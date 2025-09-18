@@ -176,13 +176,23 @@ After making changes, **ALWAYS** validate with these specific scenarios:
 - `.pre-commit-config.yaml`: Code quality automation
 - `.github/workflows/`: CI/CD pipeline definitions
 
-## Expected Timing
-- **Fresh clone setup**: 20-30 minutes
-- **Core test suite**: 8-15 minutes  
-- **Full test suite**: 20-35 minutes
+## Expected Timing and Resource Requirements
+Based on GitHub Actions and repository analysis:
+- **Fresh clone setup**: 20-30 minutes (with good network)
+- **Core dependency installation**: 15-25 minutes
+- **Full dev environment**: 30-45 minutes
+- **Core test suite** (`test-core-skip-llm.sh`): 8-15 minutes  
+- **Full test suite** (`test-skip-llm.sh`): 20-35 minutes
 - **Documentation build**: 10-20 minutes
 - **Pre-commit hooks**: 3-8 minutes
 - **Clean build from scratch**: 35-50 minutes
+- **CI/CD pipeline** (full matrix): 2-4 hours across all OS/Python combinations
+
+### Resource Requirements
+- **Python**: 3.10, 3.11, 3.12, or 3.13 (3.14+ not supported)
+- **Memory**: 2GB+ recommended for builds and tests
+- **Disk**: 1GB+ for full dev environment
+- **Network**: Stable connection required for dependency installation
 
 ### Additional Validation Commands
 - **Import test** (verify installation):
@@ -220,14 +230,27 @@ When external connectivity is limited:
 - Core functionality works without LLM API keys
 - Focus on `bash scripts/test-core-skip-llm.sh` for validation
 
-## Development Workflow
-1. **ALWAYS** create virtual environment and activate it
+## Development Workflow Best Practices
+1. **ALWAYS** create virtual environment and activate it:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
 2. Install with `pip install -e ".[dev]"` (allow 45+ minutes)
 3. Set up pre-commit: `pre-commit install`
-4. Make changes in focused, small iterations
-5. **ALWAYS** run `pre-commit run --all-files` before committing
-6. **ALWAYS** run `bash scripts/test-core-skip-llm.sh` for core changes
-7. Build and serve documentation for UI/docs changes
-8. Test actual functionality with manual agent scenarios
+4. **For changes in `autogen/`**: Run `bash scripts/test-core-skip-llm.sh`
+5. **For changes in `test/`**: Run specific test files or full suite
+6. **For changes in `website/` or docs**: Build documentation to verify
+7. **ALWAYS** run `pre-commit run --all-files` before committing
+8. **For major changes**: Run full test suite and build documentation
+9. Test actual functionality with manual agent scenarios (see validation section)
 
-Remember: **NEVER CANCEL long-running builds or tests**. This framework has complex dependencies and builds can legitimately take 20-45 minutes.
+### Working with Network Constraints
+When in environments with limited connectivity:
+- Use offline documentation in `website/docs/` directory
+- Core functionality works without LLM API keys (tests will skip automatically)
+- Focus on core tests: `bash scripts/test-core-skip-llm.sh`
+- Use system packages where available: `apt install python3-pytest`
+- Consider development container in `.devcontainer/` for pre-configured environment
+
+Remember: **NEVER CANCEL long-running builds or tests**. AG2 has complex dependencies and CI operations can take 20-45 minutes legitimately.

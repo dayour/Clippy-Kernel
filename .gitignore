@@ -178,6 +178,23 @@ local_cache/
 # coding/
 
 # Files created by tests
+
+# Clippy Kernel specific files and directories
+clippy_kernel_data.db
+project_data.db
+sprint_history.json
+workflow_results.json
+workflow_summary.json
+docs_generated/
+sample_project/
+sample_integrated_project/
+improvement_history.json
+screenshot_*.png
+azure_credentials.json
+azure_config.json
+development_artifacts/
+benchmarks/
+performance_logs/
 *tmp_code_*
 test/agentchat/test_agent_scripts/*
 

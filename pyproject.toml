@@ -204,6 +204,15 @@ mcp-proxy-gen = [
     "PyYAML",
 ]
 
+windows-clippy-mcp = [
+    "ag2[mcp]",
+    "azure-identity>=1.15.0",
+    "azure-keyvault-secrets>=4.7.0",
+    "websockets>=12.0",
+    "fastapi>=0.112,<1",
+    "uvicorn>=0.30.0",
+]
+
 interop-crewai = [
     "crewai[tools]>=0.76,<1; python_version>='3.10' and python_version<'3.13'",
     # TODO: crewai needs litellm and litellm version above 1.67.1 has problem in windows.

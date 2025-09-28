@@ -1,95 +1,102 @@
 <a name="readme-top"></a>
 
 <p align="center">
-  <!-- The image URL points to the GitHub-hosted content, ensuring it displays correctly on the PyPI website.-->
-  <img src="https://raw.githubusercontent.com/ag2ai/ag2/27b37494a6f72b1f8050f6bd7be9a7ff232cf749/website/static/img/ag2.svg" width="150" title="hover text">
+  <!-- Clippy Kernel - Advanced R&D Fork of AG2 -->
+  <h1 align="center">📎 Clippy Kernel</h1>
+  
+  <p align="center"><i>Advanced R&D Fork of AG2 with Extensible Agent Development Platform</i></p>
+
+  <br>
+
+  <a href="https://github.com/dayour/Clippy-Kernel/actions">
+    <img src="https://github.com/dayour/Clippy-Kernel/workflows/CI/badge.svg" alt="CI Status">
+  </a>
+  
+  <img src="https://img.shields.io/pypi/pyversions/ag2.svg?label=Python">
+  
+  <a href="https://github.com/dayour/Clippy-Kernel">
+    <img src="https://img.shields.io/github/stars/dayour/Clippy-Kernel?style=social" alt="GitHub Stars">
+  </a>
 
   <br>
   <br>
 
-  <a href="https://www.pepy.tech/projects/ag2">
-    <img src="https://static.pepy.tech/personalized-badge/ag2?period=month&units=international_system&left_color=grey&right_color=green&left_text=downloads/month" alt="Downloads"/>
-  </a>
-
-  <a href="https://pypi.org/project/autogen/">
-    <img src="https://img.shields.io/pypi/v/ag2?label=PyPI&color=green">
-  </a>
-
-  <img src="https://img.shields.io/pypi/pyversions/ag2.svg?label=">
-
-  <a href="https://github.com/ag2ai/ag2/actions/workflows/python-package.yml">
-    <img src="https://github.com/ag2ai/ag2/actions/workflows/python-package.yml/badge.svg">
-  </a>
-  <a href="https://discord.gg/pAbnFJrkgZ">
-    <img src="https://img.shields.io/discord/1153072414184452236?logo=discord&style=flat">
-  </a>
-
-  <br>
-
-  <a href="https://x.com/ag2oss">
-    <img src="https://img.shields.io/twitter/url/https/twitter.com/cloudposse.svg?style=social&label=Follow%20%40ag2ai">
-  </a>
+  <a href="#getting-started">🚀 Quick Start</a> |
+  <a href="#agent-dev-team">🤖 Agent Dev Team</a> |
+  <a href="#clippy-mcp-integration">🔧 Clippy MCP</a> |
+  <a href="#examples">💡 Examples</a> |
+  <a href="#contributing">🤝 Contributing</a>
 </p>
 
 <p align="center">
-  <a href="https://docs.ag2.ai/">📚 Documentation</a> |
-  <a href="https://github.com/ag2ai/build-with-ag2">💡 Examples</a> |
-  <a href="https://docs.ag2.ai/latest/docs/contributor-guide/contributing">🤝 Contributing</a> |
-  <a href="#related-papers">📝 Cite paper</a> |
-  <a href="https://discord.gg/pAbnFJrkgZ">💬 Join Discord</a>
+  <strong>Clippy Kernel</strong> is an advanced R&D fork of AG2 (formerly AutoGen) designed for cutting-edge multi-agent AI research and development. 
+  <br>Built with extensible architecture, enterprise-grade MCP integration, and self-improving agent development teams.
 </p>
 
-<p align="center">
-AG2 was evolved from AutoGen. Fully open-sourced. We invite collaborators from all organizations to contribute.
-</p>
+---
 
-# AG2: Open-Source AgentOS for AI Agents
+# 📎 Clippy Kernel: Next-Generation Agent Development Platform
 
-AG2 (formerly AutoGen) is an open-source programming framework for building AI agents and facilitating cooperation among multiple agents to solve tasks. AG2 aims to streamline the development and research of agentic AI. It offers features such as agents capable of interacting with each other, facilitates the use of various large language models (LLMs) and tool use support, autonomous and human-in-the-loop workflows, and multi-agent conversation patterns.
+**Clippy Kernel** is an advanced research and development fork of AG2 (formerly AutoGen), specifically designed for cutting-edge multi-agent AI experimentation and enterprise-grade deployment. Our platform extends the core AG2 framework with:
 
-The project is currently maintained by a [dynamic group of volunteers](MAINTAINERS.md) from several organizations. Contact project administrators Chi Wang and Qingyun Wu via [support@ag2.ai](mailto:support@ag2.ai) if you are interested in becoming a maintainer.
+- 🤖 **Self-Improving Agent Dev Teams**: Collaborative AI agents that iteratively improve codebases using agile methodologies
+- 🔧 **Extensible Clippy MCP Integration**: Enterprise-grade Model Control Protocol with Windows desktop, Azure, and VSCode integration
+- 🏗️ **Advanced Orchestration Patterns**: Sophisticated multi-agent workflows with real-time coordination and memory persistence
+- 🌐 **Comprehensive Tool Ecosystem**: Extensive integrations for web scraping, database operations, cloud services, and development workflows
+- 🧠 **Context-Aware Memory Engine**: Persistent agent memory with cross-session knowledge retention and Azure backend support
+
+This R&D platform enables researchers, developers, and enterprises to push the boundaries of what's possible with collaborative AI systems. Built on the solid foundation of AG2, Clippy Kernel adds production-ready features for real-world deployment scenarios.
 
 ## Table of contents
 
-- [AG2: Open-Source AgentOS for AI Agents](#ag2-open-source-agentos-for-ai-agents)
+- [📎 Clippy Kernel: Next-Generation Agent Development Platform](#-clippy-kernel-next-generation-agent-development-platform)
   - [Table of contents](#table-of-contents)
-  - [Getting started](#getting-started)
-    - [Installation](#installation)
+  - [🚀 Getting started](#-getting-started)
+    - [Quick Installation](#quick-installation)
     - [Setup your API keys](#setup-your-api-keys)
     - [Run your first agent](#run-your-first-agent)
-  - [Example applications](#example-applications)
-  - [Introduction of different agent concepts](#introduction-of-different-agent-concepts)
+  - [🤖 Agent Development Team](#-agent-development-team)
+  - [🔧 Clippy MCP Integration](#-clippy-mcp-integration)
+  - [💡 Advanced Examples](#-advanced-examples)
+  - [🏗️ Architecture & Concepts](#️-architecture--concepts)
     - [Conversable agent](#conversable-agent)
     - [Human in the loop](#human-in-the-loop)
     - [Orchestrating multiple agents](#orchestrating-multiple-agents)
-    - [Tools](#tools)
+    - [Tools & Extensions](#tools--extensions)
     - [Advanced agentic design patterns](#advanced-agentic-design-patterns)
-  - [Announcements](#announcements)
-  - [Code style and linting](#code-style-and-linting)
-  - [Related papers](#related-papers)
-  - [Contributors Wall](#contributors-wall)
-  - [Cite the project](#cite-the-project)
-  - [License](#license)
+  - [📦 Deployment & Production](#-deployment--production)
+  - [🧪 Testing & Development](#-testing--development)
+  - [📚 Documentation](#-documentation)
+  - [🎯 Roadmap & Research Areas](#-roadmap--research-areas)
+  - [🤝 Contributing](#-contributing)
+  - [📄 License](#-license)
 
-## Getting started
+## 🚀 Getting started
 
-For a step-by-step walk through of AG2 concepts and code, see [Basic Concepts](https://docs.ag2.ai/latest/docs/user-guide/basic-concepts/installing-ag2/) in our documentation.
+For a comprehensive walk-through of Clippy Kernel concepts and advanced features, see our [Documentation](website/docs/) and [Examples](examples/) directories.
 
-### Installation
+### Quick Installation
 
-AG2 requires **Python version >= 3.10, < 3.14**. AG2 is available via `ag2` (or its alias `autogen`) on PyPI.
+Clippy Kernel requires **Python version >= 3.10, < 3.14**. Install with enhanced features:
 
-**Windows/Linux:**
+**Standard Installation:**
 ```bash
-pip install ag2[openai]
+pip install -e ".[openai,windows-clippy-mcp]"
 ```
 
-**Mac:**
+**Full R&D Installation (Recommended):**
 ```bash
-pip install 'ag2[openai]'
+# Using UV (faster)
+uv pip install -e ".[openai,windows-clippy-mcp,dev,mcp,browser-use,retrievechat]"
+
+# Using pip
+pip install -e ".[openai,windows-clippy-mcp,dev,mcp,browser-use,retrievechat]"
 ```
 
-Minimal dependencies are installed by default. You can install extra options based on the features you need.
+**Quick Deployment (One Command):**
+```bash
+python scripts/deploy_windows_clippy_mcp.py --full-setup
+```
 
 ### Setup your API keys
 
@@ -121,25 +128,234 @@ assistant = AssistantAgent("assistant", llm_config=llm_config)
 
 user_proxy = UserProxyAgent("user_proxy", code_execution_config={"work_dir": "coding", "use_docker": False})
 
-user_proxy.run(assistant, message="Summarize the main differences between Python lists and tuples.").process()
+user_proxy.run(assistant, message="Analyze this codebase and suggest improvements using Clippy Kernel's agent dev team approach.").process()
 ```
 
-## Example applications
+## 🤖 Agent Development Team
 
-We maintain a dedicated repository with a wide range of applications to help you get started with various use cases or check out our collection of jupyter notebooks as a starting point.
+Clippy Kernel's revolutionary **Agent Development Team** feature creates collaborative AI teams that follow agile methodologies to iteratively improve codebases, implement features, and conduct code reviews.
 
-- [Build with AG2](https://github.com/ag2ai/build-with-ag2)
-- [Jupyter Notebooks](notebook)
+### Core Agent Roles
 
-## Introduction of different agent concepts
+```python
+from autogen import ConversableAgent, LLMConfig
+from autogen.agentchat import run_group_chat
+from autogen.agentchat.group.patterns import AutoPattern
 
-We have several agent concepts in AG2 to help you build your AI agents. We introduce the most common ones here.
+llm_config = LLMConfig.from_json(path="OAI_CONFIG_LIST")
 
-- **Conversable Agent**: Agents that are able to send messages, receive messages and generate replies using GenAI models, non-GenAI tools, or human inputs.
-- **Human in the loop**: Add human input to the conversation
-- **Orchestrating multiple agents**: Users can orchestrate multiple agents with built-in conversation patterns such as swarms, group chats, nested chats, sequential chats or customize the orchestration by registering custom reply methods.
-- **Tools**: Programs that can be registered, invoked and executed by agents
-- **Advanced Concepts**: AG2 supports more concepts such as structured outputs, rag, code execution, etc.
+# Product Owner - Defines requirements and priorities
+product_owner = ConversableAgent(
+    name="product_owner",
+    system_message="""You are an experienced Product Owner who:
+    - Defines clear user stories and acceptance criteria
+    - Prioritizes features based on business value
+    - Communicates requirements to the development team
+    - Ensures deliverables meet stakeholder needs""",
+    llm_config=llm_config,
+)
+
+# Technical Architect - Designs system architecture
+tech_architect = ConversableAgent(
+    name="tech_architect", 
+    system_message="""You are a Senior Technical Architect who:
+    - Designs scalable, maintainable system architectures
+    - Makes technology stack decisions
+    - Defines coding standards and patterns
+    - Reviews architectural decisions for long-term viability""",
+    llm_config=llm_config,
+)
+
+# Senior Developer - Implements complex features
+senior_dev = ConversableAgent(
+    name="senior_developer",
+    system_message="""You are a Senior Software Developer who:
+    - Implements complex features and algorithms
+    - Mentors junior developers
+    - Ensures code quality and best practices
+    - Optimizes performance and scalability""",
+    llm_config=llm_config,
+)
+
+# QA Engineer - Tests and validates quality
+qa_engineer = ConversableAgent(
+    name="qa_engineer",
+    system_message="""You are a Quality Assurance Engineer who:
+    - Creates comprehensive test plans and test cases
+    - Performs manual and automated testing
+    - Identifies bugs and edge cases
+    - Ensures quality standards are met""",
+    llm_config=llm_config,
+)
+
+# DevOps Engineer - Handles deployment and infrastructure
+devops_engineer = ConversableAgent(
+    name="devops_engineer",
+    system_message="""You are a DevOps Engineer who:
+    - Manages CI/CD pipelines and automation
+    - Handles infrastructure and deployment
+    - Monitors system performance and reliability
+    - Implements security and compliance measures""",
+    llm_config=llm_config,
+)
+
+# Scrum Master - Facilitates agile processes
+scrum_master = ConversableAgent(
+    name="scrum_master",
+    system_message="""You are a Scrum Master who:
+    - Facilitates sprint planning and retrospectives
+    - Removes blockers and impediments
+    - Ensures team follows agile principles
+    - Coordinates team communication and collaboration
+    When the sprint is complete, output: SPRINT_COMPLETE!""",
+    is_termination_msg=lambda x: "SPRINT_COMPLETE!" in (x.get("content", "") or "").upper(),
+    llm_config=llm_config,
+)
+
+# Create the Agent Dev Team
+agent_dev_team = AutoPattern(
+    agents=[product_owner, tech_architect, senior_dev, qa_engineer, devops_engineer, scrum_master],
+    initial_agent=scrum_master,
+    group_manager_args={"name": "team_lead", "llm_config": llm_config},
+)
+
+# Run a sprint planning session
+response = run_group_chat(
+    pattern=agent_dev_team,
+    messages="""Let's plan a sprint to implement a new feature: 
+    'Add real-time collaboration capabilities to Clippy Kernel agents with WebSocket support and shared memory persistence.'
+    
+    Please conduct sprint planning, define user stories, create tasks, and establish a development plan.""",
+    max_rounds=25,
+)
+
+response.process()
+```
+
+### Agile Methodology Integration
+
+The Agent Development Team follows established agile practices:
+
+- **Sprint Planning**: Automated backlog grooming and task estimation
+- **Daily Standups**: Progress tracking and blocker identification
+- **Code Reviews**: Multi-agent peer review process
+- **Retrospectives**: Continuous improvement recommendations
+- **Testing Integration**: Automated test generation and validation
+
+## 🔧 Clippy MCP Integration
+
+Clippy Kernel includes a comprehensive Model Control Protocol (MCP) integration that extends far beyond basic Windows desktop operations:
+
+### Enterprise Features
+- **Azure Integration**: Key Vault, Entra ID, and Managed Identity support
+- **VSCode Extension**: Auto-generated TypeScript extension with real-time communication
+- **Memory Engine**: Persistent context with agent-aware storage
+- **Multi-Platform Support**: Windows, macOS, and Linux compatibility
+
+### Quick Setup
+```bash
+# Deploy complete MCP integration
+python scripts/deploy_windows_clippy_mcp.py
+
+# Manual configuration
+pip install -e ".[windows-clippy-mcp]"
+```
+
+### Usage Example
+```python
+from autogen.mcp.clippy_mcp import WindowsClippyMCPClient, ClippyMCPConfig
+
+# Configure Clippy MCP
+config = ClippyMCPConfig(
+    clippy_executable_path="/path/to/clippy.exe",
+    vscode_extension_enabled=True,
+    memory_engine_enabled=True,
+    azure_key_vault_url="https://your-vault.vault.azure.net/"
+)
+
+# Create MCP client
+clippy_client = WindowsClippyMCPClient(config)
+
+# Use with agents
+from autogen import ConversableAgent
+from autogen.tools import Toolkit
+
+agent = ConversableAgent("clippy_agent", llm_config=llm_config)
+toolkit = Toolkit.from_mcp_client(clippy_client)
+toolkit.register_for_llm(agent)
+toolkit.register_for_execution(agent)
+```
+
+## 💡 Advanced Examples
+
+Explore our comprehensive collection of advanced examples and use cases:
+
+- **[Agent Development Team Examples](examples/agent_dev_team/)** - Complete agile development workflows
+- **[Clippy MCP Integration](examples/clippy_mcp/)** - Enterprise desktop and cloud integrations  
+- **[Multi-Agent Research Projects](examples/research/)** - Cutting-edge R&D scenarios
+- **[Production Deployment](examples/deployment/)** - Enterprise-grade deployment patterns
+- **[Interactive Notebooks](notebook/)** - Hands-on tutorials and experiments
+
+### Featured Examples
+
+**1. Self-Improving Codebase Agent Team**
+```python
+# Create a team that continuously improves its own codebase
+from examples.agent_dev_team import create_self_improving_team
+
+team = create_self_improving_team(
+    project_path="./",  
+    focus_areas=["performance", "maintainability", "test_coverage"]
+)
+
+improvements = team.run_improvement_sprint(
+    message="Analyze the current codebase and implement 3 high-impact improvements",
+    max_iterations=5
+)
+```
+
+**2. Enterprise Knowledge Management System**
+```python
+# Deploy a multi-agent knowledge management system
+from examples.enterprise import KnowledgeManagementSystem
+
+km_system = KnowledgeManagementSystem(
+    data_sources=["confluence", "sharepoint", "github"],
+    embedding_model="text-embedding-ada-002",
+    vector_store="azure-search"
+)
+
+response = km_system.query(
+    "What are our best practices for microservices architecture?"
+)
+```
+
+**3. Real-time Collaborative Development**
+```python
+# Enable real-time collaboration between human and AI agents
+from examples.collaboration import RealTimeDevEnvironment
+
+dev_env = RealTimeDevEnvironment(
+    websocket_port=8765,
+    shared_memory_backend="redis",
+    ide_integration=True
+)
+
+# Agents can collaborate in real-time with developers
+session = dev_env.start_collaboration_session(
+    participants=["human_developer", "code_review_agent", "test_generator_agent"]
+)
+```
+
+## 🏗️ Architecture & Concepts
+
+Clippy Kernel extends AG2's core concepts with advanced R&D features. Here are the fundamental building blocks:
+
+- **Conversable Agent**: Enhanced agents with persistent memory and context awareness
+- **Human in the loop**: Advanced human-AI collaboration patterns with real-time feedback
+- **Multi-agent orchestration**: Sophisticated patterns including swarms, hierarchies, and self-organizing teams
+- **Tools & Extensions**: Comprehensive tool ecosystem with MCP integration and cloud services
+- **Advanced Concepts**: Memory persistence, context switching, agent specialization, and performance optimization
 
 ### Conversable agent
 
@@ -374,87 +590,208 @@ logger.info("Final output:\n%s", chat_result.chat_history[-1]["content"])
 
 ### Advanced agentic design patterns
 
-AG2 supports more advanced concepts to help you build your AI agent workflows. You can find more information in the documentation.
+Clippy Kernel supports advanced concepts to help you build sophisticated AI agent workflows:
 
-- [Structured Output](https://docs.ag2.ai/latest/docs/user-guide/basic-concepts/structured-outputs)
-- [Ending a conversation](https://docs.ag2.ai/latest/docs/user-guide/advanced-concepts/orchestration/ending-a-chat/)
-- [Retrieval Augmented Generation (RAG)](https://docs.ag2.ai/latest/docs/user-guide/advanced-concepts/rag/)
-- [Code Execution](https://docs.ag2.ai/latest/docs/user-guide/advanced-concepts/code-execution)
-- [Tools with Secrets](https://docs.ag2.ai/latest/docs/user-guide/advanced-concepts/tools/tools-with-secrets/)
-- [Pattern Cookbook (9 group orchestrations)](https://docs.ag2.ai/latest/docs/user-guide/advanced-concepts/pattern-cookbook/overview/)
+- [Persistent Memory & Context](website/docs/advanced/memory-engine.md) - Agent memory that persists across sessions
+- [Self-Improving Agents](website/docs/advanced/self-improvement.md) - Agents that learn and adapt over time
+- [Enterprise Security](website/docs/advanced/security.md) - Azure integration and secure deployment
+- [Real-time Collaboration](website/docs/advanced/realtime.md) - WebSocket-based agent communication
+- [Performance Optimization](website/docs/advanced/performance.md) - Scaling multi-agent systems
+- [Research Methodologies](website/docs/research/) - Cutting-edge AI research patterns
 
-## Announcements
+## 📦 Deployment & Production
 
-🔥 🎉 **Nov 11, 2024:** We are evolving AutoGen into **AG2**!
-A new organization [AG2AI](https://github.com/ag2ai) is created to host the development of AG2 and related projects with open governance. Check [AG2's new look](https://ag2.ai/).
-
-📄 **License:**
-We adopt the Apache 2.0 license from v0.3. This enhances our commitment to open-source collaboration while providing additional protections for contributors and users alike.
-
-🎉 May 29, 2024: DeepLearning.ai launched a new short course [AI Agentic Design Patterns with AutoGen](https://www.deeplearning.ai/short-courses/ai-agentic-design-patterns-with-autogen), made in collaboration with Microsoft and Penn State University, and taught by AutoGen creators [Chi Wang](https://github.com/sonichi) and [Qingyun Wu](https://github.com/qingyun-wu).
-
-🎉 May 24, 2024: Foundation Capital published an article on [Forbes: The Promise of Multi-Agent AI](https://www.forbes.com/sites/joannechen/2024/05/24/the-promise-of-multi-agent-ai/?sh=2c1e4f454d97) and a video [AI in the Real World Episode 2: Exploring Multi-Agent AI and AutoGen with Chi Wang](https://www.youtube.com/watch?v=RLwyXRVvlNk).
-
-🎉 Apr 17, 2024: Andrew Ng cited AutoGen in [The Batch newsletter](https://www.deeplearning.ai/the-batch/issue-245/) and [What's next for AI agentic workflows](https://youtu.be/sal78ACtGTc?si=JduUzN_1kDnMq0vF) at Sequoia Capital's AI Ascent (Mar 26).
-
-[More Announcements](announcements.md)
-
-## Code style and linting
-
-This project uses pre-commit hooks to maintain code quality. Before contributing:
-
-1. Install pre-commit:
-
+### Docker Deployment
 ```bash
-pip install pre-commit
+# Build production image
+docker build -t clippy-kernel:latest .
+
+# Run with all features
+docker run -p 8080:8080 -e OPENAI_API_KEY=$OPENAI_API_KEY clippy-kernel:latest
+```
+
+### Kubernetes Deployment
+```yaml
+# Deploy to Kubernetes cluster
+kubectl apply -f deployment/k8s/
+```
+
+### Cloud Deployment
+```bash
+# Azure Container Instances
+az container create --resource-group myResourceGroup \
+  --name clippy-kernel --image clippy-kernel:latest
+
+# AWS ECS
+aws ecs create-service --cluster production \
+  --service-name clippy-kernel --task-definition clippy-kernel:1
+```
+
+## 🧪 Testing & Development
+
+### Run Core Tests
+```bash
+# Run tests without LLM dependencies
+bash scripts/test-core-skip-llm.sh
+
+# Run full test suite
+bash scripts/test-skip-llm.sh
+
+# Run specific test categories
+pytest test/mcp/ -v
+pytest test/agentchat/ -v
+```
+
+### Development Environment
+```bash
+# Set up development environment
+python3 -m venv venv
+source venv/bin/activate
+pip install -e ".[dev,windows-clippy-mcp]"
+
+# Install pre-commit hooks
 pre-commit install
+
+# Run linting and formatting
+bash scripts/lint.sh
 ```
 
-2. The hooks will run automatically on commit, or you can run them manually:
+### Performance Testing
+```bash
+# Run performance benchmarks
+python scripts/benchmark_agents.py
+
+# Load testing for production
+python scripts/load_test.py --concurrent=10 --duration=300
+```
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the `website/docs/` directory:
+
+- **[Getting Started Guide](website/docs/getting-started/)** - Quick setup and first steps
+- **[Agent Development](website/docs/agent-development/)** - Building sophisticated agents
+- **[MCP Integration](website/docs/mcp-integration/)** - Model Control Protocol usage
+- **[Enterprise Features](website/docs/enterprise/)** - Security, scalability, deployment
+- **[API Reference](website/docs/api/)** - Complete API documentation
+- **[Research Papers](website/docs/research/)** - Academic research and findings
+
+### Build Documentation
+```bash
+# Install documentation dependencies
+pip install -e ".[docs]"
+
+# Build and serve locally
+./scripts/docs_build_mkdocs.sh
+./scripts/docs_serve_mkdocs.sh
+```
+
+## 🎯 Roadmap & Research Areas
+
+### Current Research Focus
+- **Multi-Agent Reasoning**: Advanced reasoning patterns across agent teams
+- **Self-Supervised Learning**: Agents that improve without human intervention  
+- **Emergent Behavior**: Studying complex behaviors in large agent systems
+- **Ethical AI**: Ensuring responsible AI behavior in autonomous systems
+- **Performance Optimization**: Scaling to thousands of concurrent agents
+
+### Upcoming Features
+- **Q1 2025**: Advanced memory architectures and knowledge graphs
+- **Q2 2025**: Multi-modal agent capabilities (vision, audio, video)
+- **Q3 2025**: Blockchain integration for decentralized agent networks
+- **Q4 2025**: Quantum computing readiness and hybrid classical-quantum agents
+
+### Research Collaboration
+We actively collaborate with academic institutions and research organizations. 
+Interested in research partnerships? Contact us at research@clippy-kernel.ai
+
+We welcome contributions from researchers, developers, and organizations interested in advancing multi-agent AI systems!
+
+### Contributing Guidelines
+
+1. **Fork and Clone**: Fork the repository and clone your fork locally
+2. **Development Setup**: Follow the development environment setup above
+3. **Create Feature Branch**: `git checkout -b feature/your-feature-name`
+4. **Make Changes**: Implement your feature with comprehensive tests
+5. **Run Tests**: Ensure all tests pass with `bash scripts/test-core-skip-llm.sh`
+6. **Submit PR**: Create a pull request with detailed description
+
+### Areas for Contribution
+
+- **🤖 Agent Architectures**: New agent types and interaction patterns
+- **🔧 Tool Integration**: Additional MCP tools and service integrations  
+- **📊 Research**: Novel multi-agent coordination algorithms
+- **🎯 Applications**: Real-world use cases and domain-specific agents
+- **📚 Documentation**: Examples, tutorials, and API documentation
+- **🧪 Testing**: Test coverage, performance benchmarks, edge cases
+
+### Code Quality Standards
 
 ```bash
-pre-commit run --all-files
+# Install development dependencies
+pip install -e ".[dev]"
+
+# Set up pre-commit hooks
+pre-commit install
+
+# Run quality checks
+bash scripts/lint.sh
+bash scripts/test-core-skip-llm.sh
 ```
 
-## Related papers
+### Research Contributions
 
-- [AutoGen: Enabling Next-Gen LLM Applications via Multi-Agent Conversation](https://arxiv.org/abs/2308.08155)
+We especially welcome research contributions in:
+- Multi-agent learning and adaptation
+- Emergent behavior in agent systems  
+- Ethical AI and agent alignment
+- Performance optimization at scale
+- Novel application domains
 
-- [EcoOptiGen: Hyperparameter Optimization for Large Language Model Generation Inference](https://arxiv.org/abs/2303.04673)
+## 📄 License
 
-- [MathChat: Converse to Tackle Challenging Math Problems with LLM Agents](https://arxiv.org/abs/2306.01337)
+Clippy Kernel is licensed under the [Apache License, Version 2.0 (Apache-2.0)](./LICENSE).
 
-- [AgentOptimizer: Offline Training of Language Model Agents with Functions as Learnable Weights](https://arxiv.org/pdf/2402.11359)
+This project is an advanced R&D fork of [AG2](https://github.com/ag2ai/ag2) (formerly AutoGen) and contains code under two licenses:
 
-- [StateFlow: Enhancing LLM Task-Solving through State-Driven Workflows](https://arxiv.org/abs/2403.11322)
+- **Original AG2/AutoGen code**: Licensed under the Apache License, Version 2.0. See the [LICENSE](./LICENSE) file for details.
+- **Clippy Kernel enhancements**: All new features, modifications, and additions are licensed under the Apache License, Version 2.0.
 
-## Contributors Wall
+### Acknowledgments
 
-<a href="https://github.com/ag2ai/ag2/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=ag2ai/ag2&max=204" />
-</a>
+- **AG2 Community**: For the excellent foundation and ongoing development
+- **Microsoft Research**: For the original AutoGen framework
+- **Contributors**: All researchers and developers contributing to multi-agent AI
 
-## Cite the project
+### Citation
 
-```
+If you use Clippy Kernel in your research, please cite:
+
+```bibtex
+@software{ClippyKernel_2024,
+  author = {Clippy Kernel Development Team},
+  title = {Clippy Kernel: Advanced R\&D Fork of AG2 for Multi-Agent AI Research},
+  year = {2024},
+  url = {https://github.com/dayour/Clippy-Kernel},
+  note = {Advanced multi-agent AI platform with enterprise MCP integration}
+}
+
 @software{AG2_2024,
-author = {Chi Wang and Qingyun Wu and the AG2 Community},
-title = {AG2: Open-Source AgentOS for AI Agents},
-year = {2024},
-url = {https://github.com/ag2ai/ag2},
-note = {Available at https://docs.ag2.ai/},
-version = {latest}
+  author = {Chi Wang and Qingyun Wu and the AG2 Community},
+  title = {AG2: Open-Source AgentOS for AI Agents},
+  year = {2024},
+  url = {https://github.com/ag2ai/ag2},
+  note = {Available at https://docs.ag2.ai/}
 }
 ```
 
-## License
+---
 
-This project is licensed under the [Apache License, Version 2.0 (Apache-2.0)](./LICENSE).
-
-This project is a spin-off of [AutoGen](https://github.com/microsoft/autogen) and contains code under two licenses:
-
-- The original code from https://github.com/microsoft/autogen is licensed under the MIT License. See the [LICENSE_original_MIT](./license_original/LICENSE_original_MIT) file for details.
-
-- Modifications and additions made in this fork are licensed under the Apache License, Version 2.0. See the [LICENSE](./LICENSE) file for the full license text.
-
-We have documented these changes for clarity and to ensure transparency with our user and contributor community. For more details, please see the [NOTICE](./NOTICE.md) file.
+<p align="center">
+  <strong>📎 Clippy Kernel</strong> - Pushing the boundaries of multi-agent AI research and development
+  <br>
+  <br>
+  <a href="https://github.com/dayour/Clippy-Kernel/issues">Report Bug</a> •
+  <a href="https://github.com/dayour/Clippy-Kernel/discussions">Discussions</a> •
+  <a href="mailto:research@clippy-kernel.ai">Research Collaboration</a>
+</p>

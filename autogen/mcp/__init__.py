@@ -12,6 +12,15 @@ from .clippy_mcp import (
     create_vscode_extension_files,
 )
 
+# Clippy Kernel Enhanced Tools
+from .clippy_kernel_tools import (
+    ClippyKernelToolkit,
+    create_clippy_kernel_toolkit,
+    WebScrapingConfig,
+    DatabaseConfig,
+    CloudConfig
+)
+
 __all__ = [
     "create_toolkit",
     "ClippyMCPConfig",
@@ -20,4 +29,10 @@ __all__ = [
     "AzureKeyVaultConfig",
     "EntraIDConfig",
     "create_vscode_extension_files",
+    # Clippy Kernel Tools
+    "ClippyKernelToolkit",
+    "create_clippy_kernel_toolkit",
+    "WebScrapingConfig",
+    "DatabaseConfig",
+    "CloudConfig",
 ]

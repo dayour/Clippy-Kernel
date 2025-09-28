@@ -7,11 +7,12 @@ license_file = "LICENSE"
 description_file = "README.md"
 
 [project]
-name = "ag2"
-description = "A programming framework for agentic AI"
+name = "clippy-kernel"
+description = "Advanced R&D Fork of AG2 for Multi-Agent AI Research and Development"
 readme = "README.md"
 authors = [
-    {name = "Chi Wang & Qingyun Wu", email = "support@ag2.ai"}
+    {name = "Clippy Kernel Development Team", email = "research@clippy-kernel.ai"},
+    {name = "Chi Wang & Qingyun Wu (AG2 Core)", email = "support@ag2.ai"}
 ]
 
 keywords = [
@@ -19,9 +20,13 @@ keywords = [
     "agent",
     "autogen",
     "ag2",
-    "ag2.ai",
-    "ag2ai",
-    "agentic"
+    "clippy-kernel",
+    "multi-agent",
+    "agentic",
+    "mcp", 
+    "research",
+    "development-team",
+    "collaborative-ai"
 ]
 
 requires-python = ">=3.10,<3.14"

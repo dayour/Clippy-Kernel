@@ -3,5 +3,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .mcp_client import create_toolkit
+from .clippy_mcp import (
+    ClippyMCPConfig,
+    WindowsClippyMCPClient,
+    create_clippy_toolkit,
+    AzureKeyVaultConfig,
+    EntraIDConfig,
+    create_vscode_extension_files,
+)
 
-__all__ = ["create_toolkit"]
+__all__ = [
+    "create_toolkit",
+    "ClippyMCPConfig",
+    "WindowsClippyMCPClient", 
+    "create_clippy_toolkit",
+    "AzureKeyVaultConfig",
+    "EntraIDConfig",
+    "create_vscode_extension_files",
+]

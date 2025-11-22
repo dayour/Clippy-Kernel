@@ -1,28 +1,32 @@
-# Windows-Clippy-MCP Integration for AG2
+# 📎 Clippy Kernel Windows-MCP Integration
 
-This document outlines the comprehensive Windows-Clippy-MCP integration added to the AG2 framework, providing enterprise-grade Windows desktop assistant capabilities with seamless VSCode, Azure, and natural language interfaces.
+**Advanced Model Control Protocol integration for Clippy Kernel with enterprise-grade Windows desktop, Azure cloud, and VSCode development environment support.**
+
+This comprehensive integration transforms Clippy Kernel into a powerful desktop assistant and development companion, providing seamless integration with Windows systems, Azure cloud services, and modern development workflows.
 
 ## 🚀 Quick Start
 
 ### One-Command Deployment
 ```bash
-python scripts/deploy_windows_clippy_mcp.py
+python scripts/deploy_windows_clippy_mcp.py --full-setup
 ```
 
 This single command will:
 - ✅ Set up Python environment (with UV or pip)
-- ✅ Generate VSCode extension files  
-- ✅ Configure MCP server for AG2 tooling
-- ✅ Create Azure integration templates
+- ✅ Generate complete VSCode extension with TypeScript
+- ✅ Configure MCP server for Clippy Kernel tooling
+- ✅ Create Azure integration templates and configuration
 - ✅ Generate cross-platform deployment scripts
+- ✅ Set up agent development team integration
+- ✅ Configure real-time collaboration features
 
 ### Manual Installation
 ```bash
 # Install with Windows-Clippy-MCP support
-pip install -e ".[windows-clippy-mcp]"
+pip install -e ".[windows-clippy-mcp,mcp,dev]"
 
-# Or using UV (faster)
-uv pip install -e ".[windows-clippy-mcp]"
+# Or using UV (recommended for faster installation)
+uv pip install -e ".[windows-clippy-mcp,mcp,dev]"
 ```
 
 ## 🎯 Key Features Implemented

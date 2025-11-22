@@ -20,6 +20,9 @@ from .groupchat import GroupChat, GroupChatManager
 from .user_proxy_agent import UserProxyAgent
 from .utils import gather_usage_summary
 
+# Clippy Kernel Agent Development Team
+from .agent_dev_team import AgentDevTeam, create_agent_dev_team, create_self_improving_team, SprintConfig, UserStory, AgentRole, SprintPhase
+
 __all__ = [
     "Agent",
     "AssistantAgent",
@@ -41,4 +44,12 @@ __all__ = [
     "register_function",
     "run_group_chat",
     "run_swarm",
+    # Clippy Kernel additions
+    "AgentDevTeam",
+    "create_agent_dev_team",
+    "create_self_improving_team",
+    "SprintConfig",
+    "UserStory",
+    "AgentRole",
+    "SprintPhase",
 ]

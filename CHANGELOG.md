@@ -7,13 +7,88 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- Complete production polish and R&D platform transformation
-- Agent Development Team framework with agile methodologies
-- Comprehensive MCP toolkit with 15+ advanced tools
-- Integrated development workflows combining agents and tools
-- Extensive documentation and developer guides
-- Production-ready examples and tutorials
+## [1.0.1] - 2026-01-02
+
+### Changed
+
+#### 📦 Dependency Updates
+- **OpenAI SDK** upgraded from 1.99.3 to 2.14.0
+  - Latest features and improvements
+  - Enhanced API compatibility
+  - Performance optimizations
+- **MCP (Model Control Protocol)** upgraded from 1.11.0 to 1.25.0
+  - Critical bug fixes for string parameter handling
+  - Enhanced protocol features
+  - Improved stability
+- **Anthropic SDK** upgraded from 0.23.1 to 0.75.0
+  - Latest Claude models support
+  - Enhanced vertex AI integration
+  - Performance improvements
+- **Google Genai** upgraded from 1.20.0 to 1.56.0
+  - Latest Gemini model support
+  - Enhanced features and capabilities
+  - Bug fixes and stability improvements
+
+#### 🛠️ Development Tools Updates
+- **pytest** upgraded from 8.4.2 to 9.0.2
+  - Latest testing features
+  - Enhanced async support
+  - Performance improvements
+- **ruff** upgraded from 0.12.12 to 0.14.10
+  - Latest linting rules
+  - Enhanced formatting capabilities
+  - Performance optimizations
+- **mypy** upgraded from 1.17.1 to 1.19.1
+  - Better type inference
+  - Enhanced error messages
+  - Performance improvements
+- **pre-commit** upgraded from 4.3.0 to 4.5.1
+  - Latest hook features
+  - Enhanced performance
+  - Bug fixes
+- **uv** upgraded from 0.8.15 to 0.9.21
+  - Faster package installation
+  - Enhanced dependency resolution
+  - Bug fixes
+
+#### 📚 Documentation Dependencies Updates
+- **mkdocs-material** upgraded from 9.6.19 to 9.7.1
+  - Latest theme features
+  - Enhanced navigation
+  - Performance improvements
+- **fastapi** upgraded from 0.115.0 to 0.128.0
+  - Latest features
+  - Performance improvements
+  - Bug fixes
+
+#### 🔧 Optional Dependencies Updates
+- **chromadb** upgraded from 1.0.20 to 1.4.0+
+- **protobuf** upgraded from 6.32.0 to 6.33.2
+- **sentence-transformers** upgraded from ≤5.1.0 to ≥5.2.0
+- **docling** upgraded from ≥2.15.1 to ≥2.66.0
+- **selenium** upgraded from ≥4.28.1 to ≥4.39.0
+- **llama-index** upgraded from 0.12-0.13 to 0.14+
+- **crawl4ai** upgraded from ≥0.4.247 to ≥0.7.8
+- **browser-use** upgraded from ==0.1.37 to ≥0.11.2
+- **crewai** upgraded from ≥0.76 to ≥1.7.2
+- **langchain-community** upgraded from ≥0.3.12 to ≥0.4.1
+- **pydantic-ai** upgraded from ==1.0.1 to ≥1.39.0
+
+#### 🐛 Bug Fixes
+- Fixed circular import issue in `agent_dev_team.py`
+- Improved import order to prevent initialization errors
+- Enhanced module loading stability
+
+#### 🔒 Security
+- All dependencies audited for known vulnerabilities
+- Security patches applied through updates
+- Enhanced dependency version constraints
+
+### Technical Details
+- Updated version constraints to allow patch updates while maintaining stability
+- Transitioned from exact version pinning to semver ranges for better maintenance
+- Enhanced compatibility with Python 3.10-3.13
+- Improved build and test infrastructure
 
 ## [1.0.0] - 2024-12-28
 

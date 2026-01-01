@@ -9,13 +9,9 @@ and system monitoring capabilities.
 
 import logging
 from pathlib import Path
-from autogen import LLMConfig, ConversableAgent
-from autogen.mcp import (
-    create_clippy_kernel_toolkit,
-    WebScrapingConfig,
-    DatabaseConfig,
-    CloudConfig
-)
+
+from autogen import ConversableAgent, LLMConfig
+from autogen.mcp import CloudConfig, DatabaseConfig, WebScrapingConfig, create_clippy_kernel_toolkit
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -24,40 +20,33 @@ logger = logging.getLogger(__name__)
 
 def main():
     """Demonstrate the enhanced Clippy Kernel MCP toolkit."""
-    
+
     # Load LLM configuration
     try:
         llm_config = LLMConfig.from_json(path="OAI_CONFIG_LIST")
     except FileNotFoundError:
         print("❌ Please create an OAI_CONFIG_LIST file with your API keys")
         return
-    
+
     print("🔧 Creating Enhanced Clippy Kernel Toolkit...")
-    
+
     # Configure web scraping
     web_config = WebScrapingConfig(
-        headless=True,
-        timeout=30,
-        user_agent="Clippy-Kernel-Agent/1.0",
-        max_retries=3,
-        delay_between_requests=1.0
+        headless=True, timeout=30, user_agent="Clippy-Kernel-Agent/1.0", max_retries=3, delay_between_requests=1.0
     )
-    
+
     # Configure database (SQLite example)
     db_config = DatabaseConfig(
-        connection_string="sqlite:///clippy_kernel_data.db",
-        pool_size=5,
-        timeout=30,
-        auto_commit=True
+        connection_string="sqlite:///clippy_kernel_data.db", pool_size=5, timeout=30, auto_commit=True
     )
-    
+
     # Configure cloud services (example for Azure)
     cloud_config = CloudConfig(
         provider="azure",
         region="eastus",
-        credentials_path=Path("azure_credentials.json")  # Would contain connection string
+        credentials_path=Path("azure_credentials.json"),  # Would contain connection string
     )
-    
+
     # Create the enhanced toolkit
     toolkit = create_clippy_kernel_toolkit(
         enable_web_scraping=True,
@@ -65,11 +54,11 @@ def main():
         enable_cloud=False,  # Disable for this demo
         web_config=web_config,
         db_config=db_config,
-        cloud_config=cloud_config
+        cloud_config=cloud_config,
     )
-    
+
     print(f"✅ Toolkit created with {len(toolkit.tools)} tools")
-    
+
     # Create an agent with the enhanced toolkit
     development_agent = ConversableAgent(
         name="development_agent",
@@ -87,27 +76,24 @@ def main():
         and project insights. Always explain what you're doing and provide actionable recommendations.""",
         llm_config=llm_config,
         human_input_mode="NEVER",
-        max_consecutive_auto_reply=3
+        max_consecutive_auto_reply=3,
     )
-    
+
     # Register toolkit with the agent
     toolkit.register_for_llm(development_agent)
     toolkit.register_for_execution(development_agent)
-    
+
     print("🤖 Development agent created with enhanced toolkit")
-    
+
     # Example 1: Codebase Analysis
     print("\n" + "=" * 60)
     print("📊 EXAMPLE 1: COMPREHENSIVE CODEBASE ANALYSIS")
     print("=" * 60)
-    
+
     user_proxy = ConversableAgent(
-        name="user_proxy",
-        human_input_mode="NEVER",
-        llm_config=llm_config,
-        code_execution_config=False
+        name="user_proxy", human_input_mode="NEVER", llm_config=llm_config, code_execution_config=False
     )
-    
+
     try:
         analysis_request = """
         Please perform a comprehensive analysis of the current Clippy Kernel project:
@@ -119,23 +105,19 @@ def main():
         
         Focus on Python files and provide actionable insights.
         """
-        
-        response = user_proxy.initiate_chat(
-            recipient=development_agent,
-            message=analysis_request,
-            max_turns=5
-        )
-        
+
+        response = user_proxy.initiate_chat(recipient=development_agent, message=analysis_request, max_turns=5)
+
         print("✅ Codebase analysis completed!")
-        
+
     except Exception as e:
         logger.error(f"Codebase analysis failed: {str(e)}")
-    
+
     # Example 2: Web Scraping and API Integration
     print("\n" + "=" * 60)
-    print("🌐 EXAMPLE 2: WEB SCRAPING AND API INTEGRATION")  
+    print("🌐 EXAMPLE 2: WEB SCRAPING AND API INTEGRATION")
     print("=" * 60)
-    
+
     try:
         web_scraping_request = """
         Please demonstrate the web scraping capabilities:
@@ -146,23 +128,19 @@ def main():
         
         Use proper error handling and rate limiting.
         """
-        
-        response = user_proxy.initiate_chat(
-            recipient=development_agent,
-            message=web_scraping_request,
-            max_turns=3
-        )
-        
+
+        response = user_proxy.initiate_chat(recipient=development_agent, message=web_scraping_request, max_turns=3)
+
         print("✅ Web scraping demonstration completed!")
-        
+
     except Exception as e:
         logger.error(f"Web scraping example failed: {str(e)}")
-    
+
     # Example 3: Database Operations
     print("\n" + "=" * 60)
     print("🗄️ EXAMPLE 3: DATABASE OPERATIONS")
     print("=" * 60)
-    
+
     try:
         database_request = """
         Please demonstrate database capabilities:
@@ -174,23 +152,19 @@ def main():
         
         Use SQLite for this demonstration.
         """
-        
-        response = user_proxy.initiate_chat(
-            recipient=development_agent,
-            message=database_request,
-            max_turns=4
-        )
-        
+
+        response = user_proxy.initiate_chat(recipient=development_agent, message=database_request, max_turns=4)
+
         print("✅ Database operations demonstration completed!")
-        
+
     except Exception as e:
         logger.error(f"Database example failed: {str(e)}")
-    
+
     # Example 4: System Monitoring
     print("\n" + "=" * 60)
     print("📈 EXAMPLE 4: SYSTEM MONITORING AND PERFORMANCE")
     print("=" * 60)
-    
+
     try:
         monitoring_request = """
         Please provide a comprehensive system performance analysis:
@@ -202,23 +176,19 @@ def main():
         
         Present the information in a clear, actionable format.
         """
-        
-        response = user_proxy.initiate_chat(
-            recipient=development_agent,
-            message=monitoring_request,
-            max_turns=3
-        )
-        
+
+        response = user_proxy.initiate_chat(recipient=development_agent, message=monitoring_request, max_turns=3)
+
         print("✅ System monitoring demonstration completed!")
-        
+
     except Exception as e:
         logger.error(f"System monitoring example failed: {str(e)}")
-    
+
     # Example 5: Integrated Development Workflow
     print("\n" + "=" * 60)
     print("🔄 EXAMPLE 5: INTEGRATED DEVELOPMENT WORKFLOW")
     print("=" * 60)
-    
+
     try:
         workflow_request = """
         Please demonstrate an integrated development workflow that combines multiple tools:
@@ -231,23 +201,19 @@ def main():
         
         This should showcase how multiple tools work together for comprehensive development assistance.
         """
-        
-        response = user_proxy.initiate_chat(
-            recipient=development_agent,
-            message=workflow_request,
-            max_turns=6
-        )
-        
+
+        response = user_proxy.initiate_chat(recipient=development_agent, message=workflow_request, max_turns=6)
+
         print("✅ Integrated workflow demonstration completed!")
-        
+
     except Exception as e:
         logger.error(f"Integrated workflow example failed: {str(e)}")
-    
+
     # Summary and recommendations
     print("\n" + "=" * 60)
     print("📋 TOOLKIT DEMONSTRATION SUMMARY")
     print("=" * 60)
-    
+
     summary_request = """
     Please provide a summary of the toolkit capabilities demonstrated and recommendations for:
     
@@ -259,18 +225,14 @@ def main():
     
     Focus on practical advice for developers and teams.
     """
-    
+
     try:
-        response = user_proxy.initiate_chat(
-            recipient=development_agent,
-            message=summary_request,
-            max_turns=3
-        )
-        
+        response = user_proxy.initiate_chat(recipient=development_agent, message=summary_request, max_turns=3)
+
         print("✅ Toolkit demonstration completed successfully!")
         print("\n🎉 The enhanced Clippy Kernel MCP toolkit provides comprehensive")
         print("   development assistance with advanced automation capabilities!")
-        
+
     except Exception as e:
         logger.error(f"Summary generation failed: {str(e)}")
 

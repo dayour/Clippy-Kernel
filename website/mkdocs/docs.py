@@ -7,7 +7,6 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Annotated
 
-import mkdocs.commands.build
 import mkdocs.commands.serve
 import typer
 from create_api_docs import create_api_docs

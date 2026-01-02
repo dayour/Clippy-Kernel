@@ -5,14 +5,14 @@ This is the simplest possible example of using AG2 agents.
 It demonstrates basic agent creation and message exchange.
 """
 
-from autogen import ConversableAgent, LLMConfig
+from autogen import ConversableAgent
 
 
 def main():
     """Create the simplest possible AG2 agent example."""
     print("🤖 AG2 Minimal Example - Hello World")
-    print("="*40)
-    
+    print("=" * 40)
+
     # Create a simple agent without LLM (for basic demonstration)
     agent = ConversableAgent(
         name="simple_agent",
@@ -21,7 +21,7 @@ def main():
         # No LLM config needed for this basic example
         llm_config=False,
     )
-    
+
     # Create a basic human proxy agent
     user = ConversableAgent(
         name="user",
@@ -29,11 +29,11 @@ def main():
         human_input_mode="NEVER",
         llm_config=False,
     )
-    
+
     print("✅ Agents created successfully!")
     print(f"📝 Agent name: {agent.name}")
     print(f"👤 User name: {user.name}")
-    
+
     # Basic message demonstration
     message = "Hello, AG2!"
     print(f"\n💬 Sending message: '{message}'")

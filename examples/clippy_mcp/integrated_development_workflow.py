@@ -9,13 +9,10 @@ that combines collaborative agent development with powerful automation tools.
 
 import logging
 from pathlib import Path
-from autogen import LLMConfig, ConversableAgent
+
+from autogen import LLMConfig
 from autogen.agentchat import create_agent_dev_team
-from autogen.mcp import (
-    create_clippy_kernel_toolkit,
-    WebScrapingConfig,
-    DatabaseConfig
-)
+from autogen.mcp import DatabaseConfig, WebScrapingConfig, create_clippy_kernel_toolkit
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -27,73 +24,66 @@ class IntegratedDevelopmentWorkflow:
     Integrated development workflow that combines Agent Development Teams
     with the enhanced MCP toolkit for comprehensive project management.
     """
-    
+
     def __init__(self, llm_config: LLMConfig, project_path: Path):
         """
         Initialize the integrated development workflow.
-        
+
         Args:
             llm_config: LLM configuration for agents
             project_path: Path to the project directory
         """
         self.llm_config = llm_config
         self.project_path = project_path
-        
+
         # Create agent development team
         self.dev_team = create_agent_dev_team(
             llm_config=llm_config,
             project_path=project_path,
             sprint_duration_days=7,
             capacity_points=40,
-            focus_areas=["functionality", "quality", "performance", "security"]
+            focus_areas=["functionality", "quality", "performance", "security"],
         )
-        
+
         # Create enhanced toolkit
         self.toolkit = create_clippy_kernel_toolkit(
             enable_web_scraping=True,
             enable_database=True,
             enable_cloud=False,  # Disable for this example
-            web_config=WebScrapingConfig(
-                headless=True,
-                timeout=30,
-                user_agent="Clippy-Kernel-DevTeam/1.0"
-            ),
-            db_config=DatabaseConfig(
-                connection_string=f"sqlite:///{project_path}/project_data.db",
-                auto_commit=True
-            )
+            web_config=WebScrapingConfig(headless=True, timeout=30, user_agent="Clippy-Kernel-DevTeam/1.0"),
+            db_config=DatabaseConfig(connection_string=f"sqlite:///{project_path}/project_data.db", auto_commit=True),
         )
-        
+
         # Integrate toolkit with development team agents
         self._integrate_toolkit_with_agents()
-        
+
         logger.info("Integrated development workflow initialized")
-    
+
     def _integrate_toolkit_with_agents(self):
         """Integrate the enhanced toolkit with development team agents."""
-        
+
         # Register toolkit with key agents
         key_agents = [
             self.dev_team.agents["senior_developer"],
             self.dev_team.agents["qa_engineer"],
-            self.dev_team.agents["tech_architect"]
+            self.dev_team.agents["tech_architect"],
         ]
-        
+
         for agent in key_agents:
             self.toolkit.register_for_llm(agent)
             self.toolkit.register_for_execution(agent)
-        
+
         logger.info("Toolkit integrated with development team agents")
-    
+
     def run_comprehensive_project_analysis(self) -> dict:
         """
         Run a comprehensive project analysis using both agent team and toolkit.
-        
+
         Returns:
             Dictionary containing analysis results
         """
         logger.info("Starting comprehensive project analysis...")
-        
+
         analysis_request = f"""
         Please conduct a comprehensive analysis of the project at {self.project_path}:
         
@@ -121,28 +111,28 @@ class IntegratedDevelopmentWorkflow:
         Use the full range of available tools and collaborate as a team to provide
         the most comprehensive analysis possible.
         """
-        
+
         # Run the analysis sprint
         analysis_results = self.dev_team.run_development_sprint(
             feature_request=analysis_request,
-            max_iterations=30  # Allow extensive analysis
+            max_iterations=30,  # Allow extensive analysis
         )
-        
+
         logger.info("Comprehensive project analysis completed")
         return analysis_results
-    
+
     def implement_feature_with_research(self, feature_description: str) -> dict:
         """
         Implement a feature with comprehensive research and analysis.
-        
+
         Args:
             feature_description: Description of the feature to implement
-            
+
         Returns:
             Dictionary containing implementation results
         """
         logger.info(f"Starting feature implementation: {feature_description}")
-        
+
         implementation_request = f"""
         Implement the following feature with comprehensive research and best practices:
         
@@ -182,25 +172,25 @@ class IntegratedDevelopmentWorkflow:
         Use all available tools including web research, database operations,
         code analysis, and system monitoring to ensure a high-quality implementation.
         """
-        
+
         # Run the implementation sprint
         implementation_results = self.dev_team.run_development_sprint(
             feature_request=implementation_request,
-            max_iterations=40  # Allow comprehensive implementation
+            max_iterations=40,  # Allow comprehensive implementation
         )
-        
+
         logger.info("Feature implementation completed")
         return implementation_results
-    
+
     def conduct_security_audit(self) -> dict:
         """
         Conduct a comprehensive security audit of the project.
-        
+
         Returns:
             Dictionary containing security audit results
         """
         logger.info("Starting comprehensive security audit...")
-        
+
         security_audit_request = f"""
         Conduct a comprehensive security audit of the project at {self.project_path}:
         
@@ -240,26 +230,25 @@ class IntegratedDevelopmentWorkflow:
         - DevOps Engineer: Deployment and operational security
         - Product Owner: Business impact and risk assessment
         """
-        
+
         # Run the security audit
         security_results = self.dev_team.run_development_sprint(
-            feature_request=security_audit_request,
-            max_iterations=25
+            feature_request=security_audit_request, max_iterations=25
         )
-        
+
         logger.info("Security audit completed")
         return security_results
-    
+
     def create_performance_optimization_plan(self) -> dict:
         """
         Create a comprehensive performance optimization plan.
-        
+
         Returns:
             Dictionary containing optimization plan results
         """
         logger.info("Creating performance optimization plan...")
-        
-        optimization_request = f"""
+
+        optimization_request = """
         Create a comprehensive performance optimization plan for the project:
         
         **Performance Analysis:**
@@ -298,26 +287,25 @@ class IntegratedDevelopmentWorkflow:
         - QA Engineer: Performance testing and validation
         - DevOps Engineer: Infrastructure optimization and monitoring
         """
-        
+
         # Run optimization planning
         optimization_results = self.dev_team.run_development_sprint(
-            feature_request=optimization_request,
-            max_iterations=20
+            feature_request=optimization_request, max_iterations=20
         )
-        
+
         logger.info("Performance optimization plan completed")
         return optimization_results
-    
+
     def generate_comprehensive_documentation(self) -> dict:
         """
         Generate comprehensive project documentation using all available tools.
-        
+
         Returns:
             Dictionary containing documentation generation results
         """
         logger.info("Generating comprehensive project documentation...")
-        
-        documentation_request = f"""
+
+        documentation_request = """
         Generate comprehensive documentation for the project using all available tools:
         
         **Technical Documentation:**
@@ -357,137 +345,136 @@ class IntegratedDevelopmentWorkflow:
         - Accessible to different user types
         - Maintainable and version-controlled
         """
-        
+
         # Run documentation generation
         documentation_results = self.dev_team.run_development_sprint(
-            feature_request=documentation_request,
-            max_iterations=15
+            feature_request=documentation_request, max_iterations=15
         )
-        
+
         logger.info("Comprehensive documentation generation completed")
         return documentation_results
-    
+
     def export_workflow_results(self) -> Path:
         """
         Export all workflow results and analytics.
-        
+
         Returns:
             Path to the exported results file
         """
         logger.info("Exporting workflow results...")
-        
+
         # Export development team history
-        team_history_path = self.dev_team.export_sprint_history(
-            output_path=self.project_path / "workflow_results.json"
-        )
-        
+        team_history_path = self.dev_team.export_sprint_history(output_path=self.project_path / "workflow_results.json")
+
         # Generate summary report
         summary_report = {
             "project_path": str(self.project_path),
             "team_status": self.dev_team.get_team_status(),
             "toolkit_tools": [tool.name for tool in self.toolkit.tools],
-            "export_timestamp": str(self.dev_team.sprint_history[-1]["timestamp"] if self.dev_team.sprint_history else "No sprints completed")
+            "export_timestamp": str(
+                self.dev_team.sprint_history[-1]["timestamp"]
+                if self.dev_team.sprint_history
+                else "No sprints completed"
+            ),
         }
-        
+
         summary_path = self.project_path / "workflow_summary.json"
-        with open(summary_path, 'w') as f:
+        with open(summary_path, "w") as f:
             import json
+
             json.dump(summary_report, f, indent=2, default=str)
-        
+
         logger.info(f"Workflow results exported to {team_history_path}")
         return team_history_path
 
 
 def main():
     """Demonstrate the integrated development workflow."""
-    
+
     # Load LLM configuration
     try:
         llm_config = LLMConfig.from_json(path="OAI_CONFIG_LIST")
     except FileNotFoundError:
         print("❌ Please create an OAI_CONFIG_LIST file with your API keys")
         return
-    
+
     # Set up project directory
     project_path = Path("./sample_integrated_project")
     project_path.mkdir(exist_ok=True)
-    
+
     print("🚀 Initializing Integrated Development Workflow...")
-    
+
     # Create the integrated workflow
-    workflow = IntegratedDevelopmentWorkflow(
-        llm_config=llm_config,
-        project_path=project_path
-    )
-    
+    workflow = IntegratedDevelopmentWorkflow(llm_config=llm_config, project_path=project_path)
+
     print(f"✅ Workflow initialized with {len(workflow.toolkit.tools)} tools")
     print(f"   and {len(workflow.dev_team.agents)} specialized agents")
-    
+
     try:
         # Run comprehensive project analysis
         print("\n" + "=" * 70)
         print("📊 COMPREHENSIVE PROJECT ANALYSIS")
         print("=" * 70)
-        
+
         analysis_results = workflow.run_comprehensive_project_analysis()
         print("✅ Project analysis completed successfully!")
-        
+
         # Implement a sample feature
         print("\n" + "=" * 70)
         print("🔧 FEATURE IMPLEMENTATION WITH RESEARCH")
         print("=" * 70)
-        
+
         feature_results = workflow.implement_feature_with_research(
             "Real-time collaborative editing system with conflict resolution"
         )
         print("✅ Feature implementation completed successfully!")
-        
+
         # Conduct security audit
         print("\n" + "=" * 70)
         print("🔒 COMPREHENSIVE SECURITY AUDIT")
         print("=" * 70)
-        
+
         security_results = workflow.conduct_security_audit()
         print("✅ Security audit completed successfully!")
-        
+
         # Create performance optimization plan
         print("\n" + "=" * 70)
         print("⚡ PERFORMANCE OPTIMIZATION PLANNING")
         print("=" * 70)
-        
+
         optimization_results = workflow.create_performance_optimization_plan()
         print("✅ Performance optimization plan completed successfully!")
-        
+
         # Generate comprehensive documentation
         print("\n" + "=" * 70)
         print("📚 COMPREHENSIVE DOCUMENTATION GENERATION")
         print("=" * 70)
-        
+
         documentation_results = workflow.generate_comprehensive_documentation()
         print("✅ Documentation generation completed successfully!")
-        
+
         # Export results
         print("\n" + "=" * 70)
         print("📁 EXPORTING WORKFLOW RESULTS")
         print("=" * 70)
-        
+
         export_path = workflow.export_workflow_results()
         print(f"✅ Results exported to {export_path}")
-        
+
         # Display summary
         print("\n" + "=" * 70)
         print("🎉 INTEGRATED WORKFLOW COMPLETED SUCCESSFULLY!")
         print("=" * 70)
-        
+
         team_status = workflow.dev_team.get_team_status()
         print(f"📊 Total sprints completed: {team_status['sprint_history_count']}")
         print(f"🔧 Tools used: {len(workflow.toolkit.tools)}")
         print(f"👥 Agent roles: {len(team_status['team_composition'])}")
         print(f"📁 Project path: {team_status['project_path']}")
-        
+
         print("\n🚀 The integrated development workflow demonstrates the power of")
         print("   combining collaborative agent teams with comprehensive automation tools!")
-        
+
     except Exception as e:
         logger.error(f"Workflow execution failed: {str(e)}")
         print(f"❌ Workflow failed: {str(e)}")

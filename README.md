@@ -40,6 +40,7 @@
 **Clippy Kernel** is an advanced research and development fork of AG2 (formerly AutoGen), specifically designed for cutting-edge multi-agent AI experimentation and enterprise-grade deployment. Our platform extends the core AG2 framework with:
 
 - 🤖 **Self-Improving Agent Dev Teams**: Collaborative AI agents that iteratively improve codebases using agile methodologies
+- 🚀 **Autonomous SWE Agent CLI**: Command-line powered autonomous coding agent similar to Copilot CLI with full Windows integration
 - 🔧 **Extensible Clippy MCP Integration**: Enterprise-grade Model Control Protocol with Windows desktop, Azure, and VSCode integration
 - 🏗️ **Advanced Orchestration Patterns**: Sophisticated multi-agent workflows with real-time coordination and memory persistence
 - 🌐 **Comprehensive Tool Ecosystem**: Extensive integrations for web scraping, database operations, cloud services, and development workflows
@@ -55,6 +56,7 @@ This R&D platform enables researchers, developers, and enterprises to push the b
     - [Quick Installation](#quick-installation)
     - [Setup your API keys](#setup-your-api-keys)
     - [Run your first agent](#run-your-first-agent)
+  - [🚀 Clippy SWE Agent - Autonomous CLI](#-clippy-swe-agent---autonomous-cli)
   - [🤖 Agent Development Team](#-agent-development-team)
   - [🔧 Clippy MCP Integration](#-clippy-mcp-integration)
   - [💡 Advanced Examples](#-advanced-examples)
@@ -130,6 +132,108 @@ user_proxy = UserProxyAgent("user_proxy", code_execution_config={"work_dir": "co
 
 user_proxy.run(assistant, message="Analyze this codebase and suggest improvements using Clippy Kernel's agent dev team approach.").process()
 ```
+
+## 🚀 Clippy SWE Agent - Autonomous CLI
+
+Clippy Kernel introduces an **autonomous software engineering agent** with a powerful CLI interface, similar to GitHub Copilot CLI but with enhanced capabilities for Windows automation, background task execution, and multi-agent orchestration.
+
+### Key Features
+
+- 🤖 **Fully Autonomous Operation**: Complete tasks independently without constant supervision
+- 🪟 **Windows Integration**: Native desktop automation and application interaction  
+- 👁️ **Observer Mode**: Visual feedback showing real-time agent actions
+- 🎯 **Multi-Agent Collaboration**: Specialized agents (Engineer, SysAdmin, Researcher, Coordinator)
+- 📊 **Task History**: Complete history of all executed tasks
+- ⚡ **Background Execution**: Run tasks in background without blocking
+
+### Quick Start
+
+```bash
+# Install with CLI support
+pip install -e ".[openai,mcp-proxy-gen]"
+
+# Initialize configuration
+clippy-swe init
+
+# Execute autonomous coding task
+clippy-swe task "Create a Flask REST API with JWT authentication"
+
+# Execute with observer mode (see agent in action)
+clippy-swe task "Fix the bug in auth.py" --type coding --observer
+
+# Windows automation (Windows only)
+clippy-swe windows "Take a screenshot and save to Desktop"
+
+# Research task
+clippy-swe task "Research best practices for React hooks" --type research
+
+# Check agent status
+clippy-swe status
+
+# View task history
+clippy-swe history
+```
+
+### Task Types
+
+- `coding`: Software development and coding tasks
+- `system`: System administration and operations
+- `research`: Research and analysis tasks
+- `debug`: Debugging and troubleshooting
+- `deploy`: Deployment and DevOps tasks
+- `test`: Testing and quality assurance
+- `review`: Code review and analysis
+
+### Python API
+
+```python
+from autogen.cli import ClippySWEAgent, ClippySWEConfig
+
+# Configure and create agent
+config = ClippySWEConfig(
+    observer_mode=True,
+    autonomous_mode=True,
+    enable_windows_automation=True,
+)
+
+agent = ClippySWEAgent(config=config)
+
+# Execute autonomous task
+result = agent.execute_task(
+    "Create a REST API with authentication",
+    task_type="coding"
+)
+
+print(f"Status: {result['status']}")
+print(f"Result: {result['result']}")
+
+# Windows automation
+result = agent.execute_windows_task(
+    "Monitor system resources and generate report",
+    app_name="Task Manager"
+)
+```
+
+### Advanced Features
+
+**Observer Mode**: See agent collaboration in real-time
+```bash
+clippy-swe task "Build a web scraper" --observer
+```
+
+**Background Mode**: Run long tasks without blocking
+```bash
+clippy-swe task "Run all tests and generate report" --background
+```
+
+**Custom Configuration**: Use specific settings
+```bash
+clippy-swe task "Deploy to production" --config ./prod-config.json
+```
+
+For comprehensive documentation, see [**CLIPPY_SWE_AGENT_GUIDE.md**](CLIPPY_SWE_AGENT_GUIDE.md).
+
+---
 
 ## 🤖 Agent Development Team
 

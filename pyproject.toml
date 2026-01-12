@@ -355,6 +355,9 @@ Tracker = "https://github.com/ag2ai/ag2/issues"
 Source = "https://github.com/ag2ai/ag2"
 Discord = "https://discord.gg/pAbnFJrkgZ"
 
+[project.scripts]
+clippy-swe = "autogen.cli:main"
+
 
 [tool.hatch.version]
 path = "autogen/version.py"

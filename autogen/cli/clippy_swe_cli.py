@@ -351,6 +351,127 @@ def init(
 
 
 @app.command()
+def interactive(
+    session_file: Optional[Path] = typer.Option(None, "--session", "-s", help="Session file to save/load"),
+    config: Optional[str] = typer.Option(None, "--config", "-c", help="Path to custom configuration file"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+) -> None:
+    """
+    Start interactive conversational mode (like GitHub Copilot CLI).
+    
+    Features:
+    - Natural language prompts
+    - File attachments with @ prefix
+    - Shell command execution with ! prefix
+    - Slash commands (/model, /clear, /usage, etc.)
+    - Session persistence
+    
+    Examples:
+        clippy-swe interactive
+        clippy-swe interactive --session my-session.json
+    """
+    setup_logging(verbose)
+    
+    try:
+        from .interactive_mode import InteractiveSession
+        
+        # Load configuration
+        agent_config = ClippySWEConfig()
+        if config:
+            with open(config) as f:
+                custom_config = json.load(f)
+                agent_config = ClippySWEConfig(**custom_config)
+        
+        # Create agent
+        agent = ClippySWEAgent(config=agent_config)
+        
+        # Start interactive session
+        session = InteractiveSession(agent, session_file=session_file)
+        session.run()
+        
+    except ImportError:
+        console.print("[red]Error: Interactive mode requires rich library[/red]")
+        console.print("Install with: pip install -e '.[mcp-proxy-gen]'")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Error: {e}[/bold red]")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
+
+
+@app.command()
+def resolve_issue(
+    repository: str = typer.Argument(..., help="GitHub repository (owner/repo)"),
+    issue_number: int = typer.Argument(..., help="Issue number to resolve"),
+    create_pr: bool = typer.Option(True, "--create-pr/--no-pr", help="Create pull request"),
+    github_token: Optional[str] = typer.Option(None, "--token", "-t", help="GitHub personal access token"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+) -> None:
+    """
+    Automatically resolve a GitHub issue (SWE-agent style).
+    
+    This command will:
+    1. Clone the repository
+    2. Analyze the issue and codebase
+    3. Generate a solution
+    4. Run tests to validate
+    5. Create a PR (if --create-pr)
+    
+    Examples:
+        clippy-swe resolve-issue owner/repo 123
+        clippy-swe resolve-issue owner/repo 456 --token ghp_xxx --create-pr
+    """
+    setup_logging(verbose)
+    
+    try:
+        from .github_integration import GitHubIntegration
+        
+        console.print(
+            Panel.fit(
+                f"[bold cyan]Resolving Issue[/bold cyan]\n"
+                f"[bold green]Repository:[/bold green] {repository}\n"
+                f"[bold yellow]Issue:[/bold yellow] #{issue_number}\n"
+                f"[bold blue]Create PR:[/bold blue] {create_pr}",
+                title="🔧 GitHub Integration",
+                border_style="blue",
+            )
+        )
+        
+        # Create agent
+        agent_config = ClippySWEConfig(observer_mode=True)
+        agent = ClippySWEAgent(config=agent_config)
+        
+        # Initialize GitHub integration
+        gh_integration = GitHubIntegration(agent, github_token=github_token)
+        
+        # Resolve issue
+        result = gh_integration.resolve_issue(repository, issue_number, create_pr=create_pr)
+        
+        # Display results
+        if result.success:
+            console.print("\n[bold green]✅ Issue Resolved Successfully![/bold green]")
+            if result.patch_file:
+                console.print(f"[cyan]Patch file: {result.patch_file}[/cyan]")
+            if result.changed_files:
+                console.print(f"[cyan]Changed files: {', '.join(result.changed_files)}[/cyan]")
+            console.print(f"[cyan]Tests passed: {result.tests_passed}[/cyan]")
+        else:
+            console.print("\n[bold red]❌ Issue Resolution Failed[/bold red]")
+            if result.error_message:
+                console.print(f"[red]Error: {result.error_message}[/red]")
+        
+        # Cleanup
+        gh_integration.cleanup()
+        
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Error: {e}[/bold red]")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
+
+
+@app.command()
 def version() -> None:
     """Display version information."""
     try:

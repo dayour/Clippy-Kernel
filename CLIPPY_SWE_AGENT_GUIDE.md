@@ -80,6 +80,55 @@ Edit `.clippy_swe_config.json`:
 
 ### Basic Commands
 
+#### Interactive Mode (New!)
+
+Start an interactive conversational session like GitHub Copilot CLI:
+
+```bash
+# Start interactive mode
+clippy-swe interactive
+
+# With session persistence
+clippy-swe interactive --session my-work.json
+```
+
+In interactive mode:
+- Type naturally to interact with the agent
+- Use `@filename` to attach files for context
+- Use `!command` to execute shell commands
+- Use `/model`, `/clear`, `/usage`, etc. for special commands
+- Type `exit` or `quit` to end session
+
+**Example Interactive Session:**
+```
+You> Create a Flask REST API
+Clippy: [Generates Flask API code...]
+
+You> @auth.py Fix the authentication bug
+Clippy: [Analyzes auth.py and provides fix...]
+
+You> !git status
+On branch main...
+
+You> /model gpt-4
+Switched to model: gpt-4
+```
+
+#### Resolve GitHub Issues (New!)
+
+Automatically resolve GitHub issues like SWE-agent:
+
+```bash
+# Resolve an issue
+clippy-swe resolve-issue owner/repo 123
+
+# With PR creation
+clippy-swe resolve-issue owner/repo 456 --create-pr --token ghp_xxx
+
+# Without creating PR (just generate patch)
+clippy-swe resolve-issue owner/repo 789 --no-pr
+```
+
 #### Execute a Task
 
 ```bash

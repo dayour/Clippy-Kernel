@@ -33,6 +33,18 @@ uv pip install -e ".[openai,windows-clippy-mcp,mcp-proxy-gen,browser-use]"
 pip install -e ".[openai,windows-clippy-mcp,mcp-proxy-gen,browser-use]"
 ```
 
+## Enhanced OG Functionality (New!)
+
+Clippy SWE Agent now includes powerful document and media processing capabilities:
+
+- **PowerPoint Generation**: Create presentations from content, images, docs
+- **Document Analysis**: Analyze PDF, Word, Excel, PowerPoint files
+- **Feature Specs**: Generate comprehensive feature specification documents
+- **Recording Analysis**: Analyze audio/video recordings with transcription
+- **Image Generation**: Generate images using Flux 2 models
+
+See [CLIPPY_SWE_ENHANCED.md](CLIPPY_SWE_ENHANCED.md) for detailed documentation.
+
 ## Configuration
 
 ### 1. Set up API Keys

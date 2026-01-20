@@ -472,6 +472,273 @@ def resolve_issue(
 
 
 @app.command()
+def generate_ppt(
+    content_sources: list[str] = typer.Argument(..., help="Content sources (files or text)"),
+    output: Path = typer.Option("presentation.pptx", "--output", "-o", help="Output PowerPoint file"),
+    title: str = typer.Option("Presentation", "--title", "-t", help="Presentation title"),
+    subtitle: Optional[str] = typer.Option(None, "--subtitle", "-s", help="Presentation subtitle"),
+    generate_images: bool = typer.Option(True, "--generate-images/--no-images", help="Generate images with Flux 2"),
+    flux_api_key: Optional[str] = typer.Option(None, "--flux-key", help="Flux 2 API key"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+) -> None:
+    """
+    Generate PowerPoint presentation from content, images, docs, etc.
+    
+    Uses Flux 2 for image generation and multi-agent analysis for content.
+    
+    Examples:
+        clippy-swe generate-ppt "content1.txt" "content2.md" --title "My Presentation"
+        clippy-swe generate-ppt document.pdf --generate-images --flux-key YOUR_KEY
+    """
+    setup_logging(verbose)
+    
+    try:
+        from .document_processor import DocumentProcessor, PowerPointSpec
+        
+        console.print(
+            Panel.fit(
+                f"[bold cyan]Generating PowerPoint[/bold cyan]\n"
+                f"[bold green]Title:[/bold green] {title}\n"
+                f"[bold yellow]Sources:[/bold yellow] {len(content_sources)}\n"
+                f"[bold blue]Images:[/bold blue] {'Enabled' if generate_images else 'Disabled'}",
+                title="📊 PowerPoint Generation",
+                border_style="blue",
+            )
+        )
+        
+        # Create agent
+        agent_config = ClippySWEConfig()
+        agent = ClippySWEAgent(config=agent_config)
+        
+        # Initialize document processor
+        processor = DocumentProcessor(agent, flux_api_key=flux_api_key)
+        
+        # Convert content sources to Paths where applicable
+        sources = [Path(s) if Path(s).exists() else s for s in content_sources]
+        
+        # Create spec
+        spec = PowerPointSpec(title=title, subtitle=subtitle)
+        
+        # Generate PowerPoint
+        result = processor.generate_powerpoint(sources, output, spec, generate_images)
+        
+        if result["success"]:
+            console.print("\n[bold green]✅ PowerPoint Generated Successfully![/bold green]")
+            console.print(f"[cyan]Output: {result['output_path']}[/cyan]")
+            console.print(f"[cyan]Slides: {result['slide_count']}[/cyan]")
+            console.print(f"[cyan]Images: {result['images_generated']}[/cyan]")
+        else:
+            console.print(f"\n[bold red]❌ Generation Failed: {result.get('error')}[/bold red]")
+            
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Error: {e}[/bold red]")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
+
+
+@app.command()
+def analyze_doc(
+    file_path: Path = typer.Argument(..., help="Document to analyze"),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Save analysis to file"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+) -> None:
+    """
+    Analyze documents (PDF, Word, Excel, PowerPoint, etc.).
+    
+    Extracts content, provides summary, key points, and insights.
+    
+    Examples:
+        clippy-swe analyze-doc document.pdf
+        clippy-swe analyze-doc report.docx --output analysis.txt
+    """
+    setup_logging(verbose)
+    
+    try:
+        from .document_processor import DocumentProcessor
+        
+        if not file_path.exists():
+            console.print(f"[red]File not found: {file_path}[/red]")
+            sys.exit(1)
+        
+        console.print(f"[cyan]Analyzing document: {file_path}[/cyan]")
+        
+        agent_config = ClippySWEConfig()
+        agent = ClippySWEAgent(config=agent_config)
+        processor = DocumentProcessor(agent)
+        
+        result = processor.analyze_document(file_path)
+        
+        # Display results
+        console.print(Panel.fit(result.summary, title="📄 Summary", border_style="green"))
+        
+        if result.key_points:
+            console.print("\n[bold]Key Points:[/bold]")
+            for point in result.key_points:
+                console.print(f"  • {point}")
+        
+        console.print(f"\n[dim]File type: {result.file_type}[/dim]")
+        console.print(f"[dim]Size: {result.metadata.get('size', 0)} bytes[/dim]")
+        
+        # Save if requested
+        if output:
+            analysis_text = f"Summary: {result.summary}\n\nKey Points:\n"
+            analysis_text += "\n".join([f"- {p}" for p in result.key_points])
+            output.write_text(analysis_text)
+            console.print(f"\n[green]✅ Analysis saved to {output}[/green]")
+            
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Error: {e}[/bold red]")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
+
+
+@app.command()
+def create_spec(
+    feature_description: str = typer.Argument(..., help="Feature description"),
+    output: Path = typer.Option("feature_spec.md", "--output", "-o", help="Output file"),
+    include_diagrams: bool = typer.Option(True, "--diagrams/--no-diagrams", help="Generate diagrams with Flux 2"),
+    flux_api_key: Optional[str] = typer.Option(None, "--flux-key", help="Flux 2 API key"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+) -> None:
+    """
+    Create comprehensive feature specification document.
+    
+    Includes architecture, requirements, user stories, and diagrams.
+    
+    Examples:
+        clippy-swe create-spec "User authentication system"
+        clippy-swe create-spec "Real-time chat feature" --diagrams --flux-key YOUR_KEY
+    """
+    setup_logging(verbose)
+    
+    try:
+        from .document_processor import DocumentProcessor
+        
+        console.print(f"[cyan]Creating feature specification for: {feature_description}[/cyan]")
+        
+        agent_config = ClippySWEConfig(observer_mode=True)
+        agent = ClippySWEAgent(config=agent_config)
+        processor = DocumentProcessor(agent, flux_api_key=flux_api_key)
+        
+        result = processor.create_feature_spec(feature_description, output, include_diagrams)
+        
+        if result["success"]:
+            console.print("\n[bold green]✅ Feature Spec Created![/bold green]")
+            console.print(f"[cyan]Output: {result['output_path']}[/cyan]")
+            console.print(f"[cyan]Sections: {result['sections']}[/cyan]")
+            console.print(f"[cyan]Diagrams: {result['diagrams_generated']}[/cyan]")
+            console.print(f"[cyan]Word count: {result['word_count']}[/cyan]")
+        else:
+            console.print(f"\n[bold red]❌ Creation Failed: {result.get('error')}[/bold red]")
+            
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Error: {e}[/bold red]")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
+
+
+@app.command()
+def analyze_recording(
+    recording_path: Path = typer.Argument(..., help="Audio/video recording file"),
+    transcript: Optional[Path] = typer.Option(None, "--transcript", "-t", help="Existing transcript file"),
+    output: Optional[Path] = typer.Option(None, "--output", "-o", help="Save analysis to file"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+) -> None:
+    """
+    Analyze audio/video recordings.
+    
+    Generates transcript, summary, action items, and insights.
+    
+    Examples:
+        clippy-swe analyze-recording meeting.mp4
+        clippy-swe analyze-recording call.mp3 --transcript transcript.txt
+    """
+    setup_logging(verbose)
+    
+    try:
+        from .document_processor import DocumentProcessor
+        
+        if not recording_path.exists():
+            console.print(f"[red]File not found: {recording_path}[/red]")
+            sys.exit(1)
+        
+        console.print(f"[cyan]Analyzing recording: {recording_path}[/cyan]")
+        
+        agent_config = ClippySWEConfig()
+        agent = ClippySWEAgent(config=agent_config)
+        processor = DocumentProcessor(agent)
+        
+        result = processor.analyze_recording(recording_path, transcript)
+        
+        if result["success"]:
+            console.print("\n[bold green]✅ Recording Analyzed![/bold green]")
+            console.print(Panel(result["analysis"], title="📊 Analysis", border_style="green"))
+            
+            if output:
+                output_text = f"Recording: {recording_path}\n\n"
+                output_text += f"Transcript:\n{result['transcript']}\n\n"
+                output_text += f"Analysis:\n{result['analysis']}"
+                output.write_text(output_text)
+                console.print(f"\n[green]✅ Analysis saved to {output}[/green]")
+        else:
+            console.print(f"\n[bold red]❌ Analysis Failed: {result.get('error')}[/bold red]")
+            
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Error: {e}[/bold red]")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
+
+
+@app.command()
+def generate_image(
+    prompt: str = typer.Argument(..., help="Image generation prompt"),
+    output: Path = typer.Option("generated_image.png", "--output", "-o", help="Output image file"),
+    width: int = typer.Option(1024, "--width", "-w", help="Image width"),
+    height: int = typer.Option(1024, "--height", "-h", help="Image height"),
+    flux_api_key: Optional[str] = typer.Option(None, "--flux-key", help="Flux 2 API key"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+) -> None:
+    """
+    Generate images using Flux 2 model.
+    
+    High-quality image generation from text prompts.
+    
+    Examples:
+        clippy-swe generate-image "A futuristic city skyline" --flux-key YOUR_KEY
+        clippy-swe generate-image "Software architecture diagram" --width 1920 --height 1080
+    """
+    setup_logging(verbose)
+    
+    try:
+        from .document_processor import DocumentProcessor
+        
+        console.print(f"[cyan]Generating image: {prompt[:50]}...[/cyan]")
+        
+        agent_config = ClippySWEConfig()
+        agent = ClippySWEAgent(config=agent_config)
+        processor = DocumentProcessor(agent, flux_api_key=flux_api_key)
+        
+        result = processor.generate_image_flux2(prompt, output, width, height)
+        
+        if result["success"]:
+            console.print("\n[bold green]✅ Image Generated![/bold green]")
+            console.print(f"[cyan]Output: {result['output_path']}[/cyan]")
+            console.print(f"[cyan]Dimensions: {result['dimensions']}[/cyan]")
+        else:
+            console.print(f"\n[bold red]❌ Generation Failed: {result.get('error')}[/bold red]")
+            
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Error: {e}[/bold red]")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
+
+
+@app.command()
 def version() -> None:
     """Display version information."""
     try:

@@ -208,6 +208,18 @@ mcp-proxy-gen = [
     "PyYAML",
 ]
 
+copilot-sdk = [
+    "httpx>=0.28.1",
+    "anthropic>=0.75.0",
+    "google-generativeai>=0.8.0",
+    "ag2[openai]",  # For OpenAI models
+    "python-pptx>=1.0.0",  # For PowerPoint generation
+    "python-docx>=1.1.0",  # For Word processing
+    "PyPDF2>=3.0.0",  # For PDF processing
+    "pandas>=2.0.0",  # For Excel processing
+    "openpyxl>=3.1.0",  # For Excel format support
+]
+
 windows-clippy-mcp = [
     "ag2[mcp]",
     "azure-identity>=1.15.0",

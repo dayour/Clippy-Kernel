@@ -135,43 +135,47 @@ user_proxy.run(assistant, message="Analyze this codebase and suggest improvement
 
 ## 🚀 Clippy SWE Agent - Autonomous CLI
 
-Clippy Kernel introduces an **autonomous software engineering agent** with a powerful CLI interface, similar to GitHub Copilot CLI but with enhanced capabilities for Windows automation, background task execution, and multi-agent orchestration.
+Clippy Kernel introduces an **autonomous software engineering agent** with a powerful CLI interface, GitHub Copilot SDK integration, and support for multiple AI models (OpenAI/Codex, Claude, Gemini).
 
 ### Key Features
 
 - 🤖 **Fully Autonomous Operation**: Complete tasks independently without constant supervision
+- 🔌 **GitHub Copilot SDK Integration**: Multi-model support (GPT-4/5, Claude 3/4, Gemini Pro/Ultra)
 - 🪟 **Windows Integration**: Native desktop automation and application interaction  
 - 👁️ **Observer Mode**: Visual feedback showing real-time agent actions
 - 🎯 **Multi-Agent Collaboration**: Specialized agents (Engineer, SysAdmin, Researcher, Coordinator)
 - 📊 **Task History**: Complete history of all executed tasks
 - ⚡ **Background Execution**: Run tasks in background without blocking
+- 🎨 **Document & Media Processing**: PowerPoint generation, document analysis, Flux 2 images
 
 ### Quick Start
 
 ```bash
-# Install with CLI support
-pip install -e ".[openai,mcp-proxy-gen]"
+# Install with Copilot SDK support
+pip install -e ".[openai,anthropic,gemini,copilot-sdk,mcp-proxy-gen]"
 
-# Initialize configuration
-clippy-swe init
+# Configure model (choose your preferred AI)
+clippy-swe models --set gpt-4 --provider openai        # OpenAI/Codex
+clippy-swe models --set claude-3-opus --provider anthropic  # Claude  
+clippy-swe models --set gemini-pro --provider google   # Gemini
 
 # Execute autonomous coding task
 clippy-swe task "Create a Flask REST API with JWT authentication"
 
-# Execute with observer mode (see agent in action)
-clippy-swe task "Fix the bug in auth.py" --type coding --observer
+# Interactive mode (like GitHub Copilot CLI)
+clippy-swe interactive
+> Create a Flask API
+> @auth.py Fix this file
+> !git status
 
-# Windows automation (Windows only)
-clippy-swe windows "Take a screenshot and save to Desktop"
+# Resolve GitHub issues (like SWE-agent)
+clippy-swe resolve-issue owner/repo 123 --create-pr
 
-# Research task
-clippy-swe task "Research best practices for React hooks" --type research
+# Generate PowerPoint from documents
+clippy-swe generate-ppt report.pdf data.xlsx --title "Q4 Results"
 
-# Check agent status
+# Check status
 clippy-swe status
-
-# View task history
-clippy-swe history
 ```
 
 ### Task Types

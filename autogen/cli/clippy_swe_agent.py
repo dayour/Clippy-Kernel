@@ -44,6 +44,17 @@ class ClippySWEConfig(BaseModel):
     # LLM Configuration
     llm_config_path: str = Field(default="OAI_CONFIG_LIST", description="Path to LLM configuration file")
 
+    # Copilot SDK Configuration
+    use_copilot_sdk: bool = Field(default=False, description="Use GitHub Copilot SDK for enhanced features")
+    github_token: str | None = Field(default=None, description="GitHub personal access token")
+    openai_api_key: str | None = Field(default=None, description="OpenAI API key")
+    anthropic_api_key: str | None = Field(default=None, description="Anthropic API key")
+    google_api_key: str | None = Field(default=None, description="Google AI API key")
+    copilot_model: str = Field(default="gpt-4", description="Model to use with Copilot SDK")
+    copilot_provider: str = Field(default="openai", description="Provider: openai, anthropic, google")
+    enable_streaming: bool = Field(default=False, description="Enable streaming responses")
+    context_window_size: int = Field(default=8192, description="Context window size for conversations")
+
     # Agent Behavior
     autonomous_mode: bool = Field(default=True, description="Enable fully autonomous operation")
     observer_mode: bool = Field(default=False, description="Enable visual observation and display of agent actions")
@@ -151,6 +162,7 @@ class ClippySWEAgent:
         self.task_history = TaskHistory(self.config.task_history_path)
         self.toolkit: Toolkit | None = None
         self.agents: dict[str, ConversableAgent] = {}
+        self.copilot_sdk_client = None  # Will be initialized if use_copilot_sdk is True
 
         logger.info("Initializing Clippy SWE Agent...")
         self._initialize()
@@ -164,6 +176,30 @@ class ClippySWEAgent:
         except FileNotFoundError:
             logger.warning(f"LLM config file not found: {self.config.llm_config_path}")
             logger.warning("Agent will operate in limited mode")
+
+        # Initialize Copilot SDK client if enabled
+        if self.config.use_copilot_sdk:
+            try:
+                from .copilot_sdk_client import CopilotSDKClient, ModelProvider
+                
+                provider_map = {
+                    "openai": ModelProvider.OPENAI,
+                    "anthropic": ModelProvider.ANTHROPIC,
+                    "google": ModelProvider.GOOGLE,
+                    "github_copilot": ModelProvider.GITHUB_COPILOT,
+                }
+                
+                self.copilot_sdk_client = CopilotSDKClient(
+                    github_token=self.config.github_token,
+                    openai_api_key=self.config.openai_api_key,
+                    anthropic_api_key=self.config.anthropic_api_key,
+                    google_api_key=self.config.google_api_key,
+                    default_model=self.config.copilot_model,
+                    default_provider=provider_map.get(self.config.copilot_provider, ModelProvider.OPENAI),
+                )
+                logger.info("Copilot SDK client initialized")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Copilot SDK client: {e}")
 
         # Initialize toolkit
         if self.config.enable_web_tools:

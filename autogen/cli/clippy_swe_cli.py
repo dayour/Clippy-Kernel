@@ -739,6 +739,91 @@ def generate_image(
 
 
 @app.command()
+def models(
+    list_models: bool = typer.Option(False, "--list", "-l", help="List available models"),
+    set_model: Optional[str] = typer.Option(None, "--set", "-s", help="Set default model"),
+    set_provider: Optional[str] = typer.Option(None, "--provider", "-p", help="Set default provider"),
+    show_current: bool = typer.Option(True, "--current", help="Show current model configuration"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
+) -> None:
+    """
+    Manage AI models and providers (OpenAI, Claude, Gemini).
+    
+    Supports switching between different AI models for enhanced capabilities:
+    - OpenAI: GPT-4, GPT-5 (fast, versatile)
+    - Anthropic: Claude 3, Claude 4 (deep reasoning, large context)
+    - Google: Gemini Pro, Gemini Ultra (huge context, multi-modal)
+    
+    Examples:
+        clippy-swe models --list
+        clippy-swe models --set gpt-4 --provider openai
+        clippy-swe models --set claude-3-opus --provider anthropic
+        clippy-swe models --set gemini-pro --provider google
+    """
+    setup_logging(verbose)
+    
+    try:
+        available_models = {
+            "openai": ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo", "gpt-5"],
+            "anthropic": ["claude-3-sonnet", "claude-3-opus", "claude-3.5-sonnet", "claude-4"],
+            "google": ["gemini-pro", "gemini-ultra", "gemini-1.5-pro", "gemini-2.0-flash"],
+        }
+        
+        if list_models:
+            console.print("[bold cyan]Available Models and Providers:[/bold cyan]\n")
+            
+            for provider, models in available_models.items():
+                console.print(f"[bold green]{provider.upper()}:[/bold green]")
+                for model in models:
+                    console.print(f"  • {model}")
+                console.print()
+        
+        if set_model or set_provider:
+            # Save to config
+            config_path = Path(".clippy_swe_config.json")
+            
+            if config_path.exists():
+                with open(config_path) as f:
+                    config_data = json.load(f)
+            else:
+                config_data = {}
+            
+            if set_model:
+                config_data["copilot_model"] = set_model
+                config_data["use_copilot_sdk"] = True
+                console.print(f"[green]✅ Default model set to: {set_model}[/green]")
+            
+            if set_provider:
+                config_data["copilot_provider"] = set_provider
+                config_data["use_copilot_sdk"] = True
+                console.print(f"[green]✅ Default provider set to: {set_provider}[/green]")
+            
+            with open(config_path, "w") as f:
+                json.dump(config_data, f, indent=2)
+        
+        if show_current:
+            config_path = Path(".clippy_swe_config.json")
+            if config_path.exists():
+                with open(config_path) as f:
+                    config_data = json.load(f)
+                    
+                console.print("\n[bold cyan]Current Configuration:[/bold cyan]")
+                console.print(f"  Model: {config_data.get('copilot_model', 'gpt-4')}")
+                console.print(f"  Provider: {config_data.get('copilot_provider', 'openai')}")
+                console.print(f"  Copilot SDK: {'Enabled' if config_data.get('use_copilot_sdk') else 'Disabled'}")
+            else:
+                console.print("[yellow]No configuration file found. Using defaults.[/yellow]")
+                console.print("  Model: gpt-4")
+                console.print("  Provider: openai")
+                
+    except Exception as e:
+        console.print(f"\n[bold red]❌ Error: {e}[/bold red]")
+        if verbose:
+            console.print_exception()
+        sys.exit(1)
+
+
+@app.command()
 def version() -> None:
     """Display version information."""
     try:
@@ -746,6 +831,7 @@ def version() -> None:
 
         console.print(f"[bold cyan]Clippy SWE Agent[/bold cyan] version [bold green]{__version__}[/bold green]")
         console.print("[dim]Part of Clippy Kernel - Advanced R&D Fork of AG2[/dim]")
+        console.print("[dim]With GitHub Copilot SDK Integration[/dim]")
     except Exception:
         console.print("[bold cyan]Clippy SWE Agent[/bold cyan] (development version)")
 

@@ -222,3 +222,14 @@ notebook/mcp/arxiv_papers
 
 *CLAUDE.md:
 test_upgrade.py
+# Clippy SWE Agent session and history files
+.clippy_swe_history.json
+.clippy_session.json
+.clippy_swe_config.json
+
+# Flux 2 generated images
+/tmp/diagram_*.png
+/tmp/slide_image_*.png
+
+# PowerPoint output
+*.pptx

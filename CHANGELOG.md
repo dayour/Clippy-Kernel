@@ -7,7 +7,68 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.1] - 2026-01-02
+## [1.0.2] - 2026-02-22
+
+### Added
+
+#### 🆕 New AG2 Feature Modules
+- **`autogen.a2a`** - Agent-to-Agent (A2A) communication module
+  - Full streaming support for A2A communication (server and client-side)
+  - Human-in-the-loop (HITL) event processing in A2A pipelines
+  - `A2aRemoteAgent`, `A2aAgentServer`, `AutogenAgentExecutor`, and `CardSettings`
+  - Optional dependency: `ag2[a2a]` (`a2a-sdk>=0.3.11,<0.4`)
+- **`autogen.ag_ui`** - AG-UI interface module
+  - Real-time message streaming for AG-UI frontends
+  - Event-based streaming architecture for incremental text updates
+  - `AGUIStream` adapter with full streaming event support
+  - Optional dependency: `ag2[ag-ui]` (`ag-ui-protocol>=0.1.10,<0.2`)
+- **`autogen.llm_clients`** - New LLM clients module
+  - `OpenAIResponsesV2Client` - OpenAI Responses v2 API client
+    - Stateful conversations without manual history management
+    - Built-in tools (web search, image generation, apply_patch)
+    - Full access to reasoning model features (o3 thinking tokens)
+    - Multimodal applications and structured outputs
+    - Enhanced cost and token tracking
+  - `OpenAICompletionsClient` - OpenAI Completions API client
+  - `ModelClientV2` protocol for v2 client implementations
+  - Rich content block types: `TextContent`, `ReasoningContent`, `CitationContent`
+- **`autogen.opentelemetry`** - OpenTelemetry distributed tracing module
+  - `instrument_agent` - Instrument agents with OpenTelemetry spans
+  - `instrument_llm_wrapper` - Instrument LLM wrapper calls
+  - `instrument_pattern` - Instrument group chat patterns
+  - `instrument_a2a_server` - Instrument A2A server (requires A2A)
+  - Optional dependency: `ag2[tracing]` (`opentelemetry-api>=1.20`, `opentelemetry-sdk>=1.20`)
+- **`autogen.testing`** - Testing utilities module
+  - `TestAgent` - Context manager for agent testing
+  - `ToolCall` helper for tool call testing
+  - `tools_message` helper for constructing test messages
+
+#### 🔧 Enhanced Existing Features
+- **`run_group_chat_iter`** and **`a_run_group_chat_iter`** - New iterator-based execution functions
+  - Step-by-step event processing with full control over each event
+  - Supports `yield_on` parameter to filter specific event types
+  - Available as `from autogen.agentchat import run_group_chat_iter`
+- **`RunIterResponse`** and **`AsyncRunIterResponse`** - New response types for stepped execution
+  - Background thread blocks after each event until you advance iteration
+  - Use as `for event in run_group_chat_iter(...):`
+- **Safeguard parameters** added to `initiate_group_chat` and `a_initiate_group_chat`
+  - `safeguard_policy`: Optional policy dict or path to JSON file
+  - `safeguard_llm_config`: Optional LLM config for safeguard checks
+  - `mask_llm_config`: Optional LLM config for content masking
+- **Cost tracking** in `initiate_group_chat` and `a_initiate_group_chat`
+  - Recalculates cost to include ALL agents in the group chat
+- **New exports** from `autogen.agentchat`:
+  - `ContextVariables`, `ReplyResult`, `run_group_chat_iter`, `a_run_group_chat_iter`
+
+#### 📦 New Optional Dependencies
+- `ag2[a2a]` - A2A SDK for Agent-to-Agent communication
+- `ag2[ag-ui]` - AG-UI Protocol for UI streaming
+- `ag2[tracing]` - OpenTelemetry for distributed tracing
+
+#### 🔧 Dependency Updates
+- **crawl4ai**: Updated from `>=0.7.8,<0.8` to `>=0.7.8,<0.9` (supports crawl4ai 0.8.x)
+
+
 
 ### Changed
 

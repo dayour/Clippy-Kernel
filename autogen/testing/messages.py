@@ -15,7 +15,7 @@ class ToolCall:
     """Represents a tool call with a specified tool name and arguments.
 
     Args:
-        tool_name: Tool name to call. Tool should be rigestered in Agent you send message.
+        tool_name: Tool name to call. Tool should be registered in Agent you send message.
         arguments: keyword arguments to pass to the tool.
     """
 

@@ -69,6 +69,14 @@ dependencies = [
 
 [project.optional-dependencies]
 
+a2a = [
+    "a2a-sdk[http-server]>=0.3.11,<0.4",
+]
+
+ag-ui = [
+    "ag-ui-protocol>=0.1.10,<0.2",
+]
+
 flaml = [
     "flaml",
     # numpy is installed by flaml, but we want to pin the version to below 2.x (see https://github.com/microsoft/autogen/issues/1960)
@@ -153,7 +161,7 @@ rag = [
 
 
 crawl4ai = [
-    "crawl4ai>=0.7.8,<0.8",
+    "crawl4ai>=0.7.8,<0.9",
 ]
 
 browser-use = [
@@ -287,6 +295,12 @@ ollama = ["ollama>=0.4.7", "fix_busted_json>=0.0.18"]
 bedrock = ["boto3>=1.34.149"]
 deepseek = ["ag2[openai]"]
 
+tracing = [
+    "opentelemetry-api>=1.20",
+    "opentelemetry-sdk>=1.20",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.20",
+]
+
 commsagent-discord = ["discord.py>=2.4.0,<2.7"]
 commsagent-slack = ["slack_sdk>=3.33.0,<3.40"]
 commsagent-telegram = ["telethon>=1.38.1, <2"]
@@ -312,6 +326,9 @@ test = [
 ]
 
 docs = [
+    "ag2[a2a]",  # A2A is exposed in the public API by the optional `autogen.a2a` module
+    "ag2[tracing]",  # Tracing is exposed in the public API by the optional `autogen.opentelemetry` module
+    "ag2[ag-ui]",  # AG-UI is exposed in the public API by the optional `autogen.ag_ui` module
     "mkdocs-material>=9.7.1,<10",
     "mkdocstrings[python]>=0.30.0,<1",
     "mkdocs-literate-nav>=0.6.2,<1",
@@ -342,7 +359,7 @@ types = [
     "types-python-dateutil",
     "types-requests",
     "types-ujson",
-    "ag2[test, openai]",
+    "ag2[test, openai, a2a, ag-ui]",
 ]
 
 lint = [
@@ -436,6 +453,9 @@ markers = [
     "commsagent_slack",
     "commsagent-telegram",
     "lmm",
+    "tracing",
+    "a2a",
+    "ag_ui",
 ]
 
 [tool.black]

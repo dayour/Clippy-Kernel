@@ -14,16 +14,18 @@ import pytest
 from pydantic.networks import AnyUrl
 
 from autogen import AssistantAgent
-from autogen.import_utils import optional_import_block, run_for_optional_imports
-from autogen.mcp.mcp_client import (
-    DEFAULT_HTTP_REQUEST_TIMEOUT,
-    DEFAULT_SSE_EVENT_READ_TIMEOUT,
-    MCPClientSessionManager,
-    ResultSaved,
-    SseConfig,
-    StdioConfig,
-    create_toolkit,
-)
+from autogen.import_utils import optional_import_block, run_for_optional_imports, skip_on_missing_imports
+
+with optional_import_block():
+    from autogen.mcp.mcp_client import (
+        DEFAULT_HTTP_REQUEST_TIMEOUT,
+        DEFAULT_SSE_EVENT_READ_TIMEOUT,
+        MCPClientSessionManager,
+        ResultSaved,
+        SseConfig,
+        StdioConfig,
+        create_toolkit,
+    )
 
 from ..conftest import Credentials
 
@@ -33,6 +35,7 @@ with optional_import_block():
     from mcp.types import ReadResourceResult, TextResourceContents
 
 
+@skip_on_missing_imports("mcp", "mcp")
 class TestMCPClient:
     @pytest.fixture
     def server_params(self) -> "StdioServerParameters":  # type: ignore[no-any-unimported]
@@ -189,6 +192,41 @@ class TestMCPClient:
                     assert loaded_result.contents == expected_result
 
     @pytest.mark.asyncio
+    async def test_convert_resource_reports_read_failures(self, server_params: "StdioServerParameters") -> None:  # type: ignore[no-any-unimported]
+        async with (
+            stdio_client(server_params) as (read, write),
+            ClientSession(read, write, read_timeout_seconds=timedelta(seconds=30)) as session,
+        ):
+            await session.initialize()
+            toolkit = await create_toolkit(session=session)
+            echo_resource_tool = toolkit.get_tool("echo_resource")
+            assert echo_resource_tool is not None
+
+            session.read_resource = AsyncMock(side_effect=RuntimeError("boom"))  # type: ignore[method-assign]
+
+            with pytest.raises(ValueError, match="Failed to read resource 'echo://AG2User': boom"):
+                await echo_resource_tool(uri="echo://AG2User")
+
+    @pytest.mark.asyncio
+    async def test_convert_resource_reports_save_failures(self, server_params: "StdioServerParameters") -> None:  # type: ignore[no-any-unimported]
+        async with (
+            stdio_client(server_params) as (read, write),
+            ClientSession(read, write, read_timeout_seconds=timedelta(seconds=30)) as session,
+        ):
+            await session.initialize()
+            with tempfile.TemporaryDirectory() as tmp:
+                toolkit = await create_toolkit(session=session, resource_download_folder=Path(tmp))
+                echo_resource_tool = toolkit.get_tool("echo_resource")
+                assert echo_resource_tool is not None
+
+                async def fail_open_file(*args, **kwargs):
+                    raise OSError("disk full")
+
+                with patch("autogen.mcp.mcp_client.anyio.open_file", side_effect=fail_open_file):
+                    with pytest.raises(ValueError, match="Failed to save resource 'echo://AG2User'"):
+                        await echo_resource_tool(uri="echo://AG2User")
+
+    @pytest.mark.asyncio
     @pytest.mark.skipif("OPENAI_API_KEY" not in os.environ, reason="OPENAI_API_KEY not set, skipping integration test.")
     @run_for_optional_imports("openai", "openai")
     async def test_with_llm(self, server_params: "StdioServerParameters", credentials_gpt_4o_mini: Credentials) -> None:  # type: ignore[no-any-unimported]
@@ -244,6 +282,7 @@ def session_manager() -> "MCPClientSessionManager":  # type: ignore[no-any-unimp
     return MCPClientSessionManager()
 
 
+@skip_on_missing_imports("mcp", "mcp")
 class TestSseConfig:
     @pytest.fixture
     def sse_config(self) -> "SseConfig":  # type: ignore[no-any-unimported]
@@ -285,6 +324,7 @@ class TestSseConfig:
             session.initialize.assert_called_once()
 
 
+@skip_on_missing_imports("mcp", "mcp")
 class TestMCPStdioConfig:
     @pytest.fixture
     def stdio_config(self) -> "StdioConfig":  # type: ignore[no-any-unimported]
@@ -336,6 +376,7 @@ class TestMCPStdioConfig:
             session.initialize.assert_called_once()
 
 
+@skip_on_missing_imports("mcp", "mcp")
 @pytest.mark.asyncio
 async def test_session_manager_initialization(session_manager: "MCPClientSessionManager") -> None:  # type: ignore[no-any-unimported]
     assert session_manager.exit_stack is not None

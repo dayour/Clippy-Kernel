@@ -213,7 +213,10 @@ Here is the correct format for the URI template:
 """
 
         async def call_resource(uri: Annotated[str, uri_description]) -> ReadResourceResult | ResultSaved:  # type: ignore[no-any-unimported]
-            result = await session.read_resource(AnyUrl(uri))
+            try:
+                result = await session.read_resource(AnyUrl(uri))
+            except Exception as exc:
+                raise ValueError(f"Failed to read resource '{uri}': {exc}") from exc
 
             if not resource_download_folder:
                 return result
@@ -222,8 +225,11 @@ Here is the correct format for the URI template:
             filename = uri.split("://")[-1] + f"_{timestamp}"
             file_path = resource_download_folder / filename
 
-            async with await anyio.open_file(file_path, "w") as f:
-                await f.write(result.model_dump_json(indent=4))
+            try:
+                async with await anyio.open_file(file_path, "w") as f:
+                    await f.write(result.model_dump_json(indent=4))
+            except Exception as exc:
+                raise ValueError(f"Failed to save resource '{uri}' to '{file_path}': {exc}") from exc
 
             return ResultSaved(
                 explanation=f"Request for uri {uri} was saved to {file_path}",

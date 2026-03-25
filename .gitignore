@@ -179,7 +179,7 @@ local_cache/
 
 # Files created by tests
 
-# Clippy Kernel specific files and directories
+# clippy kernel specific files and directories
 clippy_kernel_data.db
 project_data.db
 sprint_history.json

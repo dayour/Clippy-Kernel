@@ -1,10 +1,10 @@
-# Clippy Kernel v1.0.1 Release Notes
+# clippy kernel v1.0.1 Release Notes
 
 Release Date: January 2, 2026
 
 ## Overview
 
-This is a maintenance release focused on upgrading all dependencies to their latest stable versions, ensuring Clippy Kernel remains secure, performant, and compatible with the latest AI/ML ecosystem tools.
+This is a maintenance release focused on upgrading all dependencies to their latest stable versions, ensuring clippy kernel remains secure, performant, and compatible with the latest AI/ML ecosystem tools.
 
 ## 🎯 Key Highlights
 
@@ -145,8 +145,8 @@ uv pip install --upgrade clippy-kernel[dev]
 ### Verify installation:
 ```python
 import autogen
-print(f"Clippy Kernel version: {autogen.__version__}")
-# Should output: Clippy Kernel version: 1.0.1
+print(f"clippy kernel version: {autogen.__version__}")
+# Should output: clippy kernel version: 1.0.1
 ```
 
 ## 📚 Documentation
@@ -165,10 +165,10 @@ All documentation updated to reflect new versions:
 
 ## 🔗 Links
 
-- [GitHub Repository](https://github.com/dayour/Clippy-Kernel)
+- [GitHub Repository](https://github.com/dayour/clippy-kernel)
 - [Full Changelog](CHANGELOG.md)
 - [Documentation](website/docs/)
-- [Issues](https://github.com/dayour/Clippy-Kernel/issues)
+- [Issues](https://github.com/dayour/clippy-kernel/issues)
 
 ## 📅 Next Steps
 
@@ -181,4 +181,4 @@ Looking ahead to v1.1.0:
 
 ---
 
-**Note**: This release maintains full backward compatibility. Existing code should work without modifications. If you encounter any issues, please [open an issue](https://github.com/dayour/Clippy-Kernel/issues/new).
+**Note**: This release maintains full backward compatibility. Existing code should work without modifications. If you encounter any issues, please [open an issue](https://github.com/dayour/clippy-kernel/issues/new).

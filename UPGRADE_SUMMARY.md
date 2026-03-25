@@ -2,7 +2,7 @@
 
 ## Completed: January 2, 2026
 
-This document summarizes the comprehensive dependency upgrade performed for Clippy Kernel v1.0.1.
+This document summarizes the comprehensive dependency upgrade performed for clippy kernel v1.0.1.
 
 ## Executive Summary
 

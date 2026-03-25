@@ -1,11 +1,11 @@
-# Copyright (c) 2023 - 2025, Clippy Kernel Development Team
+# Copyright (c) 2023 - 2025, clippy kernel development team
 #
 # SPDX-License-Identifier: Apache-2.0
 
 """
 Agent Development Team Module
 
-This module provides an advanced Agent Development Team implementation for Clippy Kernel,
+This module provides an advanced Agent Development Team implementation for clippy kernel,
 enabling collaborative AI agents that follow agile methodologies to iteratively improve
 codebases, implement features, and conduct comprehensive code reviews.
 
@@ -23,11 +23,13 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from autogen.agentchat.conversable_agent import ConversableAgent
 from autogen.agentchat.group.multi_agent_chat import run_group_chat
 from autogen.agentchat.group.patterns import AutoPattern
 from autogen.llm_config import LLMConfig
+from autogen.orchestration_metadata import build_semantic_envelope
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +69,31 @@ class UserStory:
     status: str = "backlog"
     assigned_to: str | None = None
     created_at: datetime = field(default_factory=datetime.now)
+
+    def to_dict(self) -> dict[str, Any]:
+        """Serialize the user story with semantic metadata."""
+        story_payload = {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "acceptance_criteria": self.acceptance_criteria,
+            "story_points": self.story_points,
+            "priority": self.priority,
+            "status": self.status,
+            "assigned_to": self.assigned_to,
+            "created_at": self.created_at.isoformat(),
+        }
+        return story_payload | build_semantic_envelope(
+            schema_name="clippy-kernel.agent-dev-team.user-story",
+            kind="backlog-item",
+            workflow="backlog-management",
+            primary_owner=self.assigned_to,
+            participant_roles=[self.assigned_to] if self.assigned_to else [],
+            focus_areas=["requirements", "planning"],
+            capabilities=["backlog-management", "story-refinement"],
+            tags=["agent-dev-team", "user-story", "requirements"],
+            attributes={"status": self.status},
+        )
 
 
 @dataclass
@@ -237,6 +264,44 @@ class AgentDevTeam:
             },
         )
 
+    def _participant_roles(self) -> list[str]:
+        """Return normalized participant roles for semantic metadata."""
+        return [role.value for role in self.agents]
+
+    def _orchestration_metadata(
+        self,
+        *,
+        schema_name: str,
+        workflow: str,
+        tags: list[str],
+        primary_owner: AgentRole | str | None = None,
+        phase: SprintPhase | None = None,
+        capabilities: list[str] | None = None,
+        attributes: dict[str, Any] | None = None,
+        kind: str = "orchestration-result",
+    ) -> dict[str, Any]:
+        """Build semantic metadata for team orchestration payloads."""
+        owner = primary_owner.value if isinstance(primary_owner, AgentRole) else primary_owner
+        metadata_tags = list(tags)
+        if phase is not None:
+            metadata_tags.append(f"phase-{phase.value}")
+
+        semantic_attributes = {"project_path": str(self.project_path)}
+        if attributes:
+            semantic_attributes.update(attributes)
+
+        return build_semantic_envelope(
+            schema_name=schema_name,
+            kind=kind,
+            workflow=workflow,
+            primary_owner=owner,
+            participant_roles=self._participant_roles(),
+            focus_areas=self.sprint_config.focus_areas,
+            capabilities=capabilities or ["planning", "implementation", "review", "quality-assurance"],
+            tags=["agent-dev-team", *metadata_tags],
+            attributes=semantic_attributes,
+        )
+
     def create_user_story(
         self, title: str, description: str, acceptance_criteria: list[str], story_points: int = 5, priority: int = 3
     ) -> UserStory:
@@ -287,13 +352,21 @@ class AgentDevTeam:
                     story.status = "sprint_backlog"
 
         logger.info(f"Sprint planned: {sprint_data['id']} with {len(selected_stories)} stories")
-        return sprint_data
+        return sprint_data | self._orchestration_metadata(
+            schema_name="clippy-kernel.agent-dev-team.sprint-plan",
+            workflow="sprint-planning",
+            primary_owner=AgentRole.SCRUM_MASTER,
+            phase=SprintPhase.PLANNING,
+            tags=["sprint-plan", "backlog-selection"],
+            capabilities=["planning", "capacity-management", "story-selection"],
+            attributes={"story_count": len(selected_stories), "sprint_id": sprint_data["id"]},
+        )
 
     def run_sprint_planning(self, sprint_goal: str, requirements: str) -> dict:
         """Execute sprint planning session with the team."""
 
         planning_message = f"""
-        🎯 SPRINT PLANNING SESSION
+        SPRINT PLANNING SESSION
         
         Sprint Goal: {sprint_goal}
         
@@ -333,7 +406,15 @@ class AgentDevTeam:
             "phase": SprintPhase.PLANNING,
         }
 
-        return planning_results
+        return planning_results | self._orchestration_metadata(
+            schema_name="clippy-kernel.agent-dev-team.planning-session",
+            workflow="sprint-planning",
+            primary_owner=AgentRole.SCRUM_MASTER,
+            phase=SprintPhase.PLANNING,
+            tags=["planning-session", "requirements-breakdown"],
+            capabilities=["planning", "requirements-analysis", "risk-identification"],
+            attributes={"sprint_goal": sprint_goal},
+        )
 
     def run_development_sprint(self, feature_request: str, max_iterations: int | None = None) -> dict:
         """
@@ -349,7 +430,7 @@ class AgentDevTeam:
         max_iterations = max_iterations or self.sprint_config.max_iterations
 
         sprint_message = f"""
-        🚀 DEVELOPMENT SPRINT EXECUTION
+        DEVELOPMENT SPRINT EXECUTION
         
         Feature Request: {feature_request}
         
@@ -423,10 +504,18 @@ class AgentDevTeam:
             self.sprint_history.append(sprint_results)
 
             logger.info(f"Sprint completed for feature: {feature_request}")
-            return sprint_results
+            return sprint_results | self._orchestration_metadata(
+                schema_name="clippy-kernel.agent-dev-team.development-sprint",
+                workflow="development-execution",
+                primary_owner=AgentRole.SENIOR_DEVELOPER,
+                phase=SprintPhase.COMPLETE,
+                tags=["development-sprint", "feature-delivery"],
+                capabilities=["implementation", "coordination", "delivery"],
+                attributes={"iterations_used": sprint_results["iterations_used"]},
+            )
 
         except Exception as e:
-            logger.error(f"Sprint execution failed: {str(e)}")
+            logger.error(f"Sprint execution failed: {e}", exc_info=True)
             error_results = {
                 "feature_request": feature_request,
                 "error": str(e),
@@ -435,7 +524,16 @@ class AgentDevTeam:
                 "phase": SprintPhase.DEVELOPMENT,
             }
             self.sprint_history.append(error_results)
-            return error_results
+            return error_results | self._orchestration_metadata(
+                schema_name="clippy-kernel.agent-dev-team.development-sprint",
+                workflow="development-execution",
+                primary_owner=AgentRole.SCRUM_MASTER,
+                phase=SprintPhase.DEVELOPMENT,
+                tags=["development-sprint", "failure"],
+                capabilities=["implementation", "coordination", "incident-reporting"],
+                attributes={"status": "failed"},
+                kind="orchestration-error",
+            )
 
     def run_code_review(self, code_path: Path, review_criteria: list[str] | None = None) -> dict:
         """Execute a comprehensive code review session."""
@@ -454,7 +552,7 @@ class AgentDevTeam:
         criteria = review_criteria or default_criteria
 
         review_message = f"""
-        🔍 CODE REVIEW SESSION
+        CODE REVIEW SESSION
         
         Code Path: {code_path}
         
@@ -484,19 +582,28 @@ class AgentDevTeam:
             max_rounds=10,
         )
 
-        return {
+        review_results = {
             "code_path": str(code_path),
             "review_results": response.summary,
             "criteria": criteria,
             "timestamp": datetime.now(),
             "reviewers": list(self.agents.keys()),
         }
+        return review_results | self._orchestration_metadata(
+            schema_name="clippy-kernel.agent-dev-team.code-review",
+            workflow="code-review",
+            primary_owner=AgentRole.TECH_ARCHITECT,
+            phase=SprintPhase.REVIEW,
+            tags=["code-review", "quality-gate"],
+            capabilities=["code-review", "quality-assessment", "risk-identification"],
+            attributes={"code_path": str(code_path), "criteria_count": len(criteria)},
+        )
 
     def run_retrospective(self) -> dict:
         """Conduct a sprint retrospective to identify improvements."""
 
         retrospective_message = """
-        🔄 SPRINT RETROSPECTIVE
+        SPRINT RETROSPECTIVE
         
         Team, let's reflect on our recent sprint and identify opportunities for improvement.
         
@@ -534,11 +641,19 @@ class AgentDevTeam:
             "sprint_history_count": len(self.sprint_history),
         }
 
-        return retrospective_results
+        return retrospective_results | self._orchestration_metadata(
+            schema_name="clippy-kernel.agent-dev-team.retrospective",
+            workflow="retrospective",
+            primary_owner=AgentRole.SCRUM_MASTER,
+            phase=SprintPhase.RETROSPECTIVE,
+            tags=["retrospective", "continuous-improvement"],
+            capabilities=["retrospective", "continuous-improvement", "team-health"],
+            attributes={"sprint_history_count": len(self.sprint_history)},
+        )
 
     def get_team_status(self) -> dict:
         """Get current status of the development team and ongoing work."""
-        return {
+        status = {
             "team_composition": {role.value: agent.name for role, agent in self.agents.items()},
             "current_sprint": self.current_sprint,
             "backlog_size": len(self.backlog),
@@ -550,6 +665,16 @@ class AgentDevTeam:
                 "focus_areas": self.sprint_config.focus_areas,
             },
         }
+        return status | self._orchestration_metadata(
+            schema_name="clippy-kernel.agent-dev-team.status",
+            workflow="status-reporting",
+            primary_owner=AgentRole.SCRUM_MASTER,
+            phase=self.current_sprint.get("phase") if self.current_sprint else None,
+            tags=["team-status", "coordination"],
+            capabilities=["status-reporting", "coordination", "capacity-planning"],
+            attributes={"backlog_size": len(self.backlog), "sprint_history_count": len(self.sprint_history)},
+            kind="status-report",
+        )
 
     def export_sprint_history(self, output_path: Path | None = None) -> Path:
         """Export sprint history to JSON file."""
@@ -557,22 +682,19 @@ class AgentDevTeam:
 
         export_data = {
             "team_config": self.get_team_status(),
-            "backlog": [
-                {
-                    "id": story.id,
-                    "title": story.title,
-                    "description": story.description,
-                    "acceptance_criteria": story.acceptance_criteria,
-                    "story_points": story.story_points,
-                    "priority": story.priority,
-                    "status": story.status,
-                    "created_at": story.created_at.isoformat(),
-                }
-                for story in self.backlog
-            ],
+            "backlog": [story.to_dict() for story in self.backlog],
             "sprint_history": self.sprint_history,
             "exported_at": datetime.now().isoformat(),
         }
+        export_data = export_data | self._orchestration_metadata(
+            schema_name="clippy-kernel.agent-dev-team.sprint-history-export",
+            workflow="history-export",
+            primary_owner=AgentRole.SCRUM_MASTER,
+            tags=["history-export", "audit-trail"],
+            capabilities=["export", "audit", "history-management"],
+            attributes={"backlog_size": len(self.backlog), "history_count": len(self.sprint_history)},
+            kind="artifact-export",
+        )
 
         with open(output_path, "w") as f:
             json.dump(export_data, f, indent=2, default=str)

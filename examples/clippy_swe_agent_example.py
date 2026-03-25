@@ -7,7 +7,6 @@ software engineering tasks.
 """
 
 import logging
-from pathlib import Path
 
 from autogen.cli import ClippySWEAgent, ClippySWEConfig
 
@@ -176,7 +175,7 @@ def example_system_status():
     print(f"   Agent Count: {status['agent']['agent_count']}")
 
     if "resources" in status:
-        print(f"\n💻 System Resources:")
+        print("\n💻 System Resources:")
         print(f"   CPU: {status['resources'].get('cpu_percent', 0):.1f}%")
         print(f"   Memory: {status['resources'].get('memory', {}).get('percent', 0):.1f}%")
 

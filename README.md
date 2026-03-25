@@ -1,21 +1,21 @@
 <a name="readme-top"></a>
 
 <p align="center">
-  <!-- Clippy Kernel - Advanced R&D Fork of AG2 -->
-  <h1 align="center">📎 Clippy Kernel</h1>
+  <!-- clippy kernel - Advanced R&D Fork of AG2 -->
+  <h1 align="center">📎 clippy kernel</h1>
   
   <p align="center"><i>Advanced R&D Fork of AG2 with Extensible Agent Development Platform</i></p>
 
   <br>
 
-  <a href="https://github.com/dayour/Clippy-Kernel/actions">
-    <img src="https://github.com/dayour/Clippy-Kernel/workflows/CI/badge.svg" alt="CI Status">
+  <a href="https://github.com/dayour/clippy-kernel/actions">
+    <img src="https://github.com/dayour/clippy-kernel/workflows/CI/badge.svg" alt="CI Status">
   </a>
   
   <img src="https://img.shields.io/pypi/pyversions/ag2.svg?label=Python">
   
-  <a href="https://github.com/dayour/Clippy-Kernel">
-    <img src="https://img.shields.io/github/stars/dayour/Clippy-Kernel?style=social" alt="GitHub Stars">
+  <a href="https://github.com/dayour/clippy-kernel">
+    <img src="https://img.shields.io/github/stars/dayour/clippy-kernel?style=social" alt="GitHub Stars">
   </a>
 
   <br>
@@ -29,34 +29,34 @@
 </p>
 
 <p align="center">
-  <strong>Clippy Kernel</strong> is an advanced R&D fork of AG2 (formerly AutoGen) designed for cutting-edge multi-agent AI research and development. 
-  <br>Built with extensible architecture, enterprise-grade MCP integration, and self-improving agent development teams.
+  <strong>clippy kernel</strong> is an advanced R&D fork of AG2 (formerly AutoGen) designed for multi-agent AI research and development.
+  <br>Built with extensible architecture, enterprise-grade MCP integration, and collaborative agent development teams.
 </p>
 
 ---
 
-# 📎 Clippy Kernel: Next-Generation Agent Development Platform
+# clippy kernel: Next-Generation Agent Development Platform
 
-**Clippy Kernel** is an advanced research and development fork of AG2 (formerly AutoGen), specifically designed for cutting-edge multi-agent AI experimentation and enterprise-grade deployment. Our platform extends the core AG2 framework with:
+**clippy kernel** is an advanced research and development fork of AG2 (formerly AutoGen), designed for multi-agent AI experimentation and enterprise integration. Our platform extends the core AG2 framework with:
 
-- 🤖 **Self-Improving Agent Dev Teams**: Collaborative AI agents that iteratively improve codebases using agile methodologies
-- 🚀 **Autonomous SWE Agent CLI**: Command-line powered autonomous coding agent similar to Copilot CLI with full Windows integration
-- 🔧 **Extensible Clippy MCP Integration**: Enterprise-grade Model Control Protocol with Windows desktop, Azure, and VSCode integration
-- 🏗️ **Advanced Orchestration Patterns**: Sophisticated multi-agent workflows with real-time coordination and memory persistence
-- 🌐 **Comprehensive Tool Ecosystem**: Extensive integrations for web scraping, database operations, cloud services, and development workflows
-- 🧠 **Context-Aware Memory Engine**: Persistent agent memory with cross-session knowledge retention and Azure backend support
+- **Collaborative Agent Dev Teams**: AI agents that follow agile methodologies for iterative code-improvement experiments
+- **Autonomous SWE Agent CLI**: AG2-based coding and research assistant with Windows-aware task wrappers
+- **Extensible Clippy MCP Integration**: MCP-backed tooling integration for Windows, Azure, VS Code, and related development workflows
+- **Advanced Orchestration Patterns**: Multi-agent workflow patterns with coordination and session-state experiments
+- **Comprehensive Tool Ecosystem**: Integrations for web scraping, database operations, cloud services, and development workflows
+- **Session-Aware Context**: Agent context persistence with cross-session knowledge retention (Azure backend planned)
 
-This R&D platform enables researchers, developers, and enterprises to push the boundaries of what's possible with collaborative AI systems. Built on the solid foundation of AG2, Clippy Kernel adds production-ready features for real-world deployment scenarios.
+This R&D platform enables researchers, developers, and enterprises to explore collaborative AI systems. Built on the solid foundation of AG2, clippy kernel adds experimental features for real-world deployment scenarios.
 
 ## Table of contents
 
-- [📎 Clippy Kernel: Next-Generation Agent Development Platform](#-clippy-kernel-next-generation-agent-development-platform)
+- [📎 clippy kernel: Next-Generation Agent Development Platform](#-clippy-kernel-next-generation-agent-development-platform)
   - [Table of contents](#table-of-contents)
   - [🚀 Getting started](#-getting-started)
     - [Quick Installation](#quick-installation)
     - [Setup your API keys](#setup-your-api-keys)
     - [Run your first agent](#run-your-first-agent)
-  - [🚀 Clippy SWE Agent - Autonomous CLI](#-clippy-swe-agent---autonomous-cli)
+  - [Clippy SWE Agent CLI](#clippy-swe-agent-cli)
   - [🤖 Agent Development Team](#-agent-development-team)
   - [🔧 Clippy MCP Integration](#-clippy-mcp-integration)
   - [💡 Advanced Examples](#-advanced-examples)
@@ -75,30 +75,32 @@ This R&D platform enables researchers, developers, and enterprises to push the b
 
 ## 🚀 Getting started
 
-For a comprehensive walk-through of Clippy Kernel concepts and advanced features, see our [Documentation](website/docs/) and [Examples](examples/) directories.
+For a comprehensive walk-through of clippy kernel concepts and advanced features, see our [Documentation](website/docs/) and [Examples](examples/) directories.
 
 ### Quick Installation
 
-Clippy Kernel requires **Python version >= 3.10, < 3.14**. Install with enhanced features:
+clippy kernel requires **Python version >= 3.10, < 3.14**.
 
-**Standard Installation:**
+**Practical CLI baseline:**
 ```bash
-pip install -e ".[openai,windows-clippy-mcp]"
+pip install -e ".[openai,mcp-proxy-gen]"
 ```
 
-**Full R&D Installation (Recommended):**
+This covers the current `clippy-swe` command surface plus a common provider extra.
+
+**Broader local R&D install:**
 ```bash
 # Using UV (faster)
-uv pip install -e ".[openai,windows-clippy-mcp,dev,mcp,browser-use,retrievechat]"
+uv pip install -e ".[openai,mcp-proxy-gen,windows-clippy-mcp,dev,mcp,browser-use,retrievechat]"
 
 # Using pip
-pip install -e ".[openai,windows-clippy-mcp,dev,mcp,browser-use,retrievechat]"
+pip install -e ".[openai,mcp-proxy-gen,windows-clippy-mcp,dev,mcp,browser-use,retrievechat]"
 ```
 
-**Quick Deployment (One Command):**
-```bash
-python scripts/deploy_windows_clippy_mcp.py --full-setup
-```
+If you do not need Windows-specific integration, you can omit `windows-clippy-mcp`.
+
+For local setup and maintenance details related to Clippy SWE, see
+[CLIPPY_KERNEL_DEVELOPER_GUIDE.md](CLIPPY_KERNEL_DEVELOPER_GUIDE.md).
 
 ### Setup your API keys
 
@@ -111,7 +113,7 @@ You can use the following content as a template:
 ```json
 [
   {
-    "model": "gpt-5",
+    "model": "gpt-4",
     "api_key": "<your OpenAI API key here>"
   }
 ]
@@ -130,118 +132,106 @@ assistant = AssistantAgent("assistant", llm_config=llm_config)
 
 user_proxy = UserProxyAgent("user_proxy", code_execution_config={"work_dir": "coding", "use_docker": False})
 
-user_proxy.run(assistant, message="Analyze this codebase and suggest improvements using Clippy Kernel's agent dev team approach.").process()
+user_proxy.run(assistant, message="Analyze this codebase and suggest improvements using clippy kernel's agent dev team approach.").process()
 ```
 
-## 🚀 Clippy SWE Agent - Autonomous CLI
+## Clippy SWE Agent CLI
 
-Clippy Kernel introduces an **autonomous software engineering agent** with a powerful CLI interface, GitHub Copilot SDK integration, and support for multiple AI models (OpenAI/Codex, Claude, Gemini).
+Clippy SWE is the repository's software-engineering CLI and API layer under
+`autogen.cli`. The current implementation uses AG2 multi-agent orchestration for
+task execution and provides a practical command surface for local workflows.
 
-### Key Features
+Implemented entry points include:
 
-- 🤖 **Fully Autonomous Operation**: Complete tasks independently without constant supervision
-- 🔌 **GitHub Copilot SDK Integration**: Multi-model support (GPT-4/5, Claude 3/4, Gemini Pro/Ultra)
-- 🪟 **Windows Integration**: Native desktop automation and application interaction  
-- 👁️ **Observer Mode**: Visual feedback showing real-time agent actions
-- 🎯 **Multi-Agent Collaboration**: Specialized agents (Engineer, SysAdmin, Researcher, Coordinator)
-- 📊 **Task History**: Complete history of all executed tasks
-- ⚡ **Background Execution**: Run tasks in background without blocking
-- 🎨 **Document & Media Processing**: PowerPoint generation, document analysis, Flux 2 images
+- `clippy-swe task`
+- `clippy-swe interactive`
+- `clippy-swe status`
+- `clippy-swe history`
+- `clippy-swe init`
+- `clippy-swe models`
+- `clippy-swe windows`
+- document and media helper commands such as `generate-ppt` and `analyze-doc`
+
+When `enable_workiq=true`, the active toolkit can also expose a WorkIQ-backed
+`ask_work_iq` tool for Microsoft 365 workplace queries, assuming the WorkIQ
+CLI prerequisites are already satisfied.
+
+When `enable_m365_copilot=true`, the active toolkit can also expose stable
+Microsoft 365 Copilot SDK tools for retrieval, reporting, users,
+interactions, admin settings, and online meetings, using either installed
+packages or a local `Agents-M365Copilot` checkout.
+
+Current limitations to keep in mind:
+
+- Copilot SDK support is optional and partial. Task execution still runs through
+  the AG2 orchestration path.
+- The `--background` flag is a configuration/output mode, not a durable detached
+  job runner.
+- The `windows` command adds Windows-specific context and guardrails, but it is
+  not a guarantee of dependable unattended desktop automation.
+- `resolve-issue` exists, but it should be treated as an experimental helper
+  that still needs manual review and validation.
 
 ### Quick Start
 
 ```bash
-# Install with Copilot SDK support
-pip install -e ".[openai,anthropic,gemini,copilot-sdk,mcp-proxy-gen]"
+# Install the CLI baseline
+pip install -e ".[openai,mcp-proxy-gen]"
 
-# Configure model (choose your preferred AI)
-clippy-swe models --set gpt-4 --provider openai        # OpenAI/Codex
-clippy-swe models --set claude-3-opus --provider anthropic  # Claude  
-clippy-swe models --set gemini-pro --provider google   # Gemini
+# Initialize workspace config
+clippy-swe init --workspace .
 
-# Execute autonomous coding task
-clippy-swe task "Create a Flask REST API with JWT authentication"
+# Most commands do not read .clippy_swe_config.json automatically today.
+# Pass --config when you want that file to be used.
 
-# Interactive mode (like GitHub Copilot CLI)
-clippy-swe interactive
-> Create a Flask API
-> @auth.py Fix this file
-> !git status
-
-# Resolve GitHub issues (like SWE-agent)
-clippy-swe resolve-issue owner/repo 123 --create-pr
-
-# Generate PowerPoint from documents
-clippy-swe generate-ppt report.pdf data.xlsx --title "Q4 Results"
-
-# Check status
+# Inspect current runtime status
 clippy-swe status
+
+# Run a realistic task once model config is available
+clippy-swe task "Summarize the repository layout and identify likely Clippy SWE files" --type research --config .clippy_swe_config.json
+
+# Start the interactive shell
+clippy-swe interactive --config .clippy_swe_config.json
 ```
 
-### Task Types
+Common task types:
 
-- `coding`: Software development and coding tasks
-- `system`: System administration and operations
-- `research`: Research and analysis tasks
-- `debug`: Debugging and troubleshooting
-- `deploy`: Deployment and DevOps tasks
-- `test`: Testing and quality assurance
-- `review`: Code review and analysis
+- `general`
+- `coding`
+- `system`
+- `research`
+- `debug`
+- `deploy`
+- `test`
+- `review`
 
-### Python API
+Minimal Python API example:
 
 ```python
 from autogen.cli import ClippySWEAgent, ClippySWEConfig
 
-# Configure and create agent
-config = ClippySWEConfig(
-    observer_mode=True,
-    autonomous_mode=True,
-    enable_windows_automation=True,
-)
-
+config = ClippySWEConfig(observer_mode=False, autonomous_mode=True)
 agent = ClippySWEAgent(config=config)
 
-# Execute autonomous task
 result = agent.execute_task(
-    "Create a REST API with authentication",
-    task_type="coding"
+    "Summarize the current package structure",
+    task_type="research",
 )
 
-print(f"Status: {result['status']}")
-print(f"Result: {result['result']}")
-
-# Windows automation
-result = agent.execute_windows_task(
-    "Monitor system resources and generate report",
-    app_name="Task Manager"
-)
+print(result["status"])
 ```
 
-### Advanced Features
+For maintained details, limitations, and evaluation guidance, use:
 
-**Observer Mode**: See agent collaboration in real-time
-```bash
-clippy-swe task "Build a web scraper" --observer
-```
-
-**Background Mode**: Run long tasks without blocking
-```bash
-clippy-swe task "Run all tests and generate report" --background
-```
-
-**Custom Configuration**: Use specific settings
-```bash
-clippy-swe task "Deploy to production" --config ./prod-config.json
-```
-
-For comprehensive documentation, see [**CLIPPY_SWE_AGENT_GUIDE.md**](CLIPPY_SWE_AGENT_GUIDE.md).
+- [CLIPPY_SWE_AGENT_GUIDE.md](CLIPPY_SWE_AGENT_GUIDE.md)
+- [CLIPPY_KERNEL_DEVELOPER_GUIDE.md](CLIPPY_KERNEL_DEVELOPER_GUIDE.md)
+- [CLIPPY_SWE_EVALS.md](CLIPPY_SWE_EVALS.md)
 
 ---
 
 ## 🤖 Agent Development Team
 
-Clippy Kernel's revolutionary **Agent Development Team** feature creates collaborative AI teams that follow agile methodologies to iteratively improve codebases, implement features, and conduct code reviews.
+clippy kernel's **Agent Development Team** feature creates collaborative AI teams that follow agile methodologies to iteratively improve codebases, implement features, and conduct code reviews.
 
 ### Core Agent Roles
 
@@ -331,7 +321,7 @@ agent_dev_team = AutoPattern(
 response = run_group_chat(
     pattern=agent_dev_team,
     messages="""Let's plan a sprint to implement a new feature: 
-    'Add real-time collaboration capabilities to Clippy Kernel agents with WebSocket support and shared memory persistence.'
+    'Add real-time collaboration capabilities to clippy kernel agents with WebSocket support and shared memory persistence.'
     
     Please conduct sprint planning, define user stories, create tasks, and establish a development plan.""",
     max_rounds=25,
@@ -352,7 +342,7 @@ The Agent Development Team follows established agile practices:
 
 ## 🔧 Clippy MCP Integration
 
-Clippy Kernel includes a comprehensive Model Control Protocol (MCP) integration that extends far beyond basic Windows desktop operations:
+clippy kernel includes a comprehensive Model Control Protocol (MCP) integration that extends far beyond basic Windows desktop operations:
 
 ### Enterprise Features
 - **Azure Integration**: Key Vault, Entra ID, and Managed Identity support
@@ -400,13 +390,13 @@ Explore our comprehensive collection of advanced examples and use cases:
 
 - **[Agent Development Team Examples](examples/agent_dev_team/)** - Complete agile development workflows
 - **[Clippy MCP Integration](examples/clippy_mcp/)** - Enterprise desktop and cloud integrations  
-- **[Multi-Agent Research Projects](examples/research/)** - Cutting-edge R&D scenarios
+- **[Multi-Agent Research Projects](examples/research/)** - Advanced R&D scenarios
 - **[Production Deployment](examples/deployment/)** - Enterprise-grade deployment patterns
 - **[Interactive Notebooks](notebook/)** - Hands-on tutorials and experiments
 
 ### Featured Examples
 
-**1. Self-Improving Codebase Agent Team**
+**1. Collaborative Codebase Agent Team**
 ```python
 # Create a team that continuously improves its own codebase
 from examples.agent_dev_team import create_self_improving_team
@@ -457,7 +447,7 @@ session = dev_env.start_collaboration_session(
 
 ## 🏗️ Architecture & Concepts
 
-Clippy Kernel extends AG2's core concepts with advanced R&D features. Here are the fundamental building blocks:
+clippy kernel extends AG2's core concepts with advanced R&D features. Here are the fundamental building blocks:
 
 - **Conversable Agent**: Enhanced agents with persistent memory and context awareness
 - **Human in the loop**: Advanced human-AI collaboration patterns with real-time feedback
@@ -698,14 +688,14 @@ logger.info("Final output:\n%s", chat_result.chat_history[-1]["content"])
 
 ### Advanced agentic design patterns
 
-Clippy Kernel supports advanced concepts to help you build sophisticated AI agent workflows:
+clippy kernel supports advanced concepts to help you build sophisticated AI agent workflows:
 
-- [Persistent Memory & Context](website/docs/advanced/memory-engine.md) - Agent memory that persists across sessions
-- [Self-Improving Agents](website/docs/advanced/self-improvement.md) - Agents that learn and adapt over time
+- [Persistent Memory & Context](website/docs/advanced/memory-engine.md) - Agent context that persists across sessions
+- [Collaborative Agents](website/docs/advanced/self-improvement.md) - Agents that iterate and adapt with human guidance
 - [Enterprise Security](website/docs/advanced/security.md) - Azure integration and secure deployment
 - [Real-time Collaboration](website/docs/advanced/realtime.md) - WebSocket-based agent communication
 - [Performance Optimization](website/docs/advanced/performance.md) - Scaling multi-agent systems
-- [Research Methodologies](website/docs/research/) - Cutting-edge AI research patterns
+- [Research Methodologies](website/docs/research/) - Advanced AI research patterns
 
 ## 📦 Deployment & Production
 
@@ -858,12 +848,12 @@ We especially welcome research contributions in:
 
 ## 📄 License
 
-Clippy Kernel is licensed under the [Apache License, Version 2.0 (Apache-2.0)](./LICENSE).
+clippy kernel is licensed under the [Apache License, Version 2.0 (Apache-2.0)](./LICENSE).
 
 This project is an advanced R&D fork of [AG2](https://github.com/ag2ai/ag2) (formerly AutoGen) and contains code under two licenses:
 
 - **Original AG2/AutoGen code**: Licensed under the Apache License, Version 2.0. See the [LICENSE](./LICENSE) file for details.
-- **Clippy Kernel enhancements**: All new features, modifications, and additions are licensed under the Apache License, Version 2.0.
+- **clippy kernel enhancements**: All new features, modifications, and additions are licensed under the Apache License, Version 2.0.
 
 ### Acknowledgments
 
@@ -873,14 +863,14 @@ This project is an advanced R&D fork of [AG2](https://github.com/ag2ai/ag2) (for
 
 ### Citation
 
-If you use Clippy Kernel in your research, please cite:
+If you use clippy kernel in your research, please cite:
 
 ```bibtex
 @software{ClippyKernel_2024,
-  author = {Clippy Kernel Development Team},
-  title = {Clippy Kernel: Advanced R\&D Fork of AG2 for Multi-Agent AI Research},
+  author = {clippy kernel development team},
+  title = {clippy kernel: Advanced R\&D Fork of AG2 for Multi-Agent AI Research},
   year = {2024},
-  url = {https://github.com/dayour/Clippy-Kernel},
+  url = {https://github.com/dayour/clippy-kernel},
   note = {Advanced multi-agent AI platform with enterprise MCP integration}
 }
 
@@ -896,10 +886,10 @@ If you use Clippy Kernel in your research, please cite:
 ---
 
 <p align="center">
-  <strong>📎 Clippy Kernel</strong> - Pushing the boundaries of multi-agent AI research and development
+  <strong>📎 clippy kernel</strong> - Pushing the boundaries of multi-agent AI research and development
   <br>
   <br>
-  <a href="https://github.com/dayour/Clippy-Kernel/issues">Report Bug</a> •
-  <a href="https://github.com/dayour/Clippy-Kernel/discussions">Discussions</a> •
+  <a href="https://github.com/dayour/clippy-kernel/issues">Report Bug</a> •
+  <a href="https://github.com/dayour/clippy-kernel/discussions">Discussions</a> •
   <a href="mailto:research@clippy-kernel.ai">Research Collaboration</a>
 </p>

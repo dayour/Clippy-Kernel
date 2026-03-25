@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Clippy Kernel Enhanced Tools
+# clippy kernel enhanced Tools
+from ..import_utils import optional_import_block
 from .clippy_kernel_tools import (
     ClippyKernelToolkit,
     CloudConfig,
@@ -10,28 +11,36 @@ from .clippy_kernel_tools import (
     WebScrapingConfig,
     create_clippy_kernel_toolkit,
 )
-from .clippy_mcp import (
-    AzureKeyVaultConfig,
-    ClippyMCPConfig,
-    EntraIDConfig,
-    WindowsClippyMCPClient,
-    create_clippy_toolkit,
-    create_vscode_extension_files,
-)
-from .mcp_client import create_toolkit
+
+with optional_import_block() as mcp_optional_import:
+    from .clippy_mcp import (
+        AzureKeyVaultConfig,
+        ClippyMCPConfig,
+        EntraIDConfig,
+        WindowsClippyMCPClient,
+        create_clippy_toolkit,
+        create_vscode_extension_files,
+    )
+    from .mcp_client import create_toolkit
 
 __all__ = [
-    "create_toolkit",
-    "ClippyMCPConfig",
-    "WindowsClippyMCPClient",
-    "create_clippy_toolkit",
-    "AzureKeyVaultConfig",
-    "EntraIDConfig",
-    "create_vscode_extension_files",
-    # Clippy Kernel Tools
+    # clippy kernel tools
     "ClippyKernelToolkit",
     "create_clippy_kernel_toolkit",
     "WebScrapingConfig",
     "DatabaseConfig",
     "CloudConfig",
 ]
+
+if mcp_optional_import.is_successful:
+    __all__.extend(
+        [
+            "AzureKeyVaultConfig",
+            "ClippyMCPConfig",
+            "EntraIDConfig",
+            "WindowsClippyMCPClient",
+            "create_clippy_toolkit",
+            "create_toolkit",
+            "create_vscode_extension_files",
+        ]
+    )

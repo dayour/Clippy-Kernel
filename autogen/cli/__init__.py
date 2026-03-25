@@ -1,11 +1,11 @@
-# Copyright (c) 2023 - 2025, Clippy Kernel Development Team
+# Copyright (c) 2023 - 2025, clippy kernel development team
 #
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Clippy Kernel CLI Module
+clippy kernel CLI module
 
-This module provides command-line interfaces for Clippy Kernel's
+This module provides command-line interfaces for clippy kernel's
 autonomous agent capabilities, including the SWE (Software Engineering) agent.
 """
 

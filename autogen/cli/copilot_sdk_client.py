@@ -1,38 +1,38 @@
-# Copyright (c) 2023 - 2025, Clippy Kernel Development Team
+# Copyright (c) 2023 - 2025, clippy kernel development team
 #
 # SPDX-License-Identifier: Apache-2.0
 
 """
-GitHub Copilot SDK Integration for Clippy SWE Agent
+Experimental Copilot-style provider client for Clippy SWE.
 
-This module provides integration with the official GitHub Copilot SDK,
-enabling access to Copilot's agentic core, multi-turn conversations,
-programmable tools, and streaming responses.
+This module provides the optional provider client used by the Clippy SWE
+configuration surface. OpenAI, Anthropic, and Google adapters are implemented
+directly here. The GitHub Copilot provider path is still scaffolded and
+currently falls back to OpenAI.
 
 Features:
-- Multi-turn conversations with session history
-- Programmable tool execution
-- Model selection (GPT-4, GPT-5, Claude, Gemini)
-- Real-time streaming responses
-- MCP server integration
-- GitHub authentication
+- Session-based conversations with stored history
+- Optional tool execution for implemented providers
+- Provider and model selection across the supported adapters
+- Streaming support where the underlying provider path implements it
+- MCP server metadata integration
 """
 
 import logging
+from collections.abc import AsyncIterator, Callable
 from dataclasses import dataclass
 from enum import Enum
-from pathlib import Path
-from typing import Any, AsyncIterator, Callable
+from typing import Any
 
 from ..import_utils import optional_import_block
 
 with optional_import_block():
-    # Note: GitHub Copilot SDK for Python is in preview
-    # For now, we'll use httpx to interact with the API directly
-    import httpx
+    # Note: the direct GitHub Copilot provider path is not wired here yet.
+    # httpx remains available for future experiments in that direction.
     import anthropic
+    import httpx
     from google import generativeai as genai
-    from openai import OpenAI, AsyncOpenAI
+    from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 class ModelProvider(str, Enum):
     """Supported AI model providers."""
     OPENAI = "openai"
-    ANTHROPIC = "anthropic" 
+    ANTHROPIC = "anthropic"
     GOOGLE = "google"
     GITHUB_COPILOT = "github_copilot"
 
@@ -48,14 +48,14 @@ class ModelProvider(str, Enum):
 @dataclass
 class CopilotSession:
     """Represents a Copilot SDK session."""
-    
+
     session_id: str
     model: str
     provider: ModelProvider
     history: list[dict[str, Any]]
     tools: list[dict[str, Any]]
     context_window: int = 8192
-    
+
     def add_message(self, role: str, content: str, metadata: dict[str, Any] | None = None):
         """Add a message to session history."""
         message = {
@@ -64,7 +64,7 @@ class CopilotSession:
             "metadata": metadata or {}
         }
         self.history.append(message)
-        
+
         # Manage context window
         if len(self.history) > 100:
             self.history = self.history[-50:]  # Keep last 50 messages
@@ -78,7 +78,7 @@ class CopilotSDKClient:
     with Copilot-style features including tool execution, streaming, and
     multi-turn conversations.
     """
-    
+
     def __init__(
         self,
         github_token: str | None = None,
@@ -105,21 +105,21 @@ class CopilotSDKClient:
         self.google_api_key = google_api_key
         self.default_model = default_model
         self.default_provider = default_provider
-        
+
         # Initialize clients
         self.openai_client: OpenAI | None = None
         self.anthropic_client: anthropic.Anthropic | None = None
         self.google_client: Any | None = None
         self.http_client: httpx.AsyncClient | None = None
-        
+
         self._initialize_clients()
-        
+
         # Session management
         self.sessions: dict[str, CopilotSession] = {}
         self.registered_tools: dict[str, Callable] = {}
-        
+
         logger.info(f"CopilotSDKClient initialized with provider: {default_provider}")
-    
+
     def _initialize_clients(self):
         """Initialize API clients for different providers."""
         try:
@@ -128,14 +128,14 @@ class CopilotSDKClient:
                 logger.info("OpenAI client initialized")
         except Exception as e:
             logger.warning(f"Failed to initialize OpenAI client: {e}")
-        
+
         try:
             if self.anthropic_api_key:
                 self.anthropic_client = anthropic.Anthropic(api_key=self.anthropic_api_key)
                 logger.info("Anthropic client initialized")
         except Exception as e:
             logger.warning(f"Failed to initialize Anthropic client: {e}")
-        
+
         try:
             if self.google_api_key:
                 genai.configure(api_key=self.google_api_key)
@@ -143,7 +143,7 @@ class CopilotSDKClient:
                 logger.info("Google AI client initialized")
         except Exception as e:
             logger.warning(f"Failed to initialize Google AI client: {e}")
-        
+
         # Initialize HTTP client for GitHub Copilot API
         self.http_client = httpx.AsyncClient(
             headers={
@@ -152,7 +152,7 @@ class CopilotSDKClient:
             },
             timeout=60.0
         )
-    
+
     def create_session(
         self,
         model: str | None = None,
@@ -171,11 +171,11 @@ class CopilotSDKClient:
             CopilotSession object
         """
         import uuid
-        
+
         session_id = str(uuid.uuid4())
         model = model or self.default_model
         provider = provider or self.default_provider
-        
+
         # Adjust context window based on model
         if "gemini" in model.lower():
             context_window = min(context_window, 1000000)  # Gemini: 1M tokens
@@ -183,7 +183,7 @@ class CopilotSDKClient:
             context_window = min(context_window, 200000)  # Claude 3: 200K tokens
         elif "gpt-4" in model.lower():
             context_window = min(context_window, 128000)  # GPT-4: 128K tokens
-        
+
         session = CopilotSession(
             session_id=session_id,
             model=model,
@@ -192,12 +192,12 @@ class CopilotSDKClient:
             tools=list(self.registered_tools.keys()),
             context_window=context_window,
         )
-        
+
         self.sessions[session_id] = session
         logger.info(f"Created session {session_id} with model {model} (provider: {provider})")
-        
+
         return session
-    
+
     def register_tool(
         self,
         name: str,
@@ -221,7 +221,7 @@ class CopilotSDKClient:
             "parameters": parameters,
         }
         logger.info(f"Registered tool: {name}")
-    
+
     async def send_message(
         self,
         session_id: str,
@@ -243,10 +243,10 @@ class CopilotSDKClient:
         """
         if session_id not in self.sessions:
             raise ValueError(f"Session {session_id} not found")
-        
+
         session = self.sessions[session_id]
         session.add_message("user", message)
-        
+
         # Route to appropriate provider
         if session.provider == ModelProvider.OPENAI:
             return await self._send_openai(session, stream, execute_tools)
@@ -258,7 +258,7 @@ class CopilotSDKClient:
             return await self._send_github_copilot(session, stream, execute_tools)
         else:
             raise ValueError(f"Unsupported provider: {session.provider}")
-    
+
     async def _send_openai(
         self,
         session: CopilotSession,
@@ -268,14 +268,14 @@ class CopilotSDKClient:
         """Send message using OpenAI API."""
         if not self.openai_client:
             raise ValueError("OpenAI client not initialized")
-        
+
         try:
             # Prepare messages
             messages = [
                 {"role": msg["role"], "content": msg["content"]}
                 for msg in session.history
             ]
-            
+
             # Prepare tools if registered
             tools = None
             if execute_tools and self.registered_tools:
@@ -290,7 +290,7 @@ class CopilotSDKClient:
                     }
                     for tool in self.registered_tools.values()
                 ]
-            
+
             # Make API call
             response = self.openai_client.chat.completions.create(
                 model=session.model,
@@ -298,7 +298,7 @@ class CopilotSDKClient:
                 tools=tools if tools else None,
                 stream=stream,
             )
-            
+
             if stream:
                 # Return streaming response
                 async def stream_response():
@@ -308,15 +308,15 @@ class CopilotSDKClient:
                             content = chunk.choices[0].delta.content
                             full_content += content
                             yield {"content": content, "done": False}
-                    
+
                     session.add_message("assistant", full_content)
                     yield {"content": "", "done": True}
-                
+
                 return stream_response()
             else:
                 # Handle tool calls
                 message = response.choices[0].message
-                
+
                 if message.tool_calls and execute_tools:
                     # Execute tools
                     for tool_call in message.tool_calls:
@@ -326,24 +326,24 @@ class CopilotSDKClient:
                             args = json.loads(tool_call.function.arguments)
                             func = self.registered_tools[tool_name]["function"]
                             result = func(**args)
-                            
+
                             # Add tool result to session
                             session.add_message(
                                 "tool",
                                 str(result),
                                 {"tool_name": tool_name, "tool_call_id": tool_call.id}
                             )
-                
+
                 content = message.content or ""
                 session.add_message("assistant", content)
-                
+
                 return {
                     "content": content,
                     "model": session.model,
                     "provider": session.provider.value,
                     "finish_reason": response.choices[0].finish_reason,
                 }
-        
+
         except Exception as e:
             logger.error(f"OpenAI API error: {e}", exc_info=True)
             return {
@@ -351,7 +351,7 @@ class CopilotSDKClient:
                 "content": "",
                 "provider": session.provider.value,
             }
-    
+
     async def _send_anthropic(
         self,
         session: CopilotSession,
@@ -361,7 +361,7 @@ class CopilotSDKClient:
         """Send message using Anthropic API."""
         if not self.anthropic_client:
             raise ValueError("Anthropic client not initialized")
-        
+
         try:
             # Prepare messages (Claude format)
             messages = []
@@ -371,7 +371,7 @@ class CopilotSDKClient:
                         "role": msg["role"],
                         "content": msg["content"]
                     })
-            
+
             # Prepare tools
             tools = None
             if execute_tools and self.registered_tools:
@@ -383,7 +383,7 @@ class CopilotSDKClient:
                     }
                     for tool in self.registered_tools.values()
                 ]
-            
+
             # Make API call
             response = self.anthropic_client.messages.create(
                 model=session.model,
@@ -392,33 +392,33 @@ class CopilotSDKClient:
                 tools=tools if tools else None,
                 stream=stream,
             )
-            
+
             if stream:
                 # Return streaming response
                 async def stream_response():
                     full_content = ""
                     with response as stream:
                         for event in stream:
-                            if hasattr(event, 'delta') and hasattr(event.delta, 'text'):
+                            if hasattr(event, "delta") and hasattr(event.delta, "text"):
                                 content = event.delta.text
                                 full_content += content
                                 yield {"content": content, "done": False}
-                    
+
                     session.add_message("assistant", full_content)
                     yield {"content": "", "done": True}
-                
+
                 return stream_response()
             else:
                 content = response.content[0].text if response.content else ""
                 session.add_message("assistant", content)
-                
+
                 return {
                     "content": content,
                     "model": session.model,
                     "provider": session.provider.value,
                     "finish_reason": response.stop_reason,
                 }
-        
+
         except Exception as e:
             logger.error(f"Anthropic API error: {e}", exc_info=True)
             return {
@@ -426,7 +426,7 @@ class CopilotSDKClient:
                 "content": "",
                 "provider": session.provider.value,
             }
-    
+
     async def _send_google(
         self,
         session: CopilotSession,
@@ -436,11 +436,11 @@ class CopilotSDKClient:
         """Send message using Google Gemini API."""
         if not self.google_client:
             raise ValueError("Google AI client not initialized")
-        
+
         try:
             # Initialize model
             model = self.google_client.GenerativeModel(session.model)
-            
+
             # Start chat with history
             chat_history = []
             for msg in session.history[:-1]:  # Exclude last message (current)
@@ -449,15 +449,15 @@ class CopilotSDKClient:
                         "role": msg["role"],
                         "parts": [msg["content"]]
                     })
-            
+
             chat = model.start_chat(history=chat_history)
-            
+
             # Send message
             current_message = session.history[-1]["content"]
-            
+
             if stream:
                 response = chat.send_message(current_message, stream=True)
-                
+
                 async def stream_response():
                     full_content = ""
                     for chunk in response:
@@ -465,23 +465,23 @@ class CopilotSDKClient:
                             content = chunk.text
                             full_content += content
                             yield {"content": content, "done": False}
-                    
+
                     session.add_message("assistant", full_content)
                     yield {"content": "", "done": True}
-                
+
                 return stream_response()
             else:
                 response = chat.send_message(current_message)
                 content = response.text
                 session.add_message("assistant", content)
-                
+
                 return {
                     "content": content,
                     "model": session.model,
                     "provider": session.provider.value,
                     "finish_reason": "stop",
                 }
-        
+
         except Exception as e:
             logger.error(f"Google AI API error: {e}", exc_info=True)
             return {
@@ -489,7 +489,7 @@ class CopilotSDKClient:
                 "content": "",
                 "provider": session.provider.value,
             }
-    
+
     async def _send_github_copilot(
         self,
         session: CopilotSession,
@@ -497,27 +497,27 @@ class CopilotSDKClient:
         execute_tools: bool,
     ) -> dict[str, Any]:
         """Send message using GitHub Copilot API."""
-        # Placeholder for official GitHub Copilot SDK integration
+        # Placeholder for future GitHub Copilot provider support in this client.
         # Fall back to OpenAI for now
         logger.info("GitHub Copilot API not yet available, falling back to OpenAI")
         session.provider = ModelProvider.OPENAI
         return await self._send_openai(session, stream, execute_tools)
-    
+
     def get_session(self, session_id: str) -> CopilotSession | None:
         """Get a session by ID."""
         return self.sessions.get(session_id)
-    
+
     def list_sessions(self) -> list[str]:
         """List all session IDs."""
         return list(self.sessions.keys())
-    
+
     def delete_session(self, session_id: str) -> bool:
         """Delete a session."""
         if session_id in self.sessions:
             del self.sessions[session_id]
             return True
         return False
-    
+
     async def close(self):
         """Close all client connections."""
         if self.http_client:

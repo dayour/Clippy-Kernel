@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clippy Kernel Self-Improving Agent Team Example
+clippy kernel Self-Improving Agent Team Example
 
 This example demonstrates how to create a team that continuously analyzes and improves
 its own codebase using automated workflows and agile methodologies.
@@ -47,7 +47,7 @@ def main():
 
     # Define the improvement sprint goal
     improvement_request = """
-    Analyze the current Clippy Kernel codebase and implement high-impact improvements:
+    Analyze the current clippy kernel codebase and implement high-impact improvements:
     
     **Analysis Areas:**
     1. **Code Quality**: Identify code smells, improve readability, refactor complex functions

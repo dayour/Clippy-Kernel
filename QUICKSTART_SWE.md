@@ -1,184 +1,146 @@
-# Clippy SWE Agent - Quick Start Guide
+# Clippy SWE Quick Start
 
-## What is Clippy SWE Agent?
+## What this is
 
-Clippy SWE (Software Engineering) Agent is an autonomous AI agent powered by the Clippy Kernel framework. It provides a CLI interface similar to GitHub Copilot CLI, but with enhanced capabilities:
+Clippy SWE is the repository's CLI and API layer for software-engineering workflows in
+`autogen.cli`.
 
-- 🤖 **Fully Autonomous**: Completes complex tasks independently
-- 🪟 **Windows Integration**: Native desktop automation (Windows)
-- 👁️ **Observer Mode**: Watch the agent work in real-time
-- 🎯 **Multi-Agent**: Specialized agents collaborate on tasks
-- 📊 **Task History**: Complete audit trail of all work
+This quick start stays close to the current implementation:
+
+- task execution goes through AG2 multi-agent orchestration
+- Copilot SDK support is optional and partial
+- Windows-specific entry points exist, but they are not a claim of dependable unattended desktop automation
+- `resolve-issue` is not the primary quick-start path and should be treated as experimental
+
+For maintained detail, use:
+
+- [CLIPPY_SWE_AGENT_GUIDE.md](CLIPPY_SWE_AGENT_GUIDE.md)
+- [CLIPPY_KERNEL_DEVELOPER_GUIDE.md](CLIPPY_KERNEL_DEVELOPER_GUIDE.md)
+- [CLIPPY_SWE_EVALS.md](CLIPPY_SWE_EVALS.md)
 
 ## Prerequisites
 
-- Python 3.10 - 3.13
-- OpenAI API key (or compatible LLM API)
-- Windows OS (for Windows automation features)
+- Python 3.10 to 3.13
+- a configured model provider if you want `task` execution to succeed
+- Windows only if you plan to try the `windows` command
 
-## Installation
+## Install
 
-### Option 1: Quick Install (Recommended)
+### Preferred path: Manual install
 
-```bash
-# Clone and navigate to repository
-cd Clippy-Kernel
-
-# Run quick start script
-bash scripts/quickstart_clippy_swe.sh
-```
-
-### Option 2: Manual Install
+CLI baseline:
 
 ```bash
-# Basic installation
 pip install -e ".[openai,mcp-proxy-gen]"
-
-# Full installation (all features)
-pip install -e ".[openai,windows-clippy-mcp,mcp-proxy-gen,browser-use]"
 ```
 
-## Configuration
+Optional extras for broader local experimentation:
 
-### 1. Create API Configuration
+```bash
+pip install -e ".[openai,copilot-sdk,windows-clippy-mcp,mcp-proxy-gen,browser-use]"
+```
 
-Create `OAI_CONFIG_LIST` file:
+NOTE: `pyproject.toml` does not currently define standalone `anthropic` or
+`gemini` extras. Anthropic and Google support for the optional Copilot-style
+client path come in through `copilot-sdk`.
+
+## Configure model access
+
+The agent can use an `OAI_CONFIG_LIST` JSON file. A minimal example:
 
 ```json
 [
   {
     "model": "gpt-4",
-    "api_key": "sk-your-openai-api-key"
+    "api_key": "your-api-key"
   }
 ]
 ```
 
-### 2. Initialize Agent
+Common locations are documented in `CLIPPY_SWE_AGENT_GUIDE.md`. If no usable LLM
+configuration is found, task execution fails with:
+
+```text
+Cannot execute task without LLM configuration
+```
+
+## First commands
+
+Initialize a workspace config:
 
 ```bash
-clippy-swe init
+clippy-swe init --workspace .
 ```
 
-This creates `.clippy_swe_config.json` with default settings.
-
-## Basic Usage
-
-### Execute a Coding Task
+Check status:
 
 ```bash
-clippy-swe task "Create a Flask REST API with JWT authentication"
+clippy-swe status
 ```
 
-### With Observer Mode (See Agent Work)
+Run a safe research task:
 
 ```bash
-clippy-swe task "Fix the bug in auth.py" --observer --type coding
+clippy-swe task "Summarize the repository layout and highlight Clippy SWE entry points" --type research
 ```
 
-### Research Task
+Run with observer output if you want to inspect the local orchestration flow:
 
 ```bash
-clippy-swe task "Research best practices for Python async/await" --type research
+clippy-swe task "Review likely CLI files for documentation drift" --type review --observer
 ```
 
-### System Task
+Start interactive mode:
 
 ```bash
-clippy-swe task "Analyze system performance and suggest optimizations" --type system
+clippy-swe interactive
 ```
 
-### Windows Automation (Windows Only)
+Inspect recent history:
 
 ```bash
-clippy-swe windows "Take a screenshot and save to Desktop"
+clippy-swe history --limit 5
 ```
 
-## CLI Commands
+List model presets managed by the CLI:
 
-| Command | Description | Example |
-|---------|-------------|---------|
-| `task` | Execute autonomous task | `clippy-swe task "Description"` |
-| `windows` | Windows automation | `clippy-swe windows "Task"` |
-| `status` | Show agent status | `clippy-swe status` |
-| `history` | View task history | `clippy-swe history` |
-| `init` | Initialize config | `clippy-swe init` |
-| `version` | Show version | `clippy-swe version` |
-
-## Task Types
-
-- `general` - General-purpose tasks (default)
-- `coding` - Software development tasks
-- `system` - System administration
-- `research` - Research and analysis
-- `debug` - Debugging tasks
-- `deploy` - Deployment tasks
-- `test` - Testing tasks
-- `review` - Code review tasks
-
-## Python API
-
-```python
-from autogen.cli import ClippySWEAgent, ClippySWEConfig
-
-# Configure
-config = ClippySWEConfig(
-    observer_mode=True,
-    autonomous_mode=True,
-)
-
-# Create agent
-agent = ClippySWEAgent(config=config)
-
-# Execute task
-result = agent.execute_task(
-    "Create a REST API",
-    task_type="coding"
-)
-
-print(f"Status: {result['status']}")
+```bash
+clippy-swe models --list
 ```
 
-## Examples
+## Windows command
 
-See `examples/clippy_swe_agent_example.py` for comprehensive examples.
+The `windows` command is a Windows-only entry point that adds Windows-focused context
+to a system task.
+
+Example:
+
+```bash
+clippy-swe windows "Summarize current system status and suggest what to inspect next"
+```
+
+Use it as a manual, implementation-dependent workflow rather than as a promise of
+fully reliable native desktop automation.
 
 ## Troubleshooting
 
-### "No module named 'pydantic'"
+### CLI imports fail
 
-Install dependencies:
+Install the CLI dependency extra:
+
 ```bash
-pip install -e ".[openai,mcp-proxy-gen]"
+pip install -e ".[mcp-proxy-gen]"
 ```
 
-### "LLM configuration not found"
+### Task execution fails immediately
 
-Create `OAI_CONFIG_LIST` with your API key.
+Check your LLM configuration path and contents. The most common failure is missing
+model configuration.
 
-### Windows features not working
+### You need deeper usage or maintainer detail
 
-Windows automation only works on Windows OS.
+Go to the canonical docs:
 
-## Next Steps
-
-1. ✅ Install Clippy SWE Agent
-2. ✅ Configure API keys
-3. ✅ Try basic task
-4. 📖 Read full guide: [CLIPPY_SWE_AGENT_GUIDE.md](CLIPPY_SWE_AGENT_GUIDE.md)
-5. 🔨 Explore examples: `examples/clippy_swe_agent_example.py`
-6. 🤝 Contribute: See [CONTRIBUTING.md](CONTRIBUTING.md)
-
-## Documentation
-
-- **Full Guide**: [CLIPPY_SWE_AGENT_GUIDE.md](CLIPPY_SWE_AGENT_GUIDE.md)
-- **Main README**: [README.md](README.md)
-- **API Docs**: See docstrings in source code
-
-## Support
-
-- GitHub Issues: https://github.com/dayour/Clippy-Kernel/issues
-- Discussions: https://github.com/dayour/Clippy-Kernel/discussions
-
-## License
-
-Apache License 2.0 - See [LICENSE](LICENSE)
+- [CLIPPY_SWE_AGENT_GUIDE.md](CLIPPY_SWE_AGENT_GUIDE.md)
+- [CLIPPY_KERNEL_DEVELOPER_GUIDE.md](CLIPPY_KERNEL_DEVELOPER_GUIDE.md)
+- [CLIPPY_SWE_EVALS.md](CLIPPY_SWE_EVALS.md)

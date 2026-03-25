@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clippy Kernel Integrated Development Workflow Example
+clippy kernel Integrated Development Workflow Example
 
 This advanced example demonstrates the integration of the Agent Development Team
 with the enhanced MCP toolkit to create a comprehensive development workflow
@@ -50,7 +50,7 @@ class IntegratedDevelopmentWorkflow:
             enable_web_scraping=True,
             enable_database=True,
             enable_cloud=False,  # Disable for this example
-            web_config=WebScrapingConfig(headless=True, timeout=30, user_agent="Clippy-Kernel-DevTeam/1.0"),
+            web_config=WebScrapingConfig(headless=True, timeout=30, user_agent="clippy-kernel-DevTeam/1.0"),
             db_config=DatabaseConfig(connection_string=f"sqlite:///{project_path}/project_data.db", auto_commit=True),
         )
 

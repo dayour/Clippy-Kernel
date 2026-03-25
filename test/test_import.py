@@ -5,6 +5,7 @@
 
 import importlib
 import pkgutil
+import subprocess
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -77,7 +78,55 @@ def test_list_submodules() -> None:
     assert "autogen.coding.jupyter" in submodules
 
 
+@pytest.mark.parametrize(
+    "code",
+    (
+        (
+            "import autogen; import autogen.llm_config; "
+            "assert autogen.LLMConfig is autogen.llm_config.LLMConfig; "
+            "assert autogen.ModelClient is autogen.llm_config.ModelClient"
+        ),
+        (
+            "import autogen.llm_config; import autogen; "
+            "assert autogen.LLMConfig is autogen.llm_config.LLMConfig; "
+            "assert autogen.ModelClient is autogen.llm_config.ModelClient"
+        ),
+        (
+            "from autogen.oai.anthropic import AnthropicLLMConfigEntry; "
+            "assert AnthropicLLMConfigEntry.__name__ == 'AnthropicLLMConfigEntry'"
+        ),
+    ),
+)
+def test_cold_start_imports_no_circular_import(code: str) -> None:
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        cwd=Path(__file__).resolve().parents[1],
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+# Submodules that require optional dependencies not always installed.
+# Failures for these are expected and should be skipped, not treated as regressions.
+_OPTIONAL_SUBMODULES = frozenset({
+    "autogen.a2a",
+    "autogen.ag_ui",
+    "autogen.mcp.clippy_mcp",
+    "autogen.mcp.mcp_client",
+    "autogen.opentelemetry",
+    "autogen._website",
+})
+
+
 # todo: we should always run this
 @pytest.mark.parametrize("module", list_submodules("autogen"))
 def test_submodules(module: str) -> None:
-    importlib.import_module(module)  # nosemgrep
+    try:
+        importlib.import_module(module)  # nosemgrep
+    except (ImportError, NameError):
+        if module in _OPTIONAL_SUBMODULES or any(module.startswith(m + ".") for m in _OPTIONAL_SUBMODULES):
+            pytest.skip(f"{module} requires an optional dependency that is not installed")
+        raise

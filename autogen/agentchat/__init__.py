@@ -5,10 +5,21 @@
 # Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
 # SPDX-License-Identifier: MIT
 from .agent import Agent, LLMAgent
+
+# clippy kernel agent development team
+from .agent_dev_team import (
+    AgentDevTeam,
+    AgentRole,
+    SprintConfig,
+    SprintPhase,
+    UserStory,
+    create_agent_dev_team,
+    create_self_improving_team,
+)
 from .assistant_agent import AssistantAgent
 from .chat import ChatResult, a_initiate_chats, initiate_chats
 
-# Imported last to avoid circular imports
+# Swarm agent (depends on ConversableAgent being defined first)
 from .contrib.swarm_agent import (
     a_initiate_swarm_chat,
     a_run_swarm,
@@ -27,17 +38,6 @@ from .group.multi_agent_chat import (
 from .groupchat import GroupChat, GroupChatManager
 from .user_proxy_agent import UserProxyAgent
 from .utils import gather_usage_summary
-
-# Clippy Kernel Agent Development Team - imported last to avoid circular imports
-from .agent_dev_team import (
-    AgentDevTeam,
-    AgentRole,
-    SprintConfig,
-    SprintPhase,
-    UserStory,
-    create_agent_dev_team,
-    create_self_improving_team,
-)
 
 __all__ = [
     "Agent",
@@ -64,7 +64,7 @@ __all__ = [
     "run_group_chat",
     "run_group_chat_iter",
     "run_swarm",
-    # Clippy Kernel additions
+    # clippy kernel additions
     "AgentDevTeam",
     "create_agent_dev_team",
     "create_self_improving_team",

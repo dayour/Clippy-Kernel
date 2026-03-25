@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clippy Kernel Agent Development Team - Basic Example
+clippy kernel agent development team - Basic Example
 
 This example demonstrates how to use the Agent Development Team to collaboratively
 implement a new feature using agile methodologies.

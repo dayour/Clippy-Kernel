@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to Clippy Kernel will be documented in this file.
+All notable changes to clippy kernel will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -193,7 +193,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **End-to-end workflow orchestration** with progress tracking
 
 #### 📚 Documentation & Examples
-- **Complete README transformation** establishing Clippy Kernel identity
+- **Complete README transformation** establishing clippy kernel identity
 - **Comprehensive developer guide** with setup, usage, and contribution guidelines
 - **Platform overview documentation** with architecture and research applications
 - **Real-world examples** including:
@@ -234,7 +234,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Performance optimizations** for large-scale deployments
 
 #### 📁 Repository Structure
-- **Enhanced .gitignore** with Clippy Kernel specific entries
+- **Enhanced .gitignore** with clippy kernel specific entries
 - **Improved examples organization** with dedicated directories
 - **Comprehensive test structure** following best practices
 - **Documentation organization** with user and developer guides
@@ -287,10 +287,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Memory leak prevention** in long-running workflows
 - **Cross-platform compatibility** issues resolved
 
-## [0.9.9] - 2024-12-27 (Pre-Clippy Kernel)
+## [0.9.9] - 2024-12-27 (Pre-clippy kernel)
 
 ### Context
-This was the base AG2 version before the Clippy Kernel transformation. All subsequent versions represent the evolution into the advanced R&D platform.
+This was the base AG2 version before the clippy kernel transformation. All subsequent versions represent the evolution into the advanced R&D platform.
 
 ---
 
@@ -318,4 +318,4 @@ Built on the foundation of AG2 (formerly AutoGen) with extensive enhancements fo
 
 ---
 
-**Clippy Kernel**: Advancing the state-of-the-art in multi-agent AI research and development. 📎🚀
+**clippy kernel**: Advancing the state-of-the-art in multi-agent AI research and development. 📎🚀

@@ -1,0 +1,1 @@
+::: clippybot.run.run_batch.RunBatchConfig

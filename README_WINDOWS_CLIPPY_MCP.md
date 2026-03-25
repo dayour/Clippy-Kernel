@@ -1,75 +1,85 @@
-# 📎 Clippy Kernel Windows-MCP Integration
+# clippy kernel Windows-MCP Integration
 
-**Advanced Model Control Protocol integration for Clippy Kernel with enterprise-grade Windows desktop, Azure cloud, and VSCode development environment support.**
+This document summarizes the Windows/MCP integration assets that exist in this repository today.
 
-This comprehensive integration transforms Clippy Kernel into a powerful desktop assistant and development companion, providing seamless integration with Windows systems, Azure cloud services, and modern development workflows.
+It is an operational setup note, not a claim that the repository provides a turnkey Windows automation product.
 
-## 🚀 Quick Start
+## Quick Start
 
-### One-Command Deployment
+### Default Deployment
 ```bash
-python scripts/deploy_windows_clippy_mcp.py --full-setup
+python scripts/deploy_windows_clippy_mcp.py
 ```
 
-This single command will:
-- ✅ Set up Python environment (with UV or pip)
-- ✅ Generate complete VSCode extension with TypeScript
-- ✅ Configure MCP server for Clippy Kernel tooling
-- ✅ Create Azure integration templates and configuration
-- ✅ Generate cross-platform deployment scripts
-- ✅ Set up agent development team integration
-- ✅ Configure real-time collaboration features
+This command runs the default deployment flow and will:
+- set up the Python environment (with UV or pip)
+- generate the VSCode extension scaffold
+- configure MCP server support for clippy kernel tooling
+- create Azure integration templates and configuration
+- generate deployment assets
+- create local `vscode-extension/`, `mcp-servers/`, and `config/` artifacts
 
 ### Manual Installation
 ```bash
-# Install with Windows-Clippy-MCP support
-pip install -e ".[windows-clippy-mcp,mcp,dev]"
+# Install the Windows/MCP integration surface only
+pip install -e ".[windows-clippy-mcp]"
 
-# Or using UV (recommended for faster installation)
-uv pip install -e ".[windows-clippy-mcp,mcp,dev]"
+# Install the CLI plus Windows/MCP-related extras
+pip install -e ".[mcp-proxy-gen,windows-clippy-mcp,mcp,dev]"
+
+# Or using UV
+uv pip install -e ".[windows-clippy-mcp]"
+uv pip install -e ".[mcp-proxy-gen,windows-clippy-mcp,mcp,dev]"
 ```
 
-## 🎯 Key Features Implemented
+```bash
+# The deployment script itself currently installs:
+uv pip install -e ".[mcp-proxy-gen,windows-clippy-mcp,mcp,dev]"
+```
 
-### 🔐 Enterprise Authentication
-- **Azure Key Vault**: Secure LLM API key storage and retrieval
-- **Entra ID**: Enterprise identity and access management
-- **Managed Identity**: Support for Azure managed identities
+If you only need the Python integration modules and not the `clippy-swe` CLI, `mcp-proxy-gen` is optional.
 
-### 💻 VSCode Integration
-- **Auto-Generated Extension**: Complete TypeScript-based VSCode extension
-- **Command Palette**: Native AG2 commands in VSCode
-- **Real-time Communication**: WebSocket-based agent communication
-- **Configuration UI**: Built-in settings for server and memory options
+## Implemented areas
 
-### 🧠 Memory Engine
-- **Agent-Aware Context**: Store and retrieve information with agent-specific context
-- **Azure Storage**: Enterprise-grade cloud storage for memory persistence
-- **Context Preservation**: Maintain conversation state across sessions
+### Authentication options
+- Azure Key Vault for secret retrieval
+- Entra ID integration points
+- Managed identity support
 
-### 🌐 MCP Server
-- **Natural Language Interface**: Complete AG2 toolkit accessible via MCP
-- **Agent Management**: Create, list, and manage AG2 agents via MCP clients
-- **Multi-Agent Orchestration**: Run group chats and agent conversations
-- **Code Execution**: Execute code through AG2's secure environments
-- **Resource Access**: Expose agents, conversations, and memory as MCP resources
+### VSCode Integration
+- Generated VS Code extension scaffolding
+- Command-palette integration points
+- WebSocket-based communication
+- Extension configuration UI
 
-### 📦 Modern Package Management
-- **UV Support**: Fast Python package installation and management
-- **NPM Integration**: Automated VSCode extension build process
-- **Cross-Platform**: Works on Windows, macOS, and Linux
+### Memory Engine
+- Agent-aware memory abstractions
+- Azure storage integration points
+- Session context persistence hooks
 
-## 📁 Files Added
+### MCP Server
+- AG2 toolkit exposure over MCP
+- Agent-management operations
+- Multi-agent orchestration entry points
+- Code-execution hooks
+- MCP resources for agents, conversations, and memory
+
+### Tooling
+- `uv`-based Python installation support
+- npm-based VS Code extension build steps
+- cross-platform packaging where dependencies are available
+
+## Relevant files
 
 ### Core Integration
 - [`autogen/mcp/clippy_mcp.py`](autogen/mcp/clippy_mcp.py) - Main integration module
 - [`autogen/mcp/ag2_mcp_server.py`](autogen/mcp/ag2_mcp_server.py) - MCP server for AG2 tooling
 - [`autogen/mcp/__init__.py`](autogen/mcp/__init__.py) - Updated exports
 
-### Deployment & Automation  
+### Deployment and Automation
 - [`scripts/deploy_windows_clippy_mcp.py`](scripts/deploy_windows_clippy_mcp.py) - Automated deployment script
 
-### Documentation & Examples
+### Documentation and Examples
 - [`notebook/agentchat_windows_clippy_mcp.ipynb`](notebook/agentchat_windows_clippy_mcp.ipynb) - Complete example notebook
 - [`website/docs/user-guide/windows-clippy-mcp.md`](website/docs/user-guide/windows-clippy-mcp.md) - Full documentation
 
@@ -79,25 +89,28 @@ uv pip install -e ".[windows-clippy-mcp,mcp,dev]"
 ### Configuration
 - [`pyproject.toml`](pyproject.toml) - Added `windows-clippy-mcp` optional dependencies
 
-## 🔧 Usage Examples
+## Usage examples
 
 ### Basic Setup
 ```python
+import asyncio
+
 from autogen.mcp.clippy_mcp import ClippyMCPConfig, create_clippy_toolkit
 
-# Create configuration
 config = ClippyMCPConfig(
     clippy_executable_path="windows-clippy-mcp",
     server_name="my-clippy-server",
-    vscode_extension_enabled=True,
-    memory_engine_enabled=True
+    vscode_extension_enabled=True
 )
 
-# Create toolkit with Windows-Clippy-MCP integration
-toolkit = await create_clippy_toolkit(config)
+async def main() -> None:
+    toolkit = await create_clippy_toolkit(config)
+    print(len(toolkit.tools))
+
+asyncio.run(main())
 ```
 
-### Enterprise Configuration with Azure
+### Azure-backed configuration
 ```python
 from autogen.mcp.clippy_mcp import (
     ClippyMCPConfig, AzureKeyVaultConfig, EntraIDConfig
@@ -128,7 +141,7 @@ config = ClippyMCPConfig(
 )
 ```
 
-### VSCode Extension Generation
+### VSCode extension generation
 ```python
 from autogen.mcp.clippy_mcp import create_vscode_extension_files
 from pathlib import Path
@@ -140,7 +153,7 @@ create_vscode_extension_files(config, Path("./vscode-extension"))
 # cd vscode-extension && npm install && npm run compile
 ```
 
-### MCP Server Usage
+### MCP server usage
 ```bash
 # Start MCP server with SSE transport (for VSCode)
 python autogen/mcp/ag2_mcp_server.py sse --port 8765
@@ -149,34 +162,28 @@ python autogen/mcp/ag2_mcp_server.py sse --port 8765
 python autogen/mcp/ag2_mcp_server.py stdio
 ```
 
-## 🧪 Testing
+## Testing
 
-Run the comprehensive test suite:
+Run the repository test module for this surface:
 ```bash
 pytest test/mcp/test_windows_clippy_mcp.py -v
 ```
 
-## 🌟 Integration Benefits
+This is the main automated evidence for this integration in the repository.
 
-### For Developers
-- **Native IDE Support**: AG2 agents directly in VSCode
-- **Streamlined Workflow**: Natural language commands for complex operations
-- **Context Preservation**: Memory engine maintains project context
-- **Secure Credentials**: Enterprise-grade API key management
+## Operational notes
 
-### For Enterprises
-- **Azure Integration**: Seamless integration with existing Azure infrastructure
-- **Identity Management**: Entra ID support for user authentication
-- **Compliance**: Secure credential storage in Azure Key Vault
-- **Scalability**: Support for multiple agents and concurrent operations
+### What this document is useful for
+- locating the relevant Python modules, scripts, docs, and tests
+- understanding which extras are usually needed for local setup
+- finding example configuration shapes for MCP, Azure, and VS Code integration
 
-### For the AG2 Ecosystem
-- **MCP Compatibility**: Works with Claude Desktop, Cody, and other MCP clients
-- **Extensible Architecture**: Easy to add new Windows-specific capabilities
-- **Standard Protocols**: Uses industry-standard MCP for interoperability
-- **Modern Tooling**: Supports latest package managers (UV) and build tools
+### What it does not prove
+- that Windows desktop automation is production-ready end to end
+- that every Azure or VS Code path is exercised by automated tests in this repo
+- that the default deployment script matches every local environment without adjustment
 
-## 🔗 Related Projects
+## Related projects
 
 This integration connects AG2 with:
 - [Windows-Clippy-MCP](https://github.com/dayour/Windows-Clippy-MCP) - The core Windows desktop assistant
@@ -184,22 +191,22 @@ This integration connects AG2 with:
 - [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/) - Secure credential storage
 - [VSCode Extension API](https://code.visualstudio.com/api) - IDE integration framework
 
-## 📋 Next Steps
+## Next steps
 
-1. **Install Windows-Clippy-MCP**: Get the core server from the [repository](https://github.com/dayour/Windows-Clippy-MCP)
-2. **Run Deployment**: Execute `python scripts/deploy_windows_clippy_mcp.py`
-3. **Configure Azure**: Set up Key Vault and Entra ID credentials (optional)
-4. **Install VSCode Extension**: Build and install the generated extension
-5. **Start Building**: Create AG2 agents with Windows-Clippy-MCP integration!
+1. Install Windows-Clippy-MCP from the [repository](https://github.com/dayour/Windows-Clippy-MCP) if your workflow needs it.
+2. Run `python scripts/deploy_windows_clippy_mcp.py`.
+3. Configure Azure credentials only for the features that need them.
+4. Build and install the generated VS Code extension if you plan to use that path.
+5. Run the test module and any manual checks relevant to your environment.
 
-## 💡 Contributing
+## Contributing
 
-This integration follows AG2's development patterns and is fully tested. To contribute:
-1. Install with dev dependencies: `pip install -e ".[dev,windows-clippy-mcp]"`
+This integration follows the repository's AG2 patterns. To contribute:
+1. Install with dev dependencies: `pip install -e ".[dev,mcp-proxy-gen,windows-clippy-mcp]"`
 2. Run tests: `pytest test/mcp/test_windows_clippy_mcp.py`
 3. Follow existing code patterns and add comprehensive tests
 4. Update documentation for any new features
 
 ---
 
-*This integration brings the power of AG2's multi-agent framework to Windows desktops with enterprise-grade security and modern development tools. Get started today and experience the future of AI-assisted development!*
+Use the code, tests, and the main user guide under `website/docs/user-guide/windows-clippy-mcp.md` as the source of truth when this summary and the implementation diverge.

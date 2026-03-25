@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block announce %}
+Check out <a href="https://mini-clippybot.com">Mini-clippybot</a>, an AI agent implemented in 100 lines that achieves 65% on clippybot-bench verified!
+{% endblock %}
+
+{% block content %}
+{{ super() }}
+
+<!-- Floating Bubbles -->
+<div class="floating-bubbles">
+<div class="floating-bubbles-title">Our projects</div>
+  <a href="https://mini-clippybot.com/" class="bubble" title="Mini-clippybot">
+    <img src="{{ 'assets/mini_logo.svg' | url }}" alt="Mini-clippybot">
+    <span class="bubble-tooltip">Mini-clippybot</span>
+  </a>
+  <a href="https://swe-rex.com/" class="bubble" title="SWE-rex">
+    <img src="{{ 'assets/swerex_logo.svg' | url }}" alt="SWE-rex">
+    <span class="bubble-tooltip">SWE-ReX</span>
+  </a>
+  <a href="https://swesmith.com" class="bubble" title="SWE-smith">
+    <img src="{{ 'assets/swesmith_logo.png' | url }}" alt="SWE-smith">
+    <span class="bubble-tooltip">SWE-smith</span>
+  </a>
+  <a href="https://clippybotbench.com" class="bubble" title="clippybot-bench">
+    <img src="{{ 'assets/clippybotbench_logo.png' | url }}" alt="clippybot-bench">
+    <span class="bubble-tooltip">clippybot-bench</span>
+  </a>
+  <a href="https://www.clippybotbench.com/sb-cli/" class="bubble" title="sb-cli">
+    <img src="{{ 'assets/sbcli_logo.svg' | url }}" alt="sb-cli">
+    <span class="bubble-tooltip">sb-cli</span>
+  </a>
+</div>
+{% endblock %}

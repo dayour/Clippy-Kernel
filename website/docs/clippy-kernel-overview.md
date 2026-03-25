@@ -1,6 +1,6 @@
-# 📎 Clippy Kernel: Advanced R&D Platform for Multi-Agent AI
+# 📎 clippy kernel: Advanced R&D Platform for Multi-Agent AI
 
-**Clippy Kernel** is a cutting-edge research and development fork of AG2 (formerly AutoGen) that pushes the boundaries of multi-agent AI systems. Designed for researchers, developers, and enterprises who need sophisticated AI agent collaboration capabilities with production-grade reliability.
+**clippy kernel** is a cutting-edge research and development fork of AG2 (formerly AutoGen) that pushes the boundaries of multi-agent AI systems. Designed for researchers, developers, and enterprises who need sophisticated AI agent collaboration capabilities with production-grade reliability.
 
 ## 🎯 Vision and Mission
 
@@ -175,13 +175,13 @@ improvements = improvement_team.run_development_sprint(
 - **Escalation Handling**: Intelligent routing of complex issues
 - **Quality Monitoring**: Automated quality assurance for customer interactions
 
-## 🔧 Development Workflow
+## Development Workflow
 
 ### 1. Project Setup
 ```bash
-# Clone Clippy Kernel
-git clone https://github.com/dayour/Clippy-Kernel.git
-cd Clippy-Kernel
+# Clone clippy kernel
+git clone https://github.com/dayour/clippy-kernel.git
+cd clippy-kernel
 
 # Set up development environment
 python3 -m venv venv
@@ -189,7 +189,7 @@ source venv/bin/activate
 pip install -e ".[dev,windows-clippy-mcp,mcp]"
 
 # Deploy enhanced MCP integration
-python scripts/deploy_windows_clippy_mcp.py --full-setup
+python scripts/deploy_windows_clippy_mcp.py
 ```
 
 ### 2. Create Agent Development Team
@@ -312,6 +312,6 @@ retrospective = team.run_retrospective()
 
 ---
 
-**Clippy Kernel** represents the next evolution in multi-agent AI systems, combining cutting-edge research with practical enterprise applications. Join us in building the future of collaborative artificial intelligence.
+**clippy kernel** represents the next evolution in multi-agent AI systems, combining cutting-edge research with practical enterprise applications. Join us in building the future of collaborative artificial intelligence.
 
-*For more information, visit our [GitHub repository](https://github.com/dayour/Clippy-Kernel) or contact the research team at research@clippy-kernel.ai*
+*For more information, visit our [GitHub repository](https://github.com/dayour/clippy-kernel) or contact the research team at research@clippy-kernel.ai*

@@ -11,7 +11,7 @@ name = "clippy-kernel"
 description = "Advanced R&D Fork of AG2 for Multi-Agent AI Research and Development"
 readme = "README.md"
 authors = [
-    {name = "Clippy Kernel Development Team", email = "research@clippy-kernel.ai"},
+    {name = "clippy kernel development team", email = "research@clippy-kernel.ai"},
     {name = "Chi Wang & Qingyun Wu (AG2 Core)", email = "support@ag2.ai"}
 ]
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Clippy Kernel Development Team
+# Copyright (c) 2023 - 2025, clippy kernel development team
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -11,6 +11,7 @@ with support for file attachments, shell commands, and session management.
 
 import json
 import logging
+import shlex
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -48,7 +49,8 @@ class InteractiveSession:
             session_file: Optional path to save/load session
         """
         self.agent = agent
-        self.session_file = session_file or Path.cwd() / ".clippy_session.json"
+        default_session_file = getattr(getattr(agent, "config", None), "interactive_session_path", None)
+        self.session_file = session_file or default_session_file or Path.cwd() / ".clippy_session.json"
         self.console = Console()
         self.conversation_history: list[dict[str, Any]] = []
         self.attached_files: list[Path] = []
@@ -69,6 +71,7 @@ class InteractiveSession:
     def _save_session(self) -> None:
         """Save current session."""
         try:
+            self.session_file.parent.mkdir(parents=True, exist_ok=True)
             with open(self.session_file, "w") as f:
                 json.dump(
                     {
@@ -89,7 +92,7 @@ class InteractiveSession:
                 "[bold cyan]Clippy SWE Agent - Interactive Mode[/bold cyan]\n"
                 "Type your request, use @ to attach files, ! for shell commands, / for commands\n"
                 "Type 'exit' or 'quit' to end session",
-                title="🤖 Interactive Session",
+                title="Interactive Session",
                 border_style="cyan",
             )
         )
@@ -188,9 +191,11 @@ class InteractiveSession:
         elif cmd == "model":
             if len(parts) > 1:
                 self.current_model = parts[1]
-                self.console.print(f"[green]Switched to model: {self.current_model}[/green]")
+                self.console.print(
+                    f"[green]Recorded preferred model label for this session: {self.current_model}[/green]"
+                )
             else:
-                self.console.print(f"[cyan]Current model: {self.current_model or 'default'}[/cyan]")
+                self.console.print(f"[cyan]Current model label: {self.current_model or 'default'}[/cyan]")
             return {"status": "model_info", "model": self.current_model}
 
         elif cmd == "usage":
@@ -240,8 +245,9 @@ class InteractiveSession:
         self.console.print(f"[dim]Executing: {command}[/dim]")
 
         try:
+            args = shlex.split(command)
             result = subprocess.run(
-                command, shell=True, capture_output=True, text=True, timeout=30
+                args, shell=False, capture_output=True, text=True, timeout=30
             )
 
             output = result.stdout if result.returncode == 0 else result.stderr
@@ -314,7 +320,7 @@ class InteractiveSession:
 
             # Check if result looks like code
             if "```" in result_text or "\n" in result_text and len(result_text) > 100:
-                self.console.print(Panel(Markdown(result_text), title="✨ Response", border_style="green"))
+                self.console.print(Panel(Markdown(result_text), title="Response", border_style="green"))
             else:
                 self.console.print(f"[bold green]Clippy:[/bold green] {result_text}")
 
@@ -343,7 +349,7 @@ class InteractiveSession:
 
 [bold]Slash Commands:[/bold]
   /clear        Clear conversation history
-  /model [name] Switch or view current model
+  /model [name] Record or view the current session model label
   /usage        Show usage statistics
   /cwd          Show current working directory
   /resume       Resume previous session

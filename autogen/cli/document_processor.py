@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Clippy Kernel Development Team
+# Copyright (c) 2023 - 2025, clippy kernel development team
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -25,10 +25,8 @@ from ..import_utils import optional_import_block
 
 with optional_import_block():
     import requests
-    from PIL import Image
     from pptx import Presentation
-    from pptx.util import Inches, Pt
-    from pptx.enum.text import PP_ALIGN
+    from pptx.util import Inches
 
 logger = logging.getLogger(__name__)
 

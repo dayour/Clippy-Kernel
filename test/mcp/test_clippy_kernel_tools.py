@@ -1,9 +1,9 @@
-# Copyright (c) 2023 - 2025, Clippy Kernel Development Team
+# Copyright (c) 2023 - 2025, clippy kernel development team
 #
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Test suite for Clippy Kernel Enhanced MCP Tools.
+Test suite for clippy kernel enhanced MCP Tools.
 
 This module tests the comprehensive MCP toolkit functionality including:
 - Development workflow tools
@@ -14,6 +14,9 @@ This module tests the comprehensive MCP toolkit functionality including:
 """
 
 import tempfile
+import subprocess
+import sys
+import warnings
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -23,7 +26,9 @@ from autogen.mcp.clippy_kernel_tools import (
     ClippyKernelToolkit,
     CloudConfig,
     DatabaseConfig,
+    M365CopilotConfig,
     WebScrapingConfig,
+    WorkIQConfig,
     create_clippy_kernel_toolkit,
 )
 
@@ -37,7 +42,7 @@ class TestWebScrapingConfig:
 
         assert config.headless is True
         assert config.timeout == 30
-        assert config.user_agent == "Clippy-Kernel-Bot/1.0"
+        assert config.user_agent == "clippy-kernel-bot/1.0"
         assert config.max_retries == 3
         assert config.delay_between_requests == 1.0
 
@@ -85,6 +90,32 @@ class TestCloudConfig:
         assert config.credentials_path == Path("/path/to/creds")
         assert config.project_id == "test-project"
         assert config.subscription_id == "test-subscription"
+
+
+class TestWorkIQConfig:
+    """Test the WorkIQConfig dataclass."""
+
+    def test_default_workiq_config(self):
+        config = WorkIQConfig()
+
+        assert config.command == "npx"
+        assert config.package_spec == "@microsoft/workiq@latest"
+        assert config.tenant_id is None
+        assert config.timeout == 120
+
+
+class TestM365CopilotConfig:
+    """Test the M365CopilotConfig dataclass."""
+
+    def test_default_m365copilot_config(self):
+        config = M365CopilotConfig()
+
+        assert config.repo_path is None
+        assert config.tenant_id is None
+        assert config.client_id is None
+        assert config.credential_mode == "default"
+        assert config.scopes == ["https://graph.microsoft.com/.default"]
+        assert config.default_user_id is None
 
 
 class TestClippyKernelToolkit:
@@ -139,6 +170,36 @@ class TestClippyKernelToolkit:
         assert "run_code_quality_check" in tool_names
         assert "generate_project_documentation" in tool_names
         assert "get_system_metrics" in tool_names
+
+    def test_workiq_tool_registration(self):
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_workiq=True,
+        )
+
+        tool_names = [tool.name for tool in toolkit.tools]
+
+        assert "ask_work_iq" in tool_names
+
+    def test_m365_copilot_tool_registration(self):
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_m365_copilot=True,
+        )
+
+        tool_names = [tool.name for tool in toolkit.tools]
+
+        assert "m365_copilot_retrieve" in tool_names
+        assert "m365_copilot_list_users" in tool_names
+        assert "m365_copilot_get_user" in tool_names
+        assert "m365_copilot_list_interactions" in tool_names
+        assert "m365_copilot_list_user_online_meetings" in tool_names
+        assert "m365_copilot_get_admin_settings" in tool_names
+        assert "m365_copilot_get_usage_report" in tool_names
 
 
 class TestDevelopmentTools:
@@ -208,6 +269,9 @@ class TestMain(unittest.TestCase):
         assert "file_counts" in result
         assert "line_counts" in result
         assert "totals" in result
+        assert result["schema"]["name"] == "clippy-kernel.toolkit.codebase-analysis"
+        assert "semantic_tags" in result
+        assert result["routing_hints"]["workflow"] == "codebase-analysis"
 
         # Check file counts
         assert result["file_counts"][".py"] == 3
@@ -227,6 +291,7 @@ class TestMain(unittest.TestCase):
         assert isinstance(result, dict)
         assert "error" in result
         assert "does not exist" in result["error"]
+        assert result["schema"]["name"] == "clippy-kernel.toolkit.codebase-analysis"
 
     @patch("subprocess.run")
     def test_run_code_quality_check(self, mock_subprocess, toolkit, temp_project):
@@ -252,6 +317,8 @@ class TestMain(unittest.TestCase):
         assert "project_path" in result
         assert "tool_results" in result
         assert "summary" in result
+        assert result["schema"]["name"] == "clippy-kernel.toolkit.code-quality-check"
+        assert "quality-gate" in result["semantic_tags"]
 
         # Check that both tools were attempted
         assert "ruff" in result["tool_results"]
@@ -288,6 +355,349 @@ class TestMain(unittest.TestCase):
         docs_dir = Path(result["docs_directory"])
         assert docs_dir.exists()
         assert (docs_dir / "README.markdown").exists()
+
+
+class TestWorkIQTools:
+    """Test WorkIQ tool integration."""
+
+    @patch("subprocess.run")
+    def test_ask_work_iq_uses_npx_by_default(self, mock_subprocess):
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = "You have three meetings tomorrow."
+        mock_result.stderr = ""
+        mock_subprocess.return_value = mock_result
+
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_workiq=True,
+            workiq_config=WorkIQConfig(tenant_id="tenant-123"),
+        )
+        workiq_tool = next(tool for tool in toolkit.tools if tool.name == "ask_work_iq")
+
+        result = workiq_tool.func(question="What meetings do I have tomorrow?")
+
+        mock_subprocess.assert_called_once()
+        assert mock_subprocess.call_args.args[0] == [
+            "npx",
+            "-y",
+            "@microsoft/workiq@latest",
+            "ask",
+            "-t",
+            "tenant-123",
+            "-q",
+            "What meetings do I have tomorrow?",
+        ]
+        assert result["response"] == "You have three meetings tomorrow."
+        assert result["schema"]["name"] == "clippy-kernel.toolkit.workiq-query"
+
+    @patch("subprocess.run", side_effect=FileNotFoundError)
+    def test_ask_work_iq_reports_missing_cli(self, mock_subprocess):
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_workiq=True,
+        )
+        workiq_tool = next(tool for tool in toolkit.tools if tool.name == "ask_work_iq")
+
+        result = workiq_tool.func(question="Show my recent documents")
+
+        mock_subprocess.assert_called_once()
+        assert "error" in result
+        assert "WorkIQ CLI command not found" in result["error"]
+        assert result["schema"]["name"] == "clippy-kernel.toolkit.workiq-query"
+
+    @pytest.mark.parametrize("command", ["workiq.cmd", r"C:\Program Files\nodejs\workiq.ps1"])
+    @patch("subprocess.run")
+    def test_ask_work_iq_treats_windows_shims_as_direct_commands(self, mock_subprocess, command):
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stdout = "Ready."
+        mock_result.stderr = ""
+        mock_subprocess.return_value = mock_result
+
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_workiq=True,
+            workiq_config=WorkIQConfig(command=command, tenant_id="tenant-123"),
+        )
+        workiq_tool = next(tool for tool in toolkit.tools if tool.name == "ask_work_iq")
+
+        result = workiq_tool.func(question="Show my focus time")
+
+        assert mock_subprocess.call_args.args[0] == [
+            command,
+            "ask",
+            "-t",
+            "tenant-123",
+            "-q",
+            "Show my focus time",
+        ]
+        assert result["response"] == "Ready."
+
+    @patch("subprocess.run", side_effect=subprocess.TimeoutExpired(cmd=["npx"], timeout=120))
+    def test_ask_work_iq_reports_timeout(self, mock_subprocess):
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_workiq=True,
+            workiq_config=WorkIQConfig(timeout=120),
+        )
+        workiq_tool = next(tool for tool in toolkit.tools if tool.name == "ask_work_iq")
+
+        result = workiq_tool.func(question="Summarize my unread email")
+
+        mock_subprocess.assert_called_once()
+        assert "error" in result
+        assert "timed out after 120 seconds" in result["error"]
+        assert result["schema"]["name"] == "clippy-kernel.toolkit.workiq-query"
+
+
+class TestM365CopilotTools:
+    """Test Microsoft 365 Copilot SDK tool integration."""
+
+    @pytest.mark.parametrize(
+        "repo_path_factory",
+        [
+            lambda repo_root: repo_root,
+            lambda repo_root: repo_root / "python" / "packages",
+        ],
+        ids=["repo-root", "python-packages"],
+    )
+    def test_import_m365_copilot_module_supports_local_repo_layouts(self, tmp_path, monkeypatch, repo_path_factory):
+        repo_root = tmp_path / "Agents-M365Copilot"
+        packages_root = repo_root / "python" / "packages"
+        for package_name in [
+            "microsoft_agents_m365copilot",
+            "microsoft_agents_m365copilot_core",
+            "m365_loader_probe",
+        ]:
+            package_dir = packages_root / package_name
+            package_dir.mkdir(parents=True, exist_ok=True)
+            (package_dir / "__init__.py").write_text(f"PACKAGE_NAME = {package_name!r}\n", encoding="utf-8")
+
+        module_name = "m365_loader_probe"
+        monkeypatch.delitem(sys.modules, module_name, raising=False)
+        monkeypatch.setattr(sys, "path", [entry for entry in sys.path if str(repo_root) not in entry])
+
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_m365_copilot=True,
+            m365_copilot_config=M365CopilotConfig(repo_path=repo_path_factory(repo_root)),
+        )
+
+        module = toolkit._import_m365_copilot_module(module_name)
+
+        assert module.PACKAGE_NAME == module_name
+        assert str(packages_root) in sys.path
+        assert str(packages_root / "microsoft_agents_m365copilot") not in sys.path
+
+    def test_m365_copilot_retrieve_reports_warnings_and_hit_count(self, monkeypatch):
+        class DummyRetrievalPostRequestBody:
+            def __init__(self):
+                self.query_string = None
+                self.data_source = None
+                self.maximum_number_of_results = None
+                self.filter_expression = None
+                self.resource_metadata = None
+
+        class DummyRetrievalEnum:
+            SharePoint = "sharePoint"
+
+        def fake_import(self, module_name):
+            if module_name.endswith("retrieval_post_request_body"):
+                return type("BodyModule", (), {"RetrievalPostRequestBody": DummyRetrievalPostRequestBody})
+            if module_name.endswith("retrieval_data_source"):
+                return type("EnumModule", (), {"RetrievalDataSource": DummyRetrievalEnum})
+            raise AssertionError(module_name)
+
+        class DummyResponse:
+            def __init__(self):
+                self.retrieval_hits = [{"id": "hit-1"}, {"id": "hit-2"}]
+
+        class DummyRetrieval:
+            def __init__(self):
+                self.body = None
+
+            async def post(self, body):
+                self.body = body
+                warnings.warn("retrieval preview", DeprecationWarning)
+                return DummyResponse()
+
+        class DummyCopilot:
+            def __init__(self):
+                self.retrieval = DummyRetrieval()
+
+        class DummyClient:
+            def __init__(self):
+                self.copilot = DummyCopilot()
+
+        client = DummyClient()
+        monkeypatch.setattr(ClippyKernelToolkit, "_import_m365_copilot_module", fake_import)
+        monkeypatch.setattr(ClippyKernelToolkit, "_create_m365_copilot_client", lambda self: client)
+
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_m365_copilot=True,
+        )
+        retrieval_tool = next(tool for tool in toolkit.tools if tool.name == "m365_copilot_retrieve")
+
+        result = retrieval_tool.func(query="What changed this week?", max_results=2)
+
+        assert result["hit_count"] == 2
+        assert result["warnings"] == ["retrieval preview"]
+        assert client.copilot.retrieval.body.query_string == "What changed this week?"
+        assert client.copilot.retrieval.body.maximum_number_of_results == 2
+        assert client.copilot.retrieval.body.data_source == "sharePoint"
+
+    def test_m365_copilot_retrieve_reports_body_configuration_failures(self, monkeypatch):
+        class DummyRetrievalPostRequestBody:
+            def __init__(self):
+                self.query_string = None
+                self.data_source = None
+                self.filter_expression = None
+                self.resource_metadata = None
+                self._maximum_number_of_results = None
+
+            @property
+            def maximum_number_of_results(self):
+                return self._maximum_number_of_results
+
+            @maximum_number_of_results.setter
+            def maximum_number_of_results(self, value):
+                raise RuntimeError(f"invalid max result count: {value}")
+
+        class DummyRetrievalEnum:
+            SharePoint = "sharePoint"
+
+        def fake_import(self, module_name):
+            if module_name.endswith("retrieval_post_request_body"):
+                return type("BodyModule", (), {"RetrievalPostRequestBody": DummyRetrievalPostRequestBody})
+            if module_name.endswith("retrieval_data_source"):
+                return type("EnumModule", (), {"RetrievalDataSource": DummyRetrievalEnum})
+            raise AssertionError(module_name)
+
+        monkeypatch.setattr(ClippyKernelToolkit, "_import_m365_copilot_module", fake_import)
+
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_m365_copilot=True,
+        )
+        retrieval_tool = next(tool for tool in toolkit.tools if tool.name == "m365_copilot_retrieve")
+
+        result = retrieval_tool.func(query="What changed this week?", max_results=2)
+
+        assert result["operation"] == "retrieval"
+        assert "invalid max result count" in result["error"]
+        assert result["schema"]["name"] == "clippy-kernel.toolkit.m365-copilot-retrieval"
+
+    def test_m365_copilot_list_users_builds_query_configuration(self, monkeypatch):
+        class DummyUsersBuilder:
+            class UsersRequestBuilderGetQueryParameters:
+                def __init__(self, **kwargs):
+                    self.__dict__.update(kwargs)
+
+            class UsersRequestBuilderGetRequestConfiguration:
+                def __init__(self, query_parameters=None):
+                    self.query_parameters = query_parameters
+
+            def __init__(self):
+                self.last_configuration = None
+
+            async def get(self, request_configuration=None):
+                self.last_configuration = request_configuration
+                return type("UserCollection", (), {"value": [{"id": "u1"}, {"id": "u2"}]})()
+
+        class DummyCopilot:
+            def __init__(self):
+                self.users = DummyUsersBuilder()
+
+        class DummyClient:
+            def __init__(self):
+                self.copilot = DummyCopilot()
+
+        client = DummyClient()
+        monkeypatch.setattr(ClippyKernelToolkit, "_create_m365_copilot_client", lambda self: client)
+
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_m365_copilot=True,
+        )
+        users_tool = next(tool for tool in toolkit.tools if tool.name == "m365_copilot_list_users")
+
+        result = users_tool.func(top=3, search="finance", include_count=True)
+
+        assert result["count"] == 2
+        assert client.copilot.users.last_configuration.query_parameters.top == 3
+        assert client.copilot.users.last_configuration.query_parameters.search == "finance"
+        assert client.copilot.users.last_configuration.query_parameters.count is True
+
+    def test_m365_copilot_get_user_requires_user_id_without_default(self):
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_m365_copilot=True,
+        )
+        get_user_tool = next(tool for tool in toolkit.tools if tool.name == "m365_copilot_get_user")
+
+        result = get_user_tool.func()
+
+        assert "error" in result
+        assert "user_id" in result["error"]
+
+    def test_m365_copilot_usage_report_decodes_bytes(self, monkeypatch):
+        class DummyReportBuilder:
+            async def get(self):
+                return b"Report Refresh Date,Value\n2026-03-01,42\n"
+
+        class DummyReports:
+            def __init__(self):
+                self.period = None
+
+            def get_microsoft365_copilot_user_count_summary_with_period(self, period):
+                self.period = period
+                return DummyReportBuilder()
+
+        class DummyCopilot:
+            def __init__(self):
+                self.reports = DummyReports()
+
+        class DummyClient:
+            def __init__(self):
+                self.copilot = DummyCopilot()
+
+        client = DummyClient()
+        monkeypatch.setattr(ClippyKernelToolkit, "_create_m365_copilot_client", lambda self: client)
+
+        toolkit = ClippyKernelToolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_m365_copilot=True,
+        )
+        report_tool = next(tool for tool in toolkit.tools if tool.name == "m365_copilot_get_usage_report")
+
+        result = report_tool.func(report="user_count_summary", period="D30")
+
+        assert result["report"] == "user_count_summary"
+        assert result["period"] == "D30"
+        assert result["report_data"]["preview_lines"][0] == "Report Refresh Date,Value"
+        assert client.copilot.reports.period == "D30"
 
 
 class TestWebScrapingTools:
@@ -334,6 +744,7 @@ class TestWebScrapingTools:
         mock_response.status_code = 404
         mock_response.headers = {"Content-Type": "application/json"}
         mock_response.text = "Not Found"
+        mock_response.json.side_effect = ValueError("Not JSON")
         mock_request.return_value = mock_response
 
         api_tool = None
@@ -535,6 +946,38 @@ class TestFactoryFunction:
         assert toolkit.web_config == web_config
         assert toolkit.db_config == db_config
         assert toolkit.cloud_config == cloud_config
+
+    def test_create_clippy_kernel_toolkit_with_workiq(self):
+        workiq_config = WorkIQConfig(command="workiq", tenant_id="tenant-456", timeout=45)
+
+        toolkit = create_clippy_kernel_toolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_workiq=True,
+            workiq_config=workiq_config,
+        )
+
+        assert isinstance(toolkit, ClippyKernelToolkit)
+        assert toolkit.enable_workiq is True
+        assert toolkit.workiq_config == workiq_config
+        assert "ask_work_iq" in [tool.name for tool in toolkit.tools]
+
+    def test_create_clippy_kernel_toolkit_with_m365_copilot(self):
+        m365_config = M365CopilotConfig(repo_path=Path("E:/Agents-M365Copilot"), default_user_id="user-123")
+
+        toolkit = create_clippy_kernel_toolkit(
+            enable_web_scraping=False,
+            enable_database=False,
+            enable_cloud=False,
+            enable_m365_copilot=True,
+            m365_copilot_config=m365_config,
+        )
+
+        assert isinstance(toolkit, ClippyKernelToolkit)
+        assert toolkit.enable_m365_copilot is True
+        assert toolkit.m365_copilot_config == m365_config
+        assert "m365_copilot_retrieve" in [tool.name for tool in toolkit.tools]
 
 
 # Skip tests that require actual external services

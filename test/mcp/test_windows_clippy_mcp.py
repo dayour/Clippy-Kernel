@@ -8,20 +8,25 @@ Tests for Windows-Clippy-MCP integration
 
 import json
 import tempfile
+import builtins
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
 
-from autogen.mcp.clippy_mcp import (
-    AzureKeyVaultConfig,
-    ClippyMCPConfig,
-    EntraIDConfig,
-    WindowsClippyMCPClient,
-    create_vscode_extension_files,
-)
+from autogen.import_utils import optional_import_block, skip_on_missing_imports
+
+with optional_import_block():
+    from autogen.mcp.clippy_mcp import (
+        AzureKeyVaultConfig,
+        ClippyMCPConfig,
+        EntraIDConfig,
+        WindowsClippyMCPClient,
+        create_vscode_extension_files,
+    )
 
 
+@skip_on_missing_imports("mcp", "mcp")
 class TestClippyMCPConfig:
     """Test the ClippyMCPConfig model."""
 
@@ -63,6 +68,7 @@ class TestClippyMCPConfig:
             ClippyMCPConfig()
 
 
+@skip_on_missing_imports("mcp", "mcp")
 class TestAzureKeyVaultConfig:
     """Test the AzureKeyVaultConfig model."""
 
@@ -89,6 +95,7 @@ class TestAzureKeyVaultConfig:
         assert config.use_managed_identity is True
 
 
+@skip_on_missing_imports("mcp", "mcp")
 class TestEntraIDConfig:
     """Test the EntraIDConfig model."""
 
@@ -109,6 +116,7 @@ class TestEntraIDConfig:
         assert config.scopes == custom_scopes
 
 
+@skip_on_missing_imports("mcp", "mcp")
 class TestWindowsClippyMCPClient:
     """Test the WindowsClippyMCPClient class."""
 
@@ -168,6 +176,58 @@ class TestWindowsClippyMCPClient:
         assert client._azure_credentials is None
 
     @pytest.mark.asyncio
+    async def test_initialize_azure_auth_handles_missing_azure_identity(self, capsys):
+        config = ClippyMCPConfig(
+            clippy_executable_path="/path/to/clippy.exe",
+            azure_key_vault=AzureKeyVaultConfig(
+                vault_url="https://test.vault.azure.net/",
+                tenant_id="test-tenant",
+                client_id="test-client",
+                use_managed_identity=True,
+            ),
+            entra_id=EntraIDConfig(tenant_id="test-tenant", client_id="test-client"),
+        )
+        client = WindowsClippyMCPClient(config)
+        real_import = builtins.__import__
+
+        def import_side_effect(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "azure.identity":
+                raise ImportError("azure.identity missing")
+            return real_import(name, globals, locals, fromlist, level)
+
+        with patch("builtins.__import__", side_effect=import_side_effect):
+            await client.initialize_azure_auth()
+
+        captured = capsys.readouterr()
+        assert client._azure_credentials is None
+        assert "Azure authentication libraries not available" in captured.out
+
+    @pytest.mark.asyncio
+    async def test_get_llm_api_key_handles_missing_keyvault_dependency(self, capsys):
+        config = ClippyMCPConfig(
+            clippy_executable_path="/path/to/clippy.exe",
+            azure_key_vault=AzureKeyVaultConfig(
+                vault_url="https://test.vault.azure.net/", tenant_id="test-tenant", client_id="test-client"
+            ),
+            llm_key_vault_mapping={"openai": "openai-secret"},
+        )
+        client = WindowsClippyMCPClient(config)
+        client._azure_credentials = object()
+        real_import = builtins.__import__
+
+        def import_side_effect(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "azure.keyvault.secrets":
+                raise ImportError("azure.keyvault.secrets missing")
+            return real_import(name, globals, locals, fromlist, level)
+
+        with patch("builtins.__import__", side_effect=import_side_effect):
+            key = await client.get_llm_api_key("openai")
+
+        captured = capsys.readouterr()
+        assert key is None
+        assert "Azure Key Vault libraries not available." in captured.out
+
+    @pytest.mark.asyncio
     async def test_azure_keyvault_integration(self):
         """Test Azure Key Vault integration."""
         azure_config = ClippyMCPConfig(
@@ -195,6 +255,7 @@ class TestWindowsClippyMCPClient:
                     # In a real scenario with proper imports, this would return the key
 
 
+@skip_on_missing_imports("mcp", "mcp")
 class TestVSCodeExtensionGeneration:
     """Test VSCode extension file generation."""
 
@@ -230,6 +291,7 @@ class TestVSCodeExtensionGeneration:
             )
 
 
+@skip_on_missing_imports("mcp", "mcp")
 class TestIntegrationScenarios:
     """Test integration scenarios."""
 

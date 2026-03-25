@@ -1,15 +1,16 @@
-# Copyright (c) 2023 - 2025, Clippy Kernel Development Team
+# Copyright (c) 2023 - 2025, clippy kernel development team
 #
 # SPDX-License-Identifier: Apache-2.0
 
 """
-GitHub Integration for Clippy SWE Agent
+Experimental GitHub issue workflow for the Clippy SWE Agent.
 
-Provides SWE-agent style GitHub integration for:
-- Automatic issue resolution
-- Patch generation and PR creation
-- Test execution and validation
-- Code review automation
+This module currently provides scaffolded support for:
+- Cloning and inspecting repositories
+- Fetching issue context
+- Generating proposed solutions and patches
+- Heuristically running common test commands
+- Optionally creating a PR when a real patch exists
 """
 
 import json
@@ -48,13 +49,11 @@ class PatchResult:
 
 class GitHubIntegration:
     """
-    GitHub integration for autonomous issue resolution.
-    
-    Provides SWE-agent capabilities:
-    - Clone and analyze repositories
-    - Resolve GitHub issues automatically
-    - Generate patches and PRs
-    - Run tests and validate changes
+    Experimental GitHub integration for issue analysis and patch scaffolding.
+
+    This helper can clone repositories, fetch issue metadata, and ask the agent
+    for analysis or proposed solutions. Automatic change application remains
+    scaffolded in the current implementation.
     """
 
     def __init__(self, agent, github_token: str | None = None):
@@ -287,13 +286,18 @@ class GitHubIntegration:
         return result
 
     def _apply_changes(self, solution: dict[str, Any], repo_path: Path) -> list[str]:
-        """Apply code changes to the repository."""
-        changed_files = []
+        """Apply code changes to the repository.
 
-        # Parse solution for file changes
-        # This is a simplified version - real implementation would parse
-        # the LLM output to extract file changes
-        logger.info("Changes would be applied here based on LLM output")
+        SCAFFOLDED: This method does NOT apply changes. It is a placeholder
+        that logs intent but returns an empty list. A real implementation
+        must parse the LLM solution output and write files to repo_path.
+        """
+        changed_files: list[str] = []
+
+        logger.warning(
+            "SCAFFOLDED: _apply_changes() is not implemented. "
+            "Changes are NOT being applied to the repository."
+        )
 
         return changed_files
 
@@ -326,7 +330,7 @@ class GitHubIntegration:
             return False
 
         except Exception as e:
-            logger.error(f"Test execution failed: {e}")
+            logger.error(f"Test execution failed: {e}", exc_info=True)
             return False
 
     def _generate_patch(self, repo_path: Path, issue_number: int) -> Path | None:

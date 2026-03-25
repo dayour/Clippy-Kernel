@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Clippy Kernel Enhanced MCP Toolkit Example
+clippy kernel enhanced MCP Toolkit Example
 
-This example demonstrates the comprehensive MCP toolkit integration for Clippy Kernel,
+This example demonstrates the comprehensive MCP toolkit integration for clippy kernel,
 showcasing advanced development tools, web scraping, database operations, cloud services,
 and system monitoring capabilities.
 """
@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def main():
-    """Demonstrate the enhanced Clippy Kernel MCP toolkit."""
+    """Demonstrate the enhanced clippy kernel MCP toolkit."""
 
     # Load LLM configuration
     try:
@@ -28,11 +28,11 @@ def main():
         print("❌ Please create an OAI_CONFIG_LIST file with your API keys")
         return
 
-    print("🔧 Creating Enhanced Clippy Kernel Toolkit...")
+    print("🔧 Creating Enhanced clippy kernel toolkit...")
 
     # Configure web scraping
     web_config = WebScrapingConfig(
-        headless=True, timeout=30, user_agent="Clippy-Kernel-Agent/1.0", max_retries=3, delay_between_requests=1.0
+        headless=True, timeout=30, user_agent="clippy-kernel-Agent/1.0", max_retries=3, delay_between_requests=1.0
     )
 
     # Configure database (SQLite example)
@@ -62,7 +62,7 @@ def main():
     # Create an agent with the enhanced toolkit
     development_agent = ConversableAgent(
         name="development_agent",
-        system_message="""You are an advanced development agent powered by Clippy Kernel's enhanced MCP toolkit.
+        system_message="""You are an advanced development agent powered by clippy kernel's enhanced MCP toolkit.
         
         You have access to comprehensive development tools including:
         - Codebase analysis and quality checking
@@ -96,7 +96,7 @@ def main():
 
     try:
         analysis_request = """
-        Please perform a comprehensive analysis of the current Clippy Kernel project:
+        Please perform a comprehensive analysis of the current clippy kernel project:
         
         1. Analyze the codebase structure and metrics
         2. Run code quality checks using available tools
@@ -230,7 +230,7 @@ def main():
         response = user_proxy.initiate_chat(recipient=development_agent, message=summary_request, max_turns=3)
 
         print("✅ Toolkit demonstration completed successfully!")
-        print("\n🎉 The enhanced Clippy Kernel MCP toolkit provides comprehensive")
+        print("\n🎉 The enhanced clippy kernel MCP toolkit provides comprehensive")
         print("   development assistance with advanced automation capabilities!")
 
     except Exception as e:

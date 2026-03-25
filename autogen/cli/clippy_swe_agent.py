@@ -1,24 +1,22 @@
-# Copyright (c) 2023 - 2025, Clippy Kernel Development Team
+# Copyright (c) 2023 - 2025, clippy kernel development team
 #
 # SPDX-License-Identifier: Apache-2.0
 
 """
-Clippy SWE Agent - Autonomous Software Engineering Agent
+Clippy SWE Agent runtime for AG2-based software engineering workflows.
 
-This module provides an autonomous agent capable of:
-- Autonomous coding and code review
-- Multi-agent orchestration for complex tasks
-- Windows desktop application interaction
-- Background task execution with observer mode
-- Integration with development tools and IDEs
-- Real-time collaboration and task management
+This module defines the configuration, task history, and main agent wrapper
+used by the Clippy SWE CLI. The current implementation provides:
+- AG2-based multi-agent task orchestration
+- Shared Copilot-style config and session-state resolution
+- Windows-aware task wrappers with OS guardrails
+- Observer-mode console output and task history capture
+- Optional toolkit metadata and experimental Copilot client initialization
 """
 
-import asyncio
 import json
 import logging
 import platform
-import subprocess
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -29,7 +27,8 @@ from ..agentchat import ConversableAgent, run_group_chat
 from ..agentchat.group.patterns import AutoPattern
 from ..import_utils import optional_import_block
 from ..llm_config import LLMConfig
-from ..mcp.clippy_kernel_tools import ClippyKernelToolkit, WebScrapingConfig
+from ..mcp.clippy_kernel_tools import ClippyKernelToolkit, M365CopilotConfig, WebScrapingConfig, WorkIQConfig
+from ..orchestration_metadata import build_semantic_envelope
 from ..tools import Toolkit
 
 with optional_import_block():
@@ -38,27 +37,151 @@ with optional_import_block():
 logger = logging.getLogger(__name__)
 
 
+def _current_working_dir() -> Path:
+    """Return the current working directory for default path resolution."""
+    return Path.cwd()
+
+
+def _copilot_config_dir() -> Path:
+    """Return the shared Copilot configuration root."""
+    return Path.home() / ".copilot"
+
+
+def _clippy_state_dir() -> Path:
+    """Return the shared clippy-kernel state directory under ~/.copilot."""
+    return _copilot_config_dir() / "clippy-kernel"
+
+
+def _prefer_legacy_workspace_path(legacy_path: Path, shared_path: Path) -> Path:
+    """Prefer an existing workspace-local file, otherwise use the shared Copilot path."""
+    return legacy_path if legacy_path.exists() else shared_path
+
+
+def _default_llm_config_path() -> str:
+    return str(_prefer_legacy_workspace_path(_current_working_dir() / "OAI_CONFIG_LIST", _clippy_state_dir() / "OAI_CONFIG_LIST"))
+
+
+def _default_task_history_path() -> Path:
+    return _prefer_legacy_workspace_path(
+        _current_working_dir() / ".clippy_swe_history.json",
+        _clippy_state_dir() / "task-history.json",
+    )
+
+
+def _default_interactive_session_path() -> Path:
+    return _prefer_legacy_workspace_path(
+        _current_working_dir() / ".clippy_session.json",
+        _clippy_state_dir() / "interactive-session.json",
+    )
+
+
+def _default_skill_directories() -> list[Path]:
+    return [_copilot_config_dir() / "skills"]
+
+
+def _default_custom_agents_dir() -> Path:
+    return _copilot_config_dir() / "agents"
+
+
+def _default_mcp_config_path() -> Path:
+    return _copilot_config_dir() / "mcp-config.json"
+
+
+def _looks_like_mcp_server_config(value: Any) -> bool:
+    return isinstance(value, dict) and any(
+        key in value for key in ("command", "url", "transport", "args", "env", "headers", "type")
+    )
+
+
+def _load_mcp_servers_from_path(mcp_config_path: Path) -> dict[str, Any]:
+    """Load MCP server definitions from a shared Copilot config file."""
+    if not mcp_config_path.exists():
+        return {}
+
+    try:
+        with open(mcp_config_path, encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception as e:
+        logger.warning(f"Failed to load MCP server config from {mcp_config_path}: {e}")
+        return {}
+
+    if not isinstance(data, dict):
+        logger.warning(f"Ignoring MCP config at {mcp_config_path}: expected a JSON object at the top level")
+        return {}
+
+    for key in ("mcpServers", "servers"):
+        servers = data.get(key)
+        if isinstance(servers, dict):
+            return {name: config for name, config in servers.items() if _looks_like_mcp_server_config(config)}
+
+    if all(_looks_like_mcp_server_config(value) for value in data.values()):
+        return data
+
+    logger.warning(f"Ignoring MCP config at {mcp_config_path}: could not find a recognized MCP server map")
+    return {}
+
+
+def _observer_banner(title: str, details: list[str] | None = None) -> str:
+    """Build a consistent observer-mode banner for logging."""
+    lines = ["", "=" * 70, title, "=" * 70]
+    if details:
+        lines.extend(details)
+        lines.append("=" * 70)
+    lines.append("")
+    return "\n".join(lines)
+
+
 class ClippySWEConfig(BaseModel):
     """Configuration for the Clippy SWE Agent."""
 
     # LLM Configuration
-    llm_config_path: str = Field(default="OAI_CONFIG_LIST", description="Path to LLM configuration file")
+    llm_config_path: str = Field(default_factory=_default_llm_config_path, description="Path to LLM configuration file")
 
     # Copilot SDK Configuration
-    use_copilot_sdk: bool = Field(default=False, description="Use GitHub Copilot SDK for enhanced features")
+    use_copilot_sdk: bool = Field(
+        default=False,
+        description="Initialize the experimental Copilot-style client path when configured",
+    )
     github_token: str | None = Field(default=None, description="GitHub personal access token")
     openai_api_key: str | None = Field(default=None, description="OpenAI API key")
     anthropic_api_key: str | None = Field(default=None, description="Anthropic API key")
     google_api_key: str | None = Field(default=None, description="Google AI API key")
-    copilot_model: str = Field(default="gpt-4", description="Model to use with Copilot SDK")
-    copilot_provider: str = Field(default="openai", description="Provider: openai, anthropic, google")
-    enable_streaming: bool = Field(default=False, description="Enable streaming responses")
+    copilot_model: str = Field(default="gpt-4", description="Preferred model for the optional Copilot-style client")
+    copilot_provider: str = Field(
+        default="openai",
+        description="Preferred client provider: openai, anthropic, google, github_copilot",
+    )
+    enable_streaming: bool = Field(
+        default=False,
+        description="Enable streaming in the optional client path where supported",
+    )
     context_window_size: int = Field(default=8192, description="Context window size for conversations")
+    config_dir: Path = Field(default_factory=_copilot_config_dir, description="Shared GitHub Copilot configuration root")
+    custom_agents_dir: Path = Field(
+        default_factory=_default_custom_agents_dir,
+        description="Shared directory for Copilot custom agent definitions",
+    )
+    skill_directories: list[Path] = Field(
+        default_factory=_default_skill_directories,
+        description="Directories used for shared Copilot skill discovery",
+    )
+    disabled_skills: list[str] = Field(default_factory=list, description="Names of Copilot skills to disable")
+    mcp_config_path: Path = Field(
+        default_factory=_default_mcp_config_path,
+        description="Path to the shared Copilot MCP server configuration file",
+    )
+    mcp_servers: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Additional or overriding MCP server definitions for Copilot sessions",
+    )
 
     # Agent Behavior
     autonomous_mode: bool = Field(default=True, description="Enable fully autonomous operation")
     observer_mode: bool = Field(default=False, description="Enable visual observation and display of agent actions")
-    background_mode: bool = Field(default=False, description="Run tasks in background without UI")
+    background_mode: bool = Field(
+        default=False,
+        description="Reduce task UI output; execution remains synchronous",
+    )
     max_iterations: int = Field(default=50, description="Maximum iterations for agent conversations")
 
     # Workspace Configuration
@@ -67,24 +190,90 @@ class ClippySWEConfig(BaseModel):
 
     # Windows Integration
     enable_windows_automation: bool = Field(
-        default=platform.system() == "Windows", description="Enable Windows desktop automation"
+        default=platform.system() == "Windows",
+        description="Enable Windows-specific task wrappers and OS guardrails",
     )
-    enable_app_interaction: bool = Field(default=True, description="Allow interaction with applications")
+    enable_app_interaction: bool = Field(
+        default=True,
+        description="Add target application context to Windows task prompts",
+    )
 
     # Tool Configuration
     enable_web_tools: bool = Field(default=True, description="Enable web scraping and API tools")
     enable_code_execution: bool = Field(default=True, description="Enable code execution capabilities")
     enable_file_operations: bool = Field(default=True, description="Enable file system operations")
+    enable_workiq: bool = Field(
+        default=False,
+        description="Enable the WorkIQ-backed Microsoft 365 query tool in the runtime toolkit",
+    )
+    workiq_command: str = Field(default="npx", description="Command used to invoke WorkIQ")
+    workiq_package: str = Field(default="@microsoft/workiq@latest", description="Package spec used with npx")
+    workiq_tenant_id: str | None = Field(default=None, description="Optional default Entra tenant ID for WorkIQ")
+    workiq_timeout: int = Field(default=120, description="Timeout in seconds for WorkIQ CLI calls")
+    enable_m365_copilot: bool = Field(
+        default=False,
+        description="Enable Microsoft 365 Copilot SDK tools in the runtime toolkit",
+    )
+    m365_copilot_repo_path: Path | None = Field(
+        default=None,
+        description="Optional local Agents-M365Copilot repo path used when the SDK is not installed",
+    )
+    m365_copilot_tenant_id: str | None = Field(
+        default=None,
+        description="Optional default Entra tenant ID for Microsoft 365 Copilot SDK auth",
+    )
+    m365_copilot_client_id: str | None = Field(
+        default=None,
+        description="Optional client ID used for device-code Microsoft 365 Copilot auth",
+    )
+    m365_copilot_credential_mode: str = Field(
+        default="default",
+        description="Credential mode for Microsoft 365 Copilot SDK auth: default or device_code",
+    )
+    m365_copilot_default_user_id: str | None = Field(
+        default=None,
+        description="Optional default AI user identifier for user-scoped Microsoft 365 Copilot tools",
+    )
+    m365_copilot_scopes: list[str] = Field(
+        default_factory=lambda: ["https://graph.microsoft.com/.default"],
+        description="OAuth scopes used for Microsoft 365 Copilot SDK auth",
+    )
 
     # Task Management
     task_history_path: Path = Field(
-        default_factory=lambda: Path.cwd() / ".clippy_swe_history.json", description="Path to task history file"
+        default_factory=_default_task_history_path,
+        description="Path to task history file",
+    )
+    interactive_session_path: Path = Field(
+        default_factory=_default_interactive_session_path,
+        description="Path to interactive session state",
     )
     save_conversation_history: bool = Field(default=True, description="Save conversation history")
 
     # Safety
     require_confirmation: bool = Field(default=False, description="Require user confirmation for critical operations")
     safe_mode: bool = Field(default=False, description="Enable additional safety checks")
+
+    def resolve_mcp_servers(self) -> dict[str, Any]:
+        """Resolve MCP servers from explicit config or the shared Copilot MCP config file."""
+        if self.mcp_servers:
+            return dict(self.mcp_servers)
+        return _load_mcp_servers_from_path(self.mcp_config_path)
+
+    def build_copilot_session_config(self) -> dict[str, Any]:
+        """Build the shared Copilot session configuration used by future SDK-backed execution."""
+        session_config: dict[str, Any] = {
+            "working_directory": str(self.workspace_path),
+            "config_dir": str(self.config_dir),
+            "skill_directories": [str(path) for path in self.skill_directories],
+            "disabled_skills": list(self.disabled_skills),
+        }
+
+        mcp_servers = self.resolve_mcp_servers()
+        if mcp_servers:
+            session_config["mcp_servers"] = mcp_servers
+
+        return session_config
 
 
 class TaskHistory:
@@ -110,6 +299,7 @@ class TaskHistory:
     def _save_history(self) -> None:
         """Save task history to file."""
         try:
+            self.history_path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.history_path, "w") as f:
                 json.dump({"tasks": self.tasks, "last_updated": datetime.now().isoformat()}, f, indent=2)
             logger.info(f"Saved task history to {self.history_path}")
@@ -123,17 +313,34 @@ class TaskHistory:
         status: str,
         result: Any = None,
         metadata: dict[str, Any] | None = None,
+        error: str | None = None,
     ) -> None:
         """Add a task to the history."""
+        task_metadata = dict(metadata or {})
         task = {
             "id": len(self.tasks) + 1,
             "type": task_type,
             "description": description,
             "status": status,
             "result": result,
-            "metadata": metadata or {},
+            "metadata": task_metadata,
             "timestamp": datetime.now().isoformat(),
         }
+        if error is not None:
+            task["error"] = error
+
+        task = task | build_semantic_envelope(
+            schema_name="clippy-kernel.swe-agent.task-history.entry",
+            kind="task-history-entry",
+            workflow="task-history",
+            primary_owner="task-coordinator",
+            participant_roles=task_metadata.get("agents_used", []),
+            focus_areas=["software-engineering", "task-tracking"],
+            capabilities=["task-audit", "history", "orchestration"],
+            tags=["clippy-swe", f"task-{task_type}", f"status-{status}"],
+            attributes={"task_type": task_type, "status": status, "has_error": error is not None},
+        )
+
         self.tasks.append(task)
         self._save_history()
 
@@ -144,21 +351,21 @@ class TaskHistory:
 
 class ClippySWEAgent:
     """
-    Autonomous Software Engineering Agent powered by Clippy Kernel.
+    Autonomous Software Engineering Agent powered by clippy kernel.
 
-    This agent provides a CLI interface similar to GitHub Copilot CLI but with
-    enhanced capabilities including:
-    - Autonomous coding and orchestration
-    - Windows desktop automation
-    - Multi-agent collaboration
-    - Background task execution
-    - Observer mode for visual feedback
+    This agent provides the current Clippy SWE execution model:
+    - AG2-based multi-agent orchestration for coding, research, and system tasks
+    - Windows-aware system-task wrappers that add context and guardrails
+    - Shared config resolution and task history management
+    - Reduced-output observer and background flags for the synchronous CLI flow
+    - Optional Copilot-style client initialization for future provider routing
     """
 
     def __init__(self, config: ClippySWEConfig | None = None):
         """Initialize the Clippy SWE Agent."""
         self.config = config or ClippySWEConfig()
         self.llm_config: LLMConfig | None = None
+        self.copilot_session_config = self.config.build_copilot_session_config()
         self.task_history = TaskHistory(self.config.task_history_path)
         self.toolkit: Toolkit | None = None
         self.agents: dict[str, ConversableAgent] = {}
@@ -169,6 +376,18 @@ class ClippySWEAgent:
 
     def _initialize(self) -> None:
         """Initialize the agent and its components."""
+        logger.info(f"Using shared Copilot config root: {self.config.config_dir}")
+        logger.info("Resolved LLM config path: %s", self.config.llm_config_path)
+        logger.info("Resolved task history path: %s", self.config.task_history_path)
+        logger.info("Resolved interactive session path: %s", self.config.interactive_session_path)
+        logger.info("Resolved MCP config path: %s", self.config.mcp_config_path)
+        if self.copilot_session_config.get("mcp_servers"):
+            logger.info(
+                "Loaded %s shared MCP server definitions from %s",
+                len(self.copilot_session_config["mcp_servers"]),
+                self.config.mcp_config_path,
+            )
+
         # Load LLM configuration
         try:
             self.llm_config = LLMConfig.from_json(path=self.config.llm_config_path)
@@ -176,19 +395,22 @@ class ClippySWEAgent:
         except FileNotFoundError:
             logger.warning(f"LLM config file not found: {self.config.llm_config_path}")
             logger.warning("Agent will operate in limited mode")
+        except Exception as e:
+            logger.warning("Failed to load LLM configuration from %s: %s", self.config.llm_config_path, e)
+            logger.warning("Agent will operate in limited mode")
 
         # Initialize Copilot SDK client if enabled
         if self.config.use_copilot_sdk:
             try:
                 from .copilot_sdk_client import CopilotSDKClient, ModelProvider
-                
+
                 provider_map = {
                     "openai": ModelProvider.OPENAI,
                     "anthropic": ModelProvider.ANTHROPIC,
                     "google": ModelProvider.GOOGLE,
                     "github_copilot": ModelProvider.GITHUB_COPILOT,
                 }
-                
+
                 self.copilot_sdk_client = CopilotSDKClient(
                     github_token=self.config.github_token,
                     openai_api_key=self.config.openai_api_key,
@@ -199,21 +421,41 @@ class ClippySWEAgent:
                 )
                 logger.info("Copilot SDK client initialized")
             except Exception as e:
-                logger.warning(f"Failed to initialize Copilot SDK client: {e}")
+                logger.warning(
+                    "Failed to initialize Copilot SDK client for provider '%s': %s",
+                    self.config.copilot_provider,
+                    e,
+                )
 
         # Initialize toolkit
-        if self.config.enable_web_tools:
-            self.toolkit = ClippyKernelToolkit(
-                web_config=WebScrapingConfig(),
-                enable_web_scraping=True,
-                enable_database=False,
-                enable_cloud=False,
-                enable_development_tools=True,
-            )
-            logger.info(f"Toolkit initialized with {len(self.toolkit.tools)} tools")
+        self.toolkit = ClippyKernelToolkit(
+            web_config=WebScrapingConfig(),
+            workiq_config=WorkIQConfig(
+                command=self.config.workiq_command,
+                package_spec=self.config.workiq_package,
+                tenant_id=self.config.workiq_tenant_id,
+                timeout=self.config.workiq_timeout,
+            ),
+            m365_copilot_config=M365CopilotConfig(
+                repo_path=self.config.m365_copilot_repo_path,
+                tenant_id=self.config.m365_copilot_tenant_id,
+                client_id=self.config.m365_copilot_client_id,
+                credential_mode=self.config.m365_copilot_credential_mode,
+                scopes=list(self.config.m365_copilot_scopes),
+                default_user_id=self.config.m365_copilot_default_user_id,
+            ),
+            enable_web_scraping=self.config.enable_web_tools,
+            enable_database=False,
+            enable_cloud=False,
+            enable_workiq=self.config.enable_workiq,
+            enable_m365_copilot=self.config.enable_m365_copilot,
+            enable_development_tools=True,
+        )
+        logger.info(f"Toolkit initialized with {len(self.toolkit.tools)} tools")
 
         # Initialize specialized agents
         self._initialize_agents()
+        self._register_toolkit_with_agents()
 
         logger.info("Clippy SWE Agent initialized successfully")
 
@@ -305,6 +547,53 @@ class ClippySWEAgent:
 
         logger.info(f"Initialized {len(self.agents)} specialized agents")
 
+    def _register_toolkit_with_agents(self) -> None:
+        """Register toolkit tools onto all initialized agents."""
+        if not self.toolkit or not self.agents:
+            return
+
+        for agent in self.agents.values():
+            self.toolkit.register_for_llm(agent)
+            self.toolkit.register_for_execution(agent)
+
+        tool_count = len(self.toolkit.tools) if hasattr(self.toolkit, "tools") else 0
+        logger.info("Registered %s toolkit tools across %s agents", tool_count, len(self.agents))
+
+    def _task_metadata(
+        self,
+        *,
+        schema_name: str,
+        task_type: str,
+        status: str,
+        workflow: str,
+        agents_used: list[str] | None = None,
+        capabilities: list[str] | None = None,
+        attributes: dict[str, Any] | None = None,
+        kind: str = "task-result",
+    ) -> dict[str, Any]:
+        """Build semantic metadata for SWE orchestration payloads."""
+        semantic_attributes = {
+            "task_type": task_type,
+            "status": status,
+            "workspace_path": str(self.config.workspace_path),
+        }
+        if self.config.project_path:
+            semantic_attributes["project_path"] = str(self.config.project_path)
+        if attributes:
+            semantic_attributes.update(attributes)
+
+        return build_semantic_envelope(
+            schema_name=schema_name,
+            kind=kind,
+            workflow=workflow,
+            primary_owner="task-coordinator",
+            participant_roles=agents_used or [],
+            focus_areas=["delivery", "automation", "coordination"],
+            capabilities=capabilities or ["autonomous-execution", "multi-agent-collaboration"],
+            tags=["clippy-swe", f"task-{task_type}", f"status-{status}"],
+            attributes=semantic_attributes,
+        )
+
     def execute_task(
         self, task_description: str, task_type: str = "general", context: dict[str, Any] | None = None
     ) -> dict[str, Any]:
@@ -322,19 +611,39 @@ class ClippySWEAgent:
         logger.info(f"Executing task: {task_description}")
 
         if not self.llm_config:
-            error_msg = "Cannot execute task without LLM configuration"
+            error_msg = (
+                "Cannot execute task without LLM configuration. "
+                f"Create or point llm_config_path to a valid OAI_CONFIG_LIST file at {self.config.llm_config_path}."
+            )
             logger.error(error_msg)
             self.task_history.add_task(task_type, task_description, "failed", error=error_msg)
-            return {"status": "failed", "error": error_msg}
+            return {
+                "status": "failed",
+                "task_description": task_description,
+                "task_type": task_type,
+                "error": error_msg,
+                "timestamp": datetime.now().isoformat(),
+            } | self._task_metadata(
+                schema_name="clippy-kernel.swe-agent.task-result",
+                task_type=task_type,
+                status="failed",
+                workflow="task-execution",
+                capabilities=["task-validation", "history", "orchestration"],
+                attributes={"llm_configured": False},
+                kind="task-error",
+            )
 
         if self.config.observer_mode:
-            print("\n" + "=" * 70)
-            print("🔍 OBSERVER MODE: Autonomous Agent Execution")
-            print("=" * 70)
-            print(f"📋 Task: {task_description}")
-            print(f"🏷️  Type: {task_type}")
-            print(f"⚙️  Config: autonomous={self.config.autonomous_mode}, background={self.config.background_mode}")
-            print("=" * 70 + "\n")
+            logger.info(
+                _observer_banner(
+                    "OBSERVER MODE: Autonomous Agent Execution",
+                    [
+                        f"Task: {task_description}",
+                        f"Type: {task_type}",
+                        f"Config: autonomous={self.config.autonomous_mode}, background={self.config.background_mode}",
+                    ],
+                )
+            )
 
         try:
             # Select appropriate agents based on task type
@@ -352,7 +661,7 @@ class ClippySWEAgent:
 
             # Execute task with agents
             if self.config.observer_mode:
-                print("🤖 Agent team assembled and starting collaboration...\n")
+                logger.info("Agent team assembled and starting collaboration...")
 
             result = run_group_chat(pattern=agent_pattern, messages=full_task, max_rounds=self.config.max_iterations)
 
@@ -369,13 +678,22 @@ class ClippySWEAgent:
                     "iterations": len(result.chat_history) if hasattr(result, "chat_history") else 0,
                 },
             }
+            task_result = task_result | self._task_metadata(
+                schema_name="clippy-kernel.swe-agent.task-result",
+                task_type=task_type,
+                status="completed",
+                workflow="task-execution",
+                agents_used=task_result["metadata"]["agents_used"],
+                attributes={"iterations": task_result["metadata"]["iterations"]},
+            )
 
             if self.config.observer_mode:
-                print("\n" + "=" * 70)
-                print("✅ TASK COMPLETED SUCCESSFULLY")
-                print("=" * 70)
-                print(f"📊 Result: {task_result['result']}")
-                print("=" * 70 + "\n")
+                logger.info(
+                    _observer_banner(
+                        "TASK COMPLETED SUCCESSFULLY",
+                        [f"Result: {task_result['result']}"],
+                    )
+                )
 
             # Save to history
             if self.config.save_conversation_history:
@@ -398,13 +716,18 @@ class ClippySWEAgent:
                 "error": str(e),
                 "timestamp": datetime.now().isoformat(),
             }
+            error_result = error_result | self._task_metadata(
+                schema_name="clippy-kernel.swe-agent.task-result",
+                task_type=task_type,
+                status="failed",
+                workflow="task-execution",
+                capabilities=["incident-reporting", "history", "orchestration"],
+                attributes={"exception_type": type(e).__name__},
+                kind="task-error",
+            )
 
             if self.config.observer_mode:
-                print("\n" + "=" * 70)
-                print("❌ TASK FAILED")
-                print("=" * 70)
-                print(f"🚫 Error: {str(e)}")
-                print("=" * 70 + "\n")
+                logger.info(_observer_banner("TASK FAILED", [f"Error: {str(e)}"]))
 
             self.task_history.add_task(task_type, task_description, "failed", error=str(e))
             return error_result
@@ -451,6 +774,14 @@ class ClippySWEAgent:
         # Add available tools information
         if self.toolkit:
             message_parts.append(f"\n**Available Tools**: {len(self.toolkit.tools)} tools available")
+            if self.config.enable_workiq:
+                message_parts.append(
+                    "- WorkIQ is available for Microsoft 365 questions about emails, meetings, documents, Teams, and people."
+                )
+            if self.config.enable_m365_copilot:
+                message_parts.append(
+                    "- Microsoft 365 Copilot SDK tools are available for retrieval, reporting, users, interactions, admin settings, and online meetings."
+                )
 
         message_parts.append("\n**Instructions**:")
         message_parts.append("- Work autonomously to complete the task")
@@ -472,10 +803,24 @@ class ClippySWEAgent:
             Dictionary containing task results
         """
         if not self.config.enable_windows_automation:
-            return {"status": "failed", "error": "Windows automation is disabled"}
+            return {"status": "failed", "error": "Windows automation is disabled"} | self._task_metadata(
+                schema_name="clippy-kernel.swe-agent.windows-task",
+                task_type="system",
+                status="failed",
+                workflow="windows-automation",
+                capabilities=["windows-automation", "guardrails"],
+                kind="task-error",
+            )
 
         if platform.system() != "Windows":
-            return {"status": "failed", "error": "Windows automation only available on Windows"}
+            return {"status": "failed", "error": "Windows automation only available on Windows"} | self._task_metadata(
+                schema_name="clippy-kernel.swe-agent.windows-task",
+                task_type="system",
+                status="failed",
+                workflow="windows-automation",
+                capabilities=["windows-automation", "guardrails"],
+                kind="task-error",
+            )
 
         context = {"platform": "Windows", "app_interaction": self.config.enable_app_interaction}
 
@@ -518,8 +863,28 @@ class ClippySWEAgent:
                 "agent_count": len(self.agents),
                 "llm_configured": self.llm_config is not None,
                 "toolkit_enabled": self.toolkit is not None,
+                "tool_count": len(self.toolkit.tools) if self.toolkit else 0,
                 "autonomous_mode": self.config.autonomous_mode,
                 "observer_mode": self.config.observer_mode,
+                "workiq_enabled": self.config.enable_workiq,
+                "m365_copilot_enabled": self.config.enable_m365_copilot,
+            }
+            status["copilot"] = {
+                "config_dir": str(self.config.config_dir),
+                "custom_agents_dir": str(self.config.custom_agents_dir),
+                "skill_directories": [str(path) for path in self.config.skill_directories],
+                "mcp_config_path": str(self.config.mcp_config_path),
+                "resolved_mcp_servers": sorted(self.copilot_session_config.get("mcp_servers", {}).keys()),
+                "workiq_command": self.config.workiq_command if self.config.enable_workiq else None,
+                "workiq_tenant_id": self.config.workiq_tenant_id,
+                "m365_copilot_repo_path": (
+                    str(self.config.m365_copilot_repo_path) if self.config.m365_copilot_repo_path else None
+                ),
+                "m365_copilot_tenant_id": self.config.m365_copilot_tenant_id,
+                "m365_copilot_credential_mode": (
+                    self.config.m365_copilot_credential_mode if self.config.enable_m365_copilot else None
+                ),
+                "m365_copilot_default_user_id": self.config.m365_copilot_default_user_id,
             }
 
             # Task history
@@ -529,11 +894,28 @@ class ClippySWEAgent:
                 for task in recent_tasks
             ]
 
-            return status
+            return status | self._task_metadata(
+                schema_name="clippy-kernel.swe-agent.system-status",
+                task_type="system",
+                status="ready",
+                workflow="system-status",
+                agents_used=list(self.agents.keys()),
+                capabilities=["diagnostics", "status-reporting", "orchestration"],
+                attributes={"recent_task_count": len(status["recent_tasks"])},
+                kind="status-report",
+            )
 
         except Exception as e:
             logger.error(f"Failed to get system status: {e}")
-            return {"status": "error", "error": str(e)}
+            return {"status": "error", "error": str(e)} | self._task_metadata(
+                schema_name="clippy-kernel.swe-agent.system-status",
+                task_type="system",
+                status="error",
+                workflow="system-status",
+                capabilities=["diagnostics", "status-reporting"],
+                attributes={"exception_type": type(e).__name__},
+                kind="task-error",
+            )
 
     def list_recent_tasks(self, limit: int = 10) -> list[dict[str, Any]]:
         """List recent tasks from history."""

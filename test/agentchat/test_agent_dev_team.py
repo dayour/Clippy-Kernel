@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2025, Clippy Kernel Development Team
+# Copyright (c) 2023 - 2025, clippy kernel development team
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -17,7 +17,6 @@ import json
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import Mock
 
 import pytest
 
@@ -30,7 +29,6 @@ from autogen.agentchat.agent_dev_team import (
     create_agent_dev_team,
     create_self_improving_team,
 )
-from autogen.llm_config import LLMConfig
 
 
 class TestSprintConfig:
@@ -96,8 +94,8 @@ class TestAgentDevTeam:
 
     @pytest.fixture
     def mock_llm_config(self):
-        """Create a mock LLM configuration."""
-        return Mock(spec=LLMConfig)
+        """Create an llm configuration that disables live model calls."""
+        return False
 
     @pytest.fixture
     def temp_project_path(self):
@@ -166,6 +164,8 @@ class TestAgentDevTeam:
         assert sprint["phase"] == SprintPhase.PLANNING
         assert sprint["capacity"] == 40
         assert len(sprint["stories"]) == 2  # Should select story1 and story2 (25 points total)
+        assert sprint["schema"]["name"] == "clippy-kernel.agent-dev-team.sprint-plan"
+        assert "sprint-planning" in sprint["semantic_tags"]
 
         # Check that stories were updated
         assert story1.status == "sprint_backlog"
@@ -188,6 +188,8 @@ class TestAgentDevTeam:
         assert "sprint_history_count" in status
         assert "project_path" in status
         assert "sprint_config" in status
+        assert status["schema"]["name"] == "clippy-kernel.agent-dev-team.status"
+        assert "status-reporting" in status["semantic_tags"]
 
         assert len(status["team_composition"]) == 6
         assert status["backlog_size"] == 1
@@ -216,9 +218,11 @@ class TestAgentDevTeam:
         assert "backlog" in data
         assert "sprint_history" in data
         assert "exported_at" in data
+        assert data["schema"]["name"] == "clippy-kernel.agent-dev-team.sprint-history-export"
 
         assert len(data["backlog"]) == 1
         assert data["backlog"][0]["title"] == "Test Story"
+        assert data["backlog"][0]["schema"]["name"] == "clippy-kernel.agent-dev-team.user-story"
 
 
 class TestFactoryFunctions:
@@ -226,8 +230,8 @@ class TestFactoryFunctions:
 
     @pytest.fixture
     def mock_llm_config(self):
-        """Create a mock LLM configuration."""
-        return Mock(spec=LLMConfig)
+        """Create an llm configuration that disables live model calls."""
+        return False
 
     @pytest.fixture
     def temp_project_path(self):
@@ -274,8 +278,8 @@ class TestAgentRoleSpecialization:
 
     @pytest.fixture
     def mock_llm_config(self):
-        """Create a mock LLM configuration."""
-        return Mock(spec=LLMConfig)
+        """Create an llm configuration that disables live model calls."""
+        return False
 
     def test_agent_roles_are_distinct(self, mock_llm_config):
         """Test that each agent role has distinct responsibilities."""

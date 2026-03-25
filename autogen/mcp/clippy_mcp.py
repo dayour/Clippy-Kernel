@@ -93,9 +93,14 @@ class WindowsClippyMCPClient:
 
         try:
             # This would require azure-identity package
-            with optional_import_block():
+            with optional_import_block() as azure_imports:
                 from azure.identity import ClientSecretCredential, DefaultAzureCredential
-                from azure.keyvault.secrets import SecretClient
+
+            if not azure_imports.is_successful:
+                print(
+                    "Warning: Azure authentication libraries not available. Install azure-identity and azure-keyvault-secrets."
+                )
+                return
 
             if self.config.azure_key_vault and self.config.azure_key_vault.use_managed_identity:
                 self._azure_credentials = DefaultAzureCredential()
@@ -123,8 +128,12 @@ class WindowsClippyMCPClient:
             and self._azure_credentials
         ):
             try:
-                with optional_import_block():
+                with optional_import_block() as azure_keyvault_imports:
                     from azure.keyvault.secrets import SecretClient
+
+                if not azure_keyvault_imports.is_successful:
+                    print("Warning: Azure Key Vault libraries not available.")
+                    return None
 
                 client = SecretClient(
                     vault_url=self.config.azure_key_vault.vault_url, credential=self._azure_credentials

@@ -43,10 +43,29 @@ def get_agent_commit_hash() -> str:
         return "unavailable"
 
 
+def get_rex_commit_hash() -> str:
+    try:
+        import swerex
+        from git import Repo
+
+        repo = Repo(Path(swerex.__file__).resolve().parent.parent.parent, search_parent_directories=False)
+        return repo.head.object.hexsha
+    except Exception:
+        return "unavailable"
+
+
+def get_rex_version() -> str:
+    from swerex import __version__ as rex_version
+
+    return rex_version
+
+
 def get_agent_version_info() -> str:
     """Get version info string."""
     hash = get_agent_commit_hash()
-    return f"This is clippybot version {__version__} ({hash=})."
+    rex_hash = get_rex_commit_hash()
+    rex_version = get_rex_version()
+    return f"This is clippybot version {__version__} ({hash=}) with SWE-ReX version {rex_version} ({rex_hash=})."
 
 
 # Lazy imports for modules
@@ -138,6 +157,8 @@ __all__ = [
     "TOOLS_DIR",
     "TRAJECTORY_DIR",
     "get_agent_commit_hash",
+    "get_rex_commit_hash",
+    "get_rex_version",
     "get_agent_version_info",
     # SWE components (lazy loaded)
     "clippyagent",

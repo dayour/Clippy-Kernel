@@ -1,218 +1,112 @@
-## Architecture
+# Architecture
 
-```
-┌─────────────────────────────────────────────┐
-│        AG2/Autogen2 Framework               │
-├─────────────────────────────────────────────┤
-│                                             │
-│  LLM Clients Layer                          │
-│  ├── OpenAICompletionsClient               │
-│  └── CopilotLLMClient  NEW                │
-│      ├── Config: CopilotClientConfig        │
-│      ├── Manages: Copilot CLI lifecycle    │
-│      └── Implements: ModelClient interface  │
-│                                             │
-│  Agent Layer                                │
-│  ├── ConversableAgent                       │
-│  ├── AssistantAgent                         │
-│  ├── CopilotConversableAgent  NEW         │
-│  │   └── Uses: CopilotLLMClient            │
-│  └── CopilotAssistantAgent  NEW           │
-│      └── Uses: CopilotLLMClient            │
-│                                             │
-│  Multi-Agent Layer                          │
-│  ├── GroupChat  Compatible                │
-│  ├── Swarms  Compatible                   │
-│  └── [Future: clippy agent Swarms]            │
-│                                             │
-└─────────────────────────────────────────────┘
-           │
-           ├── Copilot CLI (external process)
-           │   ├── Model: GPT-5, Claude, etc.
-           │   ├── Tools: First-party tools
-           │   └── Auth: GitHub Copilot
-           │
-           └── GitHub Copilot SDK (Python)
-               └── Communication: JSON-RPC
-```
+## Summary
 
----
+This repository currently has a hybrid architecture:
 
-## Key Features
+1. `clippyagent` is the mature local runtime layer.
+2. `clippybot` is the expanding platform-acceleration layer for Copilot, Copilot Studio, Power Platform, Teams, Dynamics, and Microsoft 365 scenarios.
 
-###  Seamless Integration
-- No breaking changes to existing AG2 functionality
-- Copilot agents work alongside standard agents
-- Full compatibility with GroupChat, Swarms, etc.
+That split matters. The local runtime is the most proven execution surface in the repo today. The Microsoft platform work is real and growing, but much of it is still best understood as scaffolding, orchestration, adapters, and onboarding support rather than a fully demonstrated hosted runtime.
 
-###  Flexible Configuration
-- Dict-based or Config object initialization
-- All Copilot CLI options supported
-- Environment variable configuration
-- Uses Copilot CLI authentication
-- GitHub Copilot subscription billing
-- No separate LLM API management
-- Follows AG2 patterns and conventions
-- Comprehensive error handling
-- Full test coverage
-- Detailed documentation
+## Architecture diagram
 
----
+```mermaid
+flowchart TD
+    U[Builder / planner / designer / researcher / analyst] --> B[clippybot platform layer]
+    B --> C[Copilot wrappers and LLM clients]
+    B --> S[Copilot Studio builder swarms]
+    B --> A[Platform adapters]
 
+    S --> P[Planner and spec generation]
+    S --> G[Scaffolding and packaging]
+    S --> K[Knowledge source setup]
+    S --> I[Connector and action mapping]
+    S --> V[Security and analytics review]
+    S --> R[Publishing guidance]
 
+    A --> PP[Power Platform and PAC helpers]
+    A --> DV[Dataverse helpers]
+    A --> TM[Teams and M365 publishing helpers]
 
-### To Use Copilot Agents:
-
-1. **Install Copilot SDK:**
-   ```bash
-   pip install github-copilot-sdk
-   ```
-
-2. **Install Copilot CLI:**
-   - Follow: https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line
-   - Requires: GitHub Copilot subscription
-
-3. **Authenticate:**
-   ```bash
-   copilot auth login
-   ```
-
-### Current Limitations:
-- Requires active Copilot CLI process
-- Cannot run in environments without CLI access
-- Async-first design (requires `await` for start/stop)
-
----
-
-### clippy-agent Integration
-**Goal:** Enhance existing clippy-agent's autonomous software engineering capabilities in AG2
-
-Tasks:
-1. Refine and improve `clippybot/swe/` module structure
-2. Refine clippy-agent tools to AG2 format
-3. Refine environment management capabilities
-4. Enhance `clippyagent` class (Copilot + SWE capabilities)
-5. Integrate problem statement system
-
-
-### clippy agent Swarms  
-**Goal:** Improve and refine multi-agent workflows for software engineering
-
-Tasks:
-1. **Code Review Swarm**
-   - Reviewer agents (security, performance, style)
-   - Coordinator agent
-   - Aggregation and reporting
-
-2. **Debugging Swarm**
-   - Finder agent (locate bugs)
-   - Fixer agent (propose fixes)
-   - Validator agent (test fixes)
-
-3. **Testing Swarm**
-   - Generator agent (create tests)
-   - Runner agent (execute tests)
-   - Analyzer agent (analyze results)
-
-4. **Documentation Swarm**
-   - Analyzer agent (understand code)
-   - Writer agent (generate docs)
-   - Reviewer agent (ensure quality)
-
-
----
-
-###  Copilot SDK Integration
-- **Copilot LLM Client**
-  - ModelClient implementation
-  - Async/sync bridge
-  - Session management
-- **Copilot Agents**
-  - CopilotConversableAgent
-  - CopilotAssistantAgent
-
-###  clippy agent Integration  
-- **SWE Module** (`clippybot/swe/`)
-  - Tools: bash, edit, search
-  - Environment management
-  - clippyagent class
-
-###  clippy agent Swarms
-- **Swarm Manager** 
-- **Code Review Swarm**: security, performance, style reviewers
-- **Debug Swarm**: finder, fixer, validator
-- **Test Swarm**: generator, runner, coverage analyzer
-
----
-
-## Usage Examples
-
-### clippy agent
-```python
-from clippybot import clippyagent
-
-agent = clippyagent(
-    name="clippy_agent",
-    copilot_config={"model": "gpt-5", "temperature": 0.3},
-)
-await agent.start()
-# Agent ready with bash, edit, search tools
+    B --> L[clippyagent local runtime]
+    L --> T[Local tools and environment control]
+    L --> E[Autonomous execution loops]
+    L --> W[SWE-oriented workflows]
 ```
 
-### Code Review Swarm
-```python
-from clippybot.swe import create_code_review_swarm, SWESwarmManager
+## Layer responsibilities
 
-# Create swarm
-agents, user = await create_code_review_swarm()
-manager = SWESwarmManager()
-swarm = await manager.create_swarm("review", agents, user)
+### 1. Local runtime layer: `clippyagent`
 
-# Use swarm for code review
-# ... collaborate on code review tasks ...
-```
+Primary role:
 
-### Debug Swarm
-```python
-from clippybot.swe import create_debug_swarm
+- local agent execution
+- tool invocation and environment control
+- autonomous software-engineering style workflows
 
-# Create debug team
-agents, user = await create_debug_swarm()
-# bug_finder, bug_fixer, validator
-```
+This is the part of the repo that most clearly matches a working runtime today.
 
----
+### 2. Platform layer: `clippybot`
 
-## Architecture
+Primary role:
 
-```
-AG2/Autogen2 Framework
-│
-├─ LLM Clients
-│  └─ CopilotLLMClient 
-│
-├─ Agents
-│  ├─ CopilotConversableAgent 
-│  ├─ CopilotAssistantAgent 
-│  └─ clippyagent 
-│
-└─ Swarms
-   ├─ Code Review Swarm 
-   ├─ Debug Swarm 
-   └─ Test Swarm 
-```
+- wrap Copilot-oriented clients and agents
+- help plan and scaffold Copilot Studio solutions
+- provide adapters for Power Platform, Dataverse, Teams, and related Microsoft 365 surfaces
+- support onboarding experiences for planner, designer, researcher, and analyst style work
 
----
+This layer reflects the intended product direction, but it should be described as an augmentation and acceleration layer, not a fully proven hosted runtime.
 
-## Ready For
+## What is implemented today
 
- **Fine Tuning**
- **Integrating development tools**
- **AI Collaboration**
- **Bug Bush**
- **Code Review**
+- local runtime foundations in `clippyagent`
+- Copilot client and agent wrappers in `clippybot`
+- Copilot Studio builder swarm components, including planning, scaffolding, ingestion, actions, security, publishing, and analytics stages
+- helper modules for Teams, Dataverse, Power Platform CLI, adaptive cards, and flow definitions
 
----
+## What should not be overstated
 
+The repository does not yet prove:
 
+- full hosted Copilot Studio runtime completeness
+- uniform production readiness across all Microsoft channels
+- finished end-to-end experiences for every planner, designer, researcher, and analyst workflow
 
+The most accurate description is:
+
+"A mature local agent runtime plus an expanding Microsoft platform augmentation layer."
+
+## Direction of travel
+
+The intended direction is to help teams move from idea to working business-agent assets across:
+
+- Power Platform
+- Dynamics 365
+- Copilot Studio
+- Teams
+- Microsoft 365
+
+That includes stronger onboarding and acceleration for:
+
+- planners turning requirements into agent specs
+- designers shaping flows, actions, and channel experiences
+- researchers grounding agents with knowledge sources and discovery inputs
+- analysts reviewing telemetry, quality, governance, and rollout readiness
+
+## Boundary guidance
+
+Use `clippyagent` messaging when discussing:
+
+- mature local execution
+- autonomous task loops
+- tool-using agent runtime behavior
+
+Use `clippybot` messaging when discussing:
+
+- Copilot and Copilot Studio acceleration
+- Power Platform and Dataverse adapters
+- Teams and M365 publishing workflows
+- planner / designer / researcher / analyst onboarding support
+
+Avoid collapsing those two layers into a single claim of end-to-end platform completeness.

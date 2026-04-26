@@ -13,7 +13,7 @@ build-backend = "setuptools.build_meta"  # If not defined, then legacy behavior 
 [project]
 name = "clippybot"
 dynamic = ["version"]
-description = "The official clippybot package - an open source Agent Computer Interface for running language models as software engineers."
+description = "Hybrid agent toolkit combining a mature local runtime with emerging Copilot Studio, Power Platform, Teams, and Microsoft 365 acceleration flows."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {file = "LICENSE"}

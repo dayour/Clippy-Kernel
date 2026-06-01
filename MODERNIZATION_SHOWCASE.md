@@ -102,7 +102,7 @@ not yet.**
 | Package | Before | After | Notes |
 |---|---|---|---|
 | protobuf | 6.33.2 | >=6.33.6,<7 (held; a2a-sdk 1.1.0 caps <7) | Highest blast radius; affects chromadb, otlp, grpc, retrieve stack. Full-send target was 7.x but held at latest 6.x because a2a-sdk 1.1.0 requires protobuf<7 (see Section 5). |
-| pydantic | 2.x (unspecified floor) | >=2.13.4 | union-validation normalization required |
+| pydantic | 2.x (unspecified floor) | >=2.12.0,<3 (base resolves 2.13.4) | union-validation normalization required. Floor held at >=2.12.0 (not 2.13) so the opt-in interop-crewai extra co-resolves; base still installs latest 2.13.x. |
 | pydantic-settings | 2.x | >=2.14.1 | |
 | graphrag_sdk | 0.8.0 | 1.1.1 | Full async rewrite; bridge layer required |
 | a2a-sdk | 0.3.x | 1.1.0 | Protobuf-based redesign; full rewrite of 5 modules |
@@ -349,7 +349,26 @@ core fully supports 3.14; CI matrices were made honest accordingly
 (core-test + type-check keep a 3.14 leg with litellm-dependent steps
 conditionally skipped; contrib/optional-deps capped at 3.13).
 
-### Green (code-level, no full environment required)
+### Empirical Extra-Isolation Verification (resolver dry-runs)
+
+The single-branch full-send strategy relies on optional extras resolving
+in isolation. These assumptions were verified empirically with
+`uv pip compile` (resolve-only, no install):
+
+| Extra(s) resolved | Result | Conclusion |
+|---|---|---|
+| `[a2a]` | a2a-sdk==1.1.0, protobuf==6.33.6 | a2a-sdk 1.x co-resolves with the held protobuf<7; no conflict. |
+| `[websockets]` + `[commsagent-slack]` | websockets==16.0, slack-sdk==3.42.0 | slack_sdk does NOT cap websockets<16 unless its own optional extra is selected; websockets 16 and slack 3.42 coexist. |
+| base only | pydantic==2.13.4 | Base installs the latest 2.13.x, matching the core-suite-validated config. |
+| `[interop-crewai]` (py3.12) | crewai==1.14.6, pydantic==2.12.5, no a2a-sdk | Resolves after relaxing the pydantic floor to >=2.12.0 (crewai 1.14.6 caps pydantic<2.13). crewai[tools] pulls no a2a-sdk, confirming the a2a isolation assumption. |
+
+CONFLICT DISCOVERED AND RESOLVED: the full-send pydantic floor of
+>=2.13.4 made `[interop-crewai]` unresolvable (crewai 1.14.6 requires
+pydantic<2.13). Relaxing the base floor to >=2.12.0,<3 keeps base and all
+other extras on the latest 2.13.x while letting the opt-in crewai extra
+resolve pydantic 2.12.x. The validated base config is unchanged.
+
+
 
 | Check | Method | Status |
 |---|---|---|
@@ -427,20 +446,17 @@ The following ordered steps are required before this branch is merge-ready:
    git add uv.lock clippy/uv.lock && git commit -m "chore: generate uv.lock after modernization"
    ```
 
-7. **Verify crewai/a2a-sdk extra isolation.**
-   Confirm with a resolver dry run that installing `clippy-kernel[interop-crewai]` does NOT
-   pull `a2a-sdk 0.3.x`, and that `clippy-kernel[a2a]` does NOT pull `crewai`. This validates
-   the extra-gating assumption empirically.
-   ```
-   uv pip install --dry-run "clippy-kernel[interop-crewai]"
-   uv pip install --dry-run "clippy-kernel[a2a]"
-   ```
+7. **[DONE this session] Verify crewai/a2a-sdk extra isolation.**
+   Resolved empirically with `uv pip compile` (see Section 5, Empirical
+   Extra-Isolation Verification). `[a2a]` resolves a2a-sdk 1.1.0 cleanly;
+   `[interop-crewai]` pulls crewai 1.14.6 with NO a2a-sdk (after the
+   pydantic floor was relaxed to >=2.12.0 to clear a crewai pydantic<2.13
+   cap). No residual action required.
 
-8. **Verify slack_sdk/websockets extra isolation.**
-   ```
-   uv pip install --dry-run "clippy-kernel[websockets]"
-   ```
-   Confirm websockets 16.0 resolves without conflict when slack_sdk is not in the extra set.
+8. **[DONE this session] Verify slack_sdk/websockets extra isolation.**
+   Resolved empirically: `[websockets]` + `[commsagent-slack]` together
+   yield websockets 16.0 with slack-sdk 3.42.0 (slack_sdk does not cap
+   websockets<16 without its optional extra). No residual action required.
 
 9. **Update CHANGELOG.md** with the full modernization entry and merge to main.
 

@@ -60,7 +60,10 @@ dependencies = [
     "python-dotenv",
     "tiktoken",
     # Disallowing 2.6.0 can be removed when this is fixed https://github.com/pydantic/pydantic/issues/8705
-    "pydantic>=2.13.4,<3",
+    # Floor kept at >=2.12.0 (not 2.13) so the opt-in interop-crewai extra can co-resolve:
+    # crewai 1.14.6 caps pydantic<2.13. Base and all other extras still resolve to the
+    # latest 2.13.x (validated by the core suite); only interop-crewai pins pydantic 2.12.x.
+    "pydantic>=2.12.0,<3",
     "docker>=7.1.0",
     "packaging",
 #    "fast-depends>=2.4.12,<3",  # integrated into the package

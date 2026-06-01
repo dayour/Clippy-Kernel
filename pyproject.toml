@@ -105,7 +105,10 @@ jupyter-executor = [
 ]
 
 retrievechat = [
-    "protobuf>=7.35.0,<8",
+    # Capped <7: a2a-sdk 1.1.0 requires protobuf<7, so 7.x cannot co-resolve
+    # with the [a2a] extra. 6.33.x is the validated line (matches the prior
+    # 6.33.2 baseline) and still satisfies the retrievechat stack.
+    "protobuf>=6.33.6,<7",
     "chromadb>=1.5.9,<2.0",
     "sentence_transformers>=5.5.1,<6.0",
     "pypdf",

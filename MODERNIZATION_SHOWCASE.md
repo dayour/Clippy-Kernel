@@ -1,7 +1,7 @@
 # Clippy-Kernel Total Modernization — Engineering Excellence Showcase
 
 **Branch:** `upgrade/modernization-2026`
-**Commits:** `c0746119` (Phase 1 manifests) + `156faf26` (Phase 2 remediation)
+**Commits:** `c0746119` (Phase 1 manifests) + `156faf26` (Phase 2 remediation) + `a479ab6e`, `a7917881`, `d09a5aa5` (Phase 4 hardening)
 **Date:** 2026-05-31
 **Author:** Daryl Yourk (@dayour) with dayour-swe fleet co-authors
 
@@ -304,6 +304,58 @@ A pre-existing `NameError` was discovered in `autogen/mcp/clippy_mcp.py`: the `d
 module was used but never imported. This was fixed as a zero-cost addition to the B-block
 sweep.
 
+### Phase 4 — Engineering-Excellence Hardening (commits a479ab6e, a7917881, d09a5aa5)
+
+After the dayswarm sign-off, a dedicated hardening pass closed the open robustness and
+test-coverage risks from the final review, interconnecting the upgraded subsystems with
+regression-proof tests and loop-safe runtime behavior. Each item maps to a numbered dayswarm
+risk where applicable.
+
+**H1 — A2A unit coverage (closes dayswarm Risk #4).**
+The a2a-sdk 1.x rewrite (Phase 2, B5) shipped with zero unit tests. Twelve peer-free unit
+tests were added under `test/a2a/` covering the pure conversion logic: `Part` text/data
+mapping and round-trips, metadata Struct/Value conversion, input-required message and task
+INPUT_REQUIRED conversion, artifact streaming chunks, `CardSettings` to `AgentCard`
+construction (supported interfaces, extended-card capability), and client-side artifact
+append plus task status transitions. The tests gate on the optional dependency via
+module-level `pytest.importorskip("a2a")` so they skip cleanly (not error) when a2a-sdk is
+absent, matching the repo optional-dependency convention. Result: 12 passed on Python 3.13
+(a2a-sdk 1.1.0); no `autogen/a2a` source changes were required.
+
+**H2 — Windowed editing tool restoration.**
+The clippybot SWE-agent windowed file-editing tool was broken on a fresh clone: an
+over-broad `lib/` gitignore rule (root-caused and fixed in Phase 2) had silently excluded
+`clippy/tools/windowed/lib/windowed_file.py` and `flake8_utils.py` from version control,
+yet the bin scripts (`create`, `goto`, `open`, `scroll_up`, `scroll_down`) import
+`WindowedFile` from them. Both sources were restored from authentic upstream SWE-agent, with
+a JSON env-file registry shim replacing the upstream `registry` dependency to match this
+fork's environment contract. Result: 12 tests pass (`test_default_utils.py` 6,
+`test_split_string.py` 6); the clippybot suite rose from 324 to 336 passing.
+
+**H3 — GraphRAG event-loop safety (closes dayswarm Risk #5).**
+The Neo4j-native graph query engine called bare `asyncio.run()` inside `_build_graph`, which
+raises `RuntimeError` when invoked from within an already-running event loop. The loop-safe
+`_run_async` helper already present in the Falkor engine (detect a running loop; offload to a
+single-worker thread when one exists; otherwise `asyncio.run`) was mirrored into the Neo4j
+engine, and both async builder calls were routed through it.
+
+**H4 — Websockets header robustness (closes dayswarm Risk #2).**
+The Phase 2 B4 fix hardcoded the `extra_headers` to `additional_headers` remap. websockets
+could rename the server header kwarg again. The shim was made signature-aware: a new
+module-level `_supported_header_kwarg()` helper introspects the installed `ws_serve`
+signature and selects the correct kwarg name, accepts either spelling from callers, and falls
+back to the modern default on a keyword-only or var-keyword signature. Two unit tests were
+added (`TestWebsocketsHeaderKwargNormalization`).
+
+**H5 — Regression sweep.**
+The touched suites were re-run after H1-H4: autogen websockets I/O (15 passed; the single
+LLM `test_chat` errors on a missing `OPENAI_API_KEY` as expected), `test/a2a` (12 passed),
+and the clippybot suite (336 passed). Every remaining clippybot failure is the same
+pre-existing host/network artifact documented in Phase 3 (fastcore.net unauthenticated
+GitHub API, WinError 2 tool-binaries-off-PATH, POSIX-vs-Windows path semantics, missing bench
+JSON fixture) — none introduced by the hardening pass. graphrag modules pass an AST/compile
+audit and ruff is clean across all Phase 4 changes.
+
 ---
 
 ## 5. Validation Status
@@ -317,7 +369,8 @@ Results below are from actual runs, not projections.
 | Area | Command / Runner | Result |
 |---|---|---|
 | autogen core suite (Python 3.14) | `scripts/test-core-skip-llm.sh` family | 1878 passed; 8 Windows-host platform artifacts only; 0 modernization regressions |
-| clippybot suite (Python 3.13) | `pytest -m "not slow and not ctf"` | 324 passed; 14 failed + 7 errored, ALL pre-existing/host artifacts (see below); 0 dependency regressions |
+| clippybot suite (Python 3.13) | `pytest -m "not slow and not ctf"` | 336 passed (was 324 pre-Phase-4; +12 from windowed tool restoration); 14 failed + 7 errored, ALL pre-existing/host artifacts (see below); 0 dependency regressions |
+| A2A unit tests (Python 3.13) | `pytest test/a2a` (a2a-sdk 1.1.0) | 12 passed; peer-free conversion coverage added in Phase 4 (closes dayswarm Risk #4) |
 | Copilot SDK - Go (1.26) | `go test ./...` (root unit) | PASS after `go mod tidy` synced go.sum for jsonschema-go 0.4.3 |
 | Copilot SDK - Node (TS 6 / vitest 4) | `tsc --noEmit` + `vitest run` | Build + typecheck green; 20 unit tests pass after tsconfig TS6 fix |
 | Copilot SDK - Python (3.13 / pytest 9) | `pytest` (unit) | 35 unit tests pass after `requires-python >=3.10` fix |
@@ -335,8 +388,9 @@ available in the sandbox.
 clippybot non-passing tests are all pre-existing fork defects or
 host-platform artifacts, none caused by the dependency upgrades:
 - Missing SWE-agent windowed tool sources (`tools/windowed/lib/windowed_file.py`,
-  `flake8_utils.py`) - excluded by an over-broad `lib/` gitignore rule (now fixed
-  with `!**/tools/**/lib/`); the source files themselves were never committed.
+  `flake8_utils.py`) - excluded by an over-broad `lib/` gitignore rule (fixed in Phase 2
+  with `!**/tools/**/lib/`). RESOLVED in Phase 4 (H2): both sources restored from authentic
+  upstream SWE-agent; the 12 windowed tests now pass.
 - Missing `tests/test_data/data_sources/clippybot-bench-dev-easy.json` fixture (never committed).
 - POSIX-vs-Windows path semantics (`Path('/sadf')` resolves to `E:/sadf` on Windows).
 - Subprocess CLI tests failing with WinError 2 (tool binaries not on PATH on the Windows host).
@@ -458,7 +512,17 @@ The following ordered steps are required before this branch is merge-ready:
    yield websockets 16.0 with slack-sdk 3.42.0 (slack_sdk does not cap
    websockets<16 without its optional extra). No residual action required.
 
-9. **Update CHANGELOG.md** with the full modernization entry and merge to main.
+9. **[DONE this session] Update CHANGELOG.md** with the modernization entry.
+   The `[Unreleased]` section now records the full-send dependency/runtime upgrade and the
+   Phase 4 hardening pass. Emoji decorations were stripped from the file per the project
+   communication standard.
+
+10. **Track the litellm Python 3.14 gate (dayswarm Risk #3).**
+    litellm has no Python 3.14 wheel (every litellm >=1.83.8 declares Requires-Python <3.14),
+    which holds the `interop` extra and the entire clippybot subproject to <=3.13. No
+    automation currently watches for the wheel. ACTION FOR INTEGRATOR: when litellm ships a
+    3.14-compatible release, lift the conditional skips in the `core-test` / `type-check` CI
+    legs and widen the clippybot `requires-python` cap; re-run the clippybot suite on 3.14.
 
 ---
 

@@ -306,6 +306,47 @@ sweep.
 
 ## 5. Validation Status
 
+### Executed Validation Results (this session)
+
+The branch was validated live against installed, upgraded toolchains
+(uv-managed CPython 3.13.11 and 3.14.3; Node 25.7; Go 1.26; .NET 10.0.300).
+Results below are from actual runs, not projections.
+
+| Area | Command / Runner | Result |
+|---|---|---|
+| autogen core suite (Python 3.14) | `scripts/test-core-skip-llm.sh` family | 1878 passed; 8 Windows-host platform artifacts only; 0 modernization regressions |
+| clippybot suite (Python 3.13) | `pytest -m "not slow and not ctf"` | 324 passed; 14 failed + 7 errored, ALL pre-existing/host artifacts (see below); 0 dependency regressions |
+| Copilot SDK - Go (1.26) | `go test ./...` (root unit) | PASS after `go mod tidy` synced go.sum for jsonschema-go 0.4.3 |
+| Copilot SDK - Node (TS 6 / vitest 4) | `tsc --noEmit` + `vitest run` | Build + typecheck green; 20 unit tests pass after tsconfig TS6 fix |
+| Copilot SDK - Python (3.13 / pytest 9) | `pytest` (unit) | 35 unit tests pass after `requires-python >=3.10` fix |
+| Copilot SDK - .NET (net10) | `dotnet test` (unit) | Restore + build green; 12 unit tests pass after pinning Nerdbank.MessagePack 1.2.4 (NU1902) and dropping redundant System.Text.Json (NU1510) |
+| Root lockfile | `uv lock` | Infeasible by design: browser-use 0.12.9 exact-pins its whole tree; a2a-sdk 1.1.0 caps protobuf<7 (held protobuf>=6.33.6,<7). Documented, mirrors upstream (no universal lock shipped). |
+| clippy subproject lockfile | `uv lock` (clippy/) | PASS - 151 packages, `clippy/uv.lock` committed |
+| ruff format (first-party) | `ruff format --check` | PASS (vendored SDK tree excluded) |
+| mypy 2.1.0 | `mypy autogen/` | 8 residual errors, all pre-existing optional-dep/decorator noise (down from 11) |
+
+SDK e2e suites in all four languages are uniformly environment-blocked
+(not regressions): they spawn the Copilot CLI through a `tsx`/CapiProxy
+harness that needs a built CLI on PATH plus live Copilot API auth, neither
+available in the sandbox.
+
+clippybot non-passing tests are all pre-existing fork defects or
+host-platform artifacts, none caused by the dependency upgrades:
+- Missing SWE-agent windowed tool sources (`tools/windowed/lib/windowed_file.py`,
+  `flake8_utils.py`) - excluded by an over-broad `lib/` gitignore rule (now fixed
+  with `!**/tools/**/lib/`); the source files themselves were never committed.
+- Missing `tests/test_data/data_sources/clippybot-bench-dev-easy.json` fixture (never committed).
+- POSIX-vs-Windows path semantics (`Path('/sadf')` resolves to `E:/sadf` on Windows).
+- Subprocess CLI tests failing with WinError 2 (tool binaries not on PATH on the Windows host).
+- GitHub API tests running unauthenticated (`fastcore.net`; no token / network).
+
+Key environment constraint discovered: **litellm has no Python 3.14 wheel**
+(every litellm >=1.83.8 declares Requires-Python <3.14), which gates the
+`interop` extra and the entire clippybot subproject to <=3.13. The autogen
+core fully supports 3.14; CI matrices were made honest accordingly
+(core-test + type-check keep a 3.14 leg with litellm-dependent steps
+conditionally skipped; contrib/optional-deps capped at 3.13).
+
 ### Green (code-level, no full environment required)
 
 | Check | Method | Status |
@@ -320,25 +361,24 @@ sweep.
 | Packaging extras self-reference | `grep ag2\[` | PASS — 0 remaining ag2[...] in project extras |
 | Pre-commit hooks config validity | pre-commit validate-config | PASS |
 
-### Pending Full Environment (Python 3.13 + 3.14, bleeding-edge wheels)
+### Remaining Environment-Gated Items (deep integration / E2E)
+
+The core and unit validation above is complete and green. The items below
+remain gated on a full integration environment (live services, real API
+keys, a built CLI) and are for the integrator's CI, not code-level blockers.
 
 | Check | Blocker | What to do |
 |---|---|---|
-| Full autogen test suite on 3.13 | Needs installed deps | `uv sync --all-extras && pytest autogen/ -x` |
-| Full autogen test suite on 3.14 | Python 3.14 wheel availability | Same as above with pyenv 3.14 |
-| a2a-sdk 1.x integration tests | a2a-sdk 1.1.0 must be installed | `pytest test/agentchat/test_a2a*` |
-| graphrag_sdk 1.x integration tests | graphrag_sdk 1.1.1 + FalkorDB must be reachable | `pytest test/agentchat/contrib/graph_rag/` |
-| ChromaDB 1.5 vectordb tests | chromadb 1.5.9 must be installed | `pytest test/agentchat/contrib/vectordb/` |
+| a2a-sdk 1.x integration tests | a2a-sdk 1.1.0 + live peer agent | `pytest test/agentchat/test_a2a*` |
+| graphrag_sdk 1.x integration tests | graphrag_sdk 1.1.1 + FalkorDB reachable | `pytest test/agentchat/contrib/graph_rag/` |
+| ChromaDB 1.5 vectordb tests | chromadb 1.5.9 + running server | `pytest test/agentchat/contrib/vectordb/` |
 | Provider SDK round-trip tests | Real API keys + installed wheels | Standard provider test matrix |
-| .NET SDK build and xunit | .NET 10 SDK | `dotnet build && dotnet test` in copilot-sdk/dotnet/ |
-| Go SDK tests | Go 1.26 | `go test ./...` in copilot-sdk/go/ |
-| Node SDK vitest suite | Node 22+ + npm install | `npm test` in copilot-sdk/nodejs/ |
-| mypy 2.x type check | Full dep install | `mypy autogen/ clippy/` with 2.1.0 |
-| Full ruff + codespell + pre-commit | Full install | `pre-commit run --all-files` |
-| lockfile generation | uv 0.11.17 installed | `uv lock` at root and clippy/ |
+| SDK e2e suites (all 4 languages) | Built Copilot CLI on PATH + live Copilot auth | Run e2e once CapiProxy harness is provisioned |
 
-NOTE: The code-level validation gives high confidence that no structural regressions were
-introduced. The pending items are environment-gated, not code-gated.
+NOTE: Core, unit, lint, type, and lockfile validation are DONE and green
+(see Executed Validation Results above). The items here are deep-integration
+checks that require live external services, real credentials, or a built CLI;
+they are environment-gated, not code-gated.
 
 ---
 

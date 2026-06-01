@@ -30,6 +30,13 @@ __all__ = [
     "WebScrapingConfig",
     "DatabaseConfig",
     "CloudConfig",
+    "AzureKeyVaultConfig",
+    "ClippyMCPConfig",
+    "EntraIDConfig",
+    "WindowsClippyMCPClient",
+    "create_clippy_toolkit",
+    "create_vscode_extension_files",
+    "create_toolkit",
 ]
 
 if mcp_optional_import.is_successful:

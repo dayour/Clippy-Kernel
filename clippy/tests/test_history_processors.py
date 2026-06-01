@@ -2,8 +2,8 @@ import json
 from pathlib import Path
 
 import pytest
-
 from clippybot.agent.history_processors import LastNObservations, TagToolCallObservations
+
 from clippybot.types import History
 
 

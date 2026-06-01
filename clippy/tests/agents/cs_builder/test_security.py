@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 import json
+
 import pytest
 
 from clippybot.agents.cs_builder.security import (
     Finding,
     GovernanceReport,
-    SecurityAdvisorConfig,
     SecurityGovernanceAdvisorAgent,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def good_spec() -> dict[str, object]:
@@ -90,6 +90,7 @@ def advisor() -> SecurityGovernanceAdvisorAgent:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestGovernanceReport:
     """Tests for the GovernanceReport data structure."""
@@ -211,7 +212,9 @@ class TestFinding:
 
     def test_finding_to_dict_full(self):
         f = Finding(
-            "GOV-004", "fail", "bad",
+            "GOV-004",
+            "fail",
+            "bad",
             remediation="fix it",
             location="$.alm",
             diff="- old\n+ new",

@@ -148,12 +148,14 @@ class CopilotConversableAgent:
             full_messages.extend(messages)
 
         # Generate response
-        response = await self._copilot_client.create_async({
-            "messages": full_messages,
-            "model": self._copilot_config.model,
-            "temperature": self._copilot_config.temperature,
-            "max_tokens": self._copilot_config.max_tokens,
-        })
+        response = await self._copilot_client.create_async(
+            {
+                "messages": full_messages,
+                "model": self._copilot_config.model,
+                "temperature": self._copilot_config.temperature,
+                "max_tokens": self._copilot_config.max_tokens,
+            }
+        )
 
         return response.content
 
@@ -162,10 +164,7 @@ class CopilotConversableAgent:
         self._chat_history.clear()
 
     def __repr__(self) -> str:
-        return (
-            f"CopilotConversableAgent(name={self.name!r}, "
-            f"model={self._copilot_config.model!r})"
-        )
+        return f"CopilotConversableAgent(name={self.name!r}, model={self._copilot_config.model!r})"
 
 
 class CopilotAssistantAgent(CopilotConversableAgent):
@@ -210,13 +209,10 @@ class CopilotAssistantAgent(CopilotConversableAgent):
         self.description = description or f"A GitHub Copilot-powered assistant: {name}"
 
     def __repr__(self) -> str:
-        return (
-            f"CopilotAssistantAgent(name={self.name!r}, "
-            f"model={self._copilot_config.model!r})"
-        )
+        return f"CopilotAssistantAgent(name={self.name!r}, model={self._copilot_config.model!r})"
 
 
 __all__ = [
-    "CopilotConversableAgent",
     "CopilotAssistantAgent",
+    "CopilotConversableAgent",
 ]

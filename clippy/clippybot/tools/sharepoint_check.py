@@ -23,6 +23,7 @@ from clippybot.tools.dataverse_api import HttpClient, HttpResponse, MockHttpClie
 # SharePoint URL parser
 # ---------------------------------------------------------------------------
 
+
 def parse_sharepoint_url(url: str) -> dict[str, Any]:
     """Parse a SharePoint URL into structured components.
 
@@ -56,7 +57,7 @@ def parse_sharepoint_url(url: str) -> dict[str, Any]:
         return result
 
     result["site_path"] = site_match.group(1)
-    remainder = path[len(site_match.group(1)):]
+    remainder = path[len(site_match.group(1)) :]
 
     # Check for Shared Documents or other library
     if remainder:
@@ -73,6 +74,7 @@ def parse_sharepoint_url(url: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Validation result
 # ---------------------------------------------------------------------------
+
 
 class SharePointCheckResult:
     """Structured validation result for a single SharePoint knowledge source."""
@@ -119,6 +121,7 @@ class SharePointCheckResult:
 # ---------------------------------------------------------------------------
 # Graph API client
 # ---------------------------------------------------------------------------
+
 
 class GraphApiClient:
     """Lightweight async Microsoft Graph API client for SharePoint operations.
@@ -294,6 +297,7 @@ class GraphApiClient:
 # Mock Graph client (for tests)
 # ---------------------------------------------------------------------------
 
+
 class MockGraphClient(GraphApiClient):
     """A mock ``GraphApiClient`` pre-loaded with fake responses.
 
@@ -329,92 +333,127 @@ class MockGraphClient(GraphApiClient):
         # GET site
         self.mock_http.set_response(
             "sites/contoso.sharepoint.com:",
-            HttpResponse(200, {
-                "id": self._FAKE_SITE_ID,
-                "displayName": "HR Hub",
-                "name": "HRHub",
-                "webUrl": "https://contoso.sharepoint.com/sites/HRHub",
-            }),
+            HttpResponse(
+                200,
+                {
+                    "id": self._FAKE_SITE_ID,
+                    "displayName": "HR Hub",
+                    "name": "HRHub",
+                    "webUrl": "https://contoso.sharepoint.com/sites/HRHub",
+                },
+            ),
         )
 
         # GET drives
         self.mock_http.set_response(
             f"sites/{self._FAKE_SITE_ID}/drives",
-            HttpResponse(200, {
-                "value": [
-                    {
-                        "id": self._FAKE_DRIVE_ID,
-                        "name": "Documents",
-                        "driveType": "documentLibrary",
-                        "quota": {
-                            "total": 27_917_287_424,
-                            "used": 5_242_880,
+            HttpResponse(
+                200,
+                {
+                    "value": [
+                        {
+                            "id": self._FAKE_DRIVE_ID,
+                            "name": "Documents",
+                            "driveType": "documentLibrary",
+                            "quota": {
+                                "total": 27_917_287_424,
+                                "used": 5_242_880,
+                            },
                         },
-                    },
-                ],
-            }),
+                    ],
+                },
+            ),
         )
 
         # GET drive root children
         self.mock_http.set_response(
             f"drives/{self._FAKE_DRIVE_ID}/root/children",
-            HttpResponse(200, {
-                "value": [
-                    {"name": "Benefits.docx", "size": 102_400, "file": {"mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"}},
-                    {"name": "Onboarding.pptx", "size": 2_048_000, "file": {"mimeType": "application/vnd.openxmlformats-officedocument.presentationml.presentation"}},
-                    {"name": "Policies", "folder": {"childCount": 12}},
-                ],
-            }),
+            HttpResponse(
+                200,
+                {
+                    "value": [
+                        {
+                            "name": "Benefits.docx",
+                            "size": 102_400,
+                            "file": {
+                                "mimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            },
+                        },
+                        {
+                            "name": "Onboarding.pptx",
+                            "size": 2_048_000,
+                            "file": {
+                                "mimeType": "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                            },
+                        },
+                        {"name": "Policies", "folder": {"childCount": 12}},
+                    ],
+                },
+            ),
         )
 
         # GET permissions
         self.mock_http.set_response(
             f"sites/{self._FAKE_SITE_ID}/permissions",
-            HttpResponse(200, {
-                "value": [
-                    {"id": "perm-1", "roles": ["read"], "grantedToIdentities": [{"application": {"displayName": "CopilotAgent"}}]},
-                ],
-            }),
+            HttpResponse(
+                200,
+                {
+                    "value": [
+                        {
+                            "id": "perm-1",
+                            "roles": ["read"],
+                            "grantedToIdentities": [{"application": {"displayName": "CopilotAgent"}}],
+                        },
+                    ],
+                },
+            ),
         )
 
         # GET content types
         self.mock_http.set_response(
             f"sites/{self._FAKE_SITE_ID}/contentTypes",
-            HttpResponse(200, {
-                "value": [
-                    {"id": "0x0101", "name": "Document", "description": "Create a new document."},
-                    {"id": "0x0120", "name": "Folder", "description": "Create a new folder."},
-                ],
-            }),
+            HttpResponse(
+                200,
+                {
+                    "value": [
+                        {"id": "0x0101", "name": "Document", "description": "Create a new document."},
+                        {"id": "0x0120", "name": "Folder", "description": "Create a new folder."},
+                    ],
+                },
+            ),
         )
 
         # POST search
         self.mock_http.set_response(
             f"sites/{self._FAKE_SITE_ID}/search/query",
-            HttpResponse(200, {
-                "value": [
-                    {
-                        "searchTerms": ["policy"],
-                        "hitsContainers": [
-                            {
-                                "total": 3,
-                                "moreResultsAvailable": False,
-                                "hits": [
-                                    {"hitId": "hit-1", "summary": "Company policy document"},
-                                    {"hitId": "hit-2", "summary": "Security policy"},
-                                    {"hitId": "hit-3", "summary": "Vacation policy"},
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            }),
+            HttpResponse(
+                200,
+                {
+                    "value": [
+                        {
+                            "searchTerms": ["policy"],
+                            "hitsContainers": [
+                                {
+                                    "total": 3,
+                                    "moreResultsAvailable": False,
+                                    "hits": [
+                                        {"hitId": "hit-1", "summary": "Company policy document"},
+                                        {"hitId": "hit-2", "summary": "Security policy"},
+                                        {"hitId": "hit-3", "summary": "Vacation policy"},
+                                    ],
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ),
         )
 
 
 # ---------------------------------------------------------------------------
 # SharePoint checker
 # ---------------------------------------------------------------------------
+
 
 class SharePointChecker:
     """Validates SharePoint knowledge sources.
@@ -539,7 +578,10 @@ class SharePointChecker:
             # ----- Graph API path (live validation) -------------------------
             if self._graph is not None:
                 result = await self._validate_via_graph(
-                    check, parsed, errors, warnings,
+                    check,
+                    parsed,
+                    errors,
+                    warnings,
                 )
                 results.append(result.to_dict())
                 continue
@@ -592,10 +634,7 @@ class SharePointChecker:
                     "Ensure the app registration has Sites.Read.All consent."
                 )
             elif site_resp["status_code"] == 404:
-                errors.append(
-                    f"Site '{site_path}' not found on tenant '{tenant}' "
-                    f"(HTTP {site_resp['status_code']})."
-                )
+                errors.append(f"Site '{site_path}' not found on tenant '{tenant}' (HTTP {site_resp['status_code']}).")
             else:
                 errors.append(
                     f"Graph API error when checking site '{site_path}': "
@@ -628,11 +667,7 @@ class SharePointChecker:
                 if children_resp["success"]:
                     children = children_resp["data"].get("value", [])
                     estimated_items = len(children)
-                    total_bytes = sum(
-                        item.get("size", 0)
-                        for item in children
-                        if "file" in item
-                    )
+                    total_bytes = sum(item.get("size", 0) for item in children if "file" in item)
                     # Add folder children counts as rough item estimates
                     for item in children:
                         folder_info = item.get("folder")
@@ -640,15 +675,9 @@ class SharePointChecker:
                             estimated_items += folder_info.get("childCount", 0)
                     estimated_size_mb = round(total_bytes / (1024 * 1024), 2)
                 else:
-                    warnings.append(
-                        "Could not enumerate drive root children "
-                        f"(HTTP {children_resp['status_code']})."
-                    )
+                    warnings.append(f"Could not enumerate drive root children (HTTP {children_resp['status_code']}).")
         else:
-            warnings.append(
-                "Could not enumerate site drives "
-                f"(HTTP {drives_resp['status_code']})."
-            )
+            warnings.append(f"Could not enumerate site drives (HTTP {drives_resp['status_code']}).")
 
         return SharePointCheckResult(
             url=check["url"],
@@ -734,25 +763,29 @@ class SharePointChecker:
             errors = list(entry.get("errors", []))
 
             if not parsed["is_valid"]:
-                source_results.append({
-                    "url": entry["url"],
-                    "success": False,
-                    "errors": errors,
-                })
+                source_results.append(
+                    {
+                        "url": entry["url"],
+                        "success": False,
+                        "errors": errors,
+                    }
+                )
                 continue
 
             if self._graph is None:
                 # Structural-only: no live enumeration possible
-                source_results.append({
-                    "url": entry["url"],
-                    "success": True,
-                    "mode": "structural",
-                    "item_count": 0,
-                    "total_size_mb": 0.0,
-                    "drives": [],
-                    "permissions": [],
-                    "errors": errors,
-                })
+                source_results.append(
+                    {
+                        "url": entry["url"],
+                        "success": True,
+                        "mode": "structural",
+                        "item_count": 0,
+                        "total_size_mb": 0.0,
+                        "drives": [],
+                        "permissions": [],
+                        "errors": errors,
+                    }
+                )
                 continue
 
             # ---- Live enumeration via Graph API ---------------------------
@@ -765,14 +798,17 @@ class SharePointChecker:
 
             site_resp = await self._graph.get_site(tenant, site_path)
             if not site_resp["success"]:
-                source_results.append({
-                    "url": entry["url"],
-                    "success": False,
-                    "errors": errors + [
-                        f"Graph API error: HTTP {site_resp['status_code']} - "
-                        f"{site_resp.get('error', 'Unknown error')}"
-                    ],
-                })
+                source_results.append(
+                    {
+                        "url": entry["url"],
+                        "success": False,
+                        "errors": errors
+                        + [
+                            f"Graph API error: HTTP {site_resp['status_code']} - "
+                            f"{site_resp.get('error', 'Unknown error')}"
+                        ],
+                    }
+                )
                 continue
 
             site_id = site_resp["data"].get("id", "")
@@ -801,11 +837,13 @@ class SharePointChecker:
                             folder_info = child.get("folder")
                             if folder_info:
                                 drive_item_count += folder_info.get("childCount", 0)
-                            drive_entry["items"].append({
-                                "name": child.get("name", ""),
-                                "size": size,
-                                "is_folder": "folder" in child,
-                            })
+                            drive_entry["items"].append(
+                                {
+                                    "name": child.get("name", ""),
+                                    "size": size,
+                                    "is_folder": "folder" in child,
+                                }
+                            )
                         drive_entry["item_count"] = drive_item_count
                         total_items += drive_item_count
                     drives_info.append(drive_entry)
@@ -814,23 +852,27 @@ class SharePointChecker:
             perm_resp = await self._graph.list_site_permissions(site_id)
             if perm_resp["success"]:
                 for perm in perm_resp["data"].get("value", []):
-                    permissions_info.append({
-                        "id": perm.get("id", ""),
-                        "roles": perm.get("roles", []),
-                        "grantedToIdentities": perm.get("grantedToIdentities", []),
-                    })
+                    permissions_info.append(
+                        {
+                            "id": perm.get("id", ""),
+                            "roles": perm.get("roles", []),
+                            "grantedToIdentities": perm.get("grantedToIdentities", []),
+                        }
+                    )
 
-            source_results.append({
-                "url": entry["url"],
-                "success": True,
-                "mode": "graph_api",
-                "site_id": site_id,
-                "item_count": total_items,
-                "total_size_mb": round(total_size_bytes / (1024 * 1024), 2),
-                "drives": drives_info,
-                "permissions": permissions_info,
-                "errors": errors,
-            })
+            source_results.append(
+                {
+                    "url": entry["url"],
+                    "success": True,
+                    "mode": "graph_api",
+                    "site_id": site_id,
+                    "item_count": total_items,
+                    "total_size_mb": round(total_size_bytes / (1024 * 1024), 2),
+                    "drives": drives_info,
+                    "permissions": permissions_info,
+                    "errors": errors,
+                }
+            )
 
         elapsed = (time.perf_counter() - start) * 1000
         return {

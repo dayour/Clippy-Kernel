@@ -13,6 +13,6 @@ from clippybot.agentchat.copilot_agents import (
 )
 
 __all__ = [
-    "CopilotConversableAgent",
     "CopilotAssistantAgent",
+    "CopilotConversableAgent",
 ]

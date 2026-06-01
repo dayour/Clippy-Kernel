@@ -63,6 +63,7 @@ CONNECTOR_CATALOG: dict[str, dict[str, Any]] = {
 # Configuration
 # ---------------------------------------------------------------------------
 
+
 class ActionsConfig(BaseModel):
     """Configuration for ActionsIntegratorAgent."""
 
@@ -76,6 +77,7 @@ class ActionsConfig(BaseModel):
 # ---------------------------------------------------------------------------
 # Agent
 # ---------------------------------------------------------------------------
+
 
 class ActionsIntegratorAgent(CopilotAgentMixin):
     """Maps agent_spec actions to Power Platform connectors and flows.
@@ -151,39 +153,42 @@ class ActionsIntegratorAgent(CopilotAgentMixin):
                 plan_entry["connector_id"] = catalog_entry["connector_id"]
                 plan_entry["requires_flow"] = catalog_entry["requires_flow"]
             else:
-                warnings.append(
-                    f"Connector '{connector}' not in catalog. "
-                    "A custom connector definition may be needed."
-                )
+                warnings.append(f"Connector '{connector}' not in catalog. A custom connector definition may be needed.")
                 plan_entry["connector_id"] = f"/providers/Microsoft.PowerApps/apis/shared_{connector.lower()}"
                 plan_entry["requires_flow"] = False
 
             # Connection reference (deduplicate by connector)
             if connector not in seen_connectors:
                 seen_connectors.add(connector)
-                connection_refs.append({
-                    "schema_name": cr_name,
-                    "connector": connector,
-                    "connector_id": plan_entry["connector_id"],
-                })
+                connection_refs.append(
+                    {
+                        "schema_name": cr_name,
+                        "connector": connector,
+                        "connector_id": plan_entry["connector_id"],
+                    }
+                )
 
             # Environment variable for base URL if inputs present
             if action.get("inputs"):
                 ev_name = f"{prefix}_{action['name']}_BaseUrl"
-                env_vars.append({
-                    "schema_name": ev_name,
-                    "display_name": f"{action['name']} Base URL",
-                    "type": "String",
-                })
+                env_vars.append(
+                    {
+                        "schema_name": ev_name,
+                        "display_name": f"{action['name']} Base URL",
+                        "type": "String",
+                    }
+                )
 
             # Flow stub if connector requires it
             if plan_entry.get("requires_flow"):
-                flow_stubs.append({
-                    "name": f"{prefix}_{action['name']}_flow",
-                    "trigger": "automated",
-                    "connector": connector,
-                    "action_name": action["name"],
-                })
+                flow_stubs.append(
+                    {
+                        "name": f"{prefix}_{action['name']}_flow",
+                        "trigger": "automated",
+                        "connector": connector,
+                        "action_name": action["name"],
+                    }
+                )
 
             # Auth validation
             if action.get("auth") != "connectionReference":
@@ -217,25 +222,31 @@ class ActionsIntegratorAgent(CopilotAgentMixin):
         artifacts: list[dict[str, Any]] = []
 
         for cr in plan.get("connection_references", []):
-            artifacts.append({
-                "type": "connection_reference",
-                "name": cr["schema_name"],
-                "status": "stub_generated",
-            })
+            artifacts.append(
+                {
+                    "type": "connection_reference",
+                    "name": cr["schema_name"],
+                    "status": "stub_generated",
+                }
+            )
 
         for ev in plan.get("environment_variables", []):
-            artifacts.append({
-                "type": "environment_variable",
-                "name": ev["schema_name"],
-                "status": "stub_generated",
-            })
+            artifacts.append(
+                {
+                    "type": "environment_variable",
+                    "name": ev["schema_name"],
+                    "status": "stub_generated",
+                }
+            )
 
         for flow in plan.get("flow_stubs", []):
-            artifacts.append({
-                "type": "flow_definition",
-                "name": flow["name"],
-                "status": "stub_generated",
-            })
+            artifacts.append(
+                {
+                    "type": "flow_definition",
+                    "name": flow["name"],
+                    "status": "stub_generated",
+                }
+            )
 
         elapsed = (time.perf_counter() - start) * 1000
         return {
@@ -316,7 +327,7 @@ class ActionsIntegratorAgent(CopilotAgentMixin):
 
 
 __all__ = [
-    "ActionsIntegratorAgent",
-    "ActionsConfig",
     "CONNECTOR_CATALOG",
+    "ActionsConfig",
+    "ActionsIntegratorAgent",
 ]

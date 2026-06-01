@@ -103,7 +103,7 @@ class SWESwarmManager:
         try:
             # Initialize all agents
             for agent in agents:
-                if hasattr(agent, 'start'):
+                if hasattr(agent, "start"):
                     await agent.start()
 
             # Simulate swarm execution

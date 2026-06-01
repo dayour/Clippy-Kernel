@@ -1,9 +1,9 @@
 import os
 
 import pytest
-
 from clippybot.agent.problem_statement import GithubIssue
 from clippybot.run.hooks.open_pr import OpenPRConfig, OpenPRHook
+
 from clippybot.types import AgentRunResult
 
 

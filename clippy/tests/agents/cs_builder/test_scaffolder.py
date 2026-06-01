@@ -3,19 +3,19 @@
 from __future__ import annotations
 
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 from clippybot.agents.cs_builder.scaffolder import (
     AgentScaffolderAgent,
     ScaffolderConfig,
-    ScaffoldPlan,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def example_spec() -> dict[str, object]:
@@ -28,8 +28,12 @@ def example_spec() -> dict[str, object]:
             {"type": "sharepoint", "url": "https://contoso.sharepoint.com/sites/IT", "scope": "site"},
         ],
         "actions": [
-            {"name": "CreateTicket", "connector": "ServiceNow", "auth": "connectionReference",
-             "inputs": {"table": "incident"}},
+            {
+                "name": "CreateTicket",
+                "connector": "ServiceNow",
+                "auth": "connectionReference",
+                "inputs": {"table": "incident"},
+            },
             {"name": "PostToTeams", "connector": "Teams", "auth": "connectionReference"},
         ],
         "channels": ["teams", "m365_copilot"],
@@ -63,6 +67,7 @@ def scaffolder(tmp_path) -> AgentScaffolderAgent:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestScaffoldPlan:
     @pytest.mark.asyncio

@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 class InteractiveSession:
     """
     Interactive session manager for Clippy SWE Agent.
-    
+
     Provides GitHub Copilot CLI-style interactive mode with:
     - Natural language prompts
     - File attachments (@filename)
@@ -43,7 +43,7 @@ class InteractiveSession:
     def __init__(self, agent, session_file: Path | None = None):
         """
         Initialize interactive session.
-        
+
         Args:
             agent: ClippySWEAgent instance
             session_file: Optional path to save/load session
@@ -140,10 +140,10 @@ class InteractiveSession:
     def _process_input(self, user_input: str) -> dict[str, Any] | None:
         """
         Process user input and return response.
-        
+
         Args:
             user_input: User's input text
-            
+
         Returns:
             Response dictionary or None
         """
@@ -168,9 +168,7 @@ class InteractiveSession:
         self.conversation_history.append({"role": "user", "content": user_input})
 
         # Execute task with agent
-        result = self.agent.execute_task(
-            task_description=user_input, task_type="general", context=context
-        )
+        result = self.agent.execute_task(task_description=user_input, task_type="general", context=context)
 
         # Add response to history
         self.conversation_history.append({"role": "assistant", "content": result.get("result", "")})
@@ -246,9 +244,7 @@ class InteractiveSession:
 
         try:
             args = shlex.split(command)
-            result = subprocess.run(
-                args, shell=False, capture_output=True, text=True, timeout=30
-            )
+            result = subprocess.run(args, shell=False, capture_output=True, text=True, timeout=30)
 
             output = result.stdout if result.returncode == 0 else result.stderr
 

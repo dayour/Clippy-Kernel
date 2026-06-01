@@ -13,9 +13,9 @@ This module tests the comprehensive MCP toolkit functionality including:
 - System monitoring and performance tools
 """
 
-import tempfile
 import subprocess
 import sys
+import tempfile
 import warnings
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -496,7 +496,7 @@ class TestM365CopilotTools:
 
         module = toolkit._import_m365_copilot_module(module_name)
 
-        assert module.PACKAGE_NAME == module_name
+        assert module_name == module.PACKAGE_NAME
         assert str(packages_root) in sys.path
         assert str(packages_root / "microsoft_agents_m365copilot") not in sys.path
 

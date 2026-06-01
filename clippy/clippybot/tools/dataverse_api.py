@@ -19,13 +19,18 @@ from typing import Any, Protocol, runtime_checkable
 # HTTP client abstraction
 # ---------------------------------------------------------------------------
 
+
 @runtime_checkable
 class HttpClient(Protocol):
     """Protocol for HTTP requests.  Swap with a mock in tests."""
 
     async def get(self, url: str, *, headers: dict[str, str] | None = None) -> HttpResponse: ...
-    async def post(self, url: str, *, headers: dict[str, str] | None = None, body: dict[str, Any] | None = None) -> HttpResponse: ...
-    async def patch(self, url: str, *, headers: dict[str, str] | None = None, body: dict[str, Any] | None = None) -> HttpResponse: ...
+    async def post(
+        self, url: str, *, headers: dict[str, str] | None = None, body: dict[str, Any] | None = None
+    ) -> HttpResponse: ...
+    async def patch(
+        self, url: str, *, headers: dict[str, str] | None = None, body: dict[str, Any] | None = None
+    ) -> HttpResponse: ...
     async def delete(self, url: str, *, headers: dict[str, str] | None = None) -> HttpResponse: ...
 
 
@@ -62,11 +67,15 @@ class MockHttpClient:
         self.calls.append({"method": "GET", "url": url})
         return self._find_response(url)
 
-    async def post(self, url: str, *, headers: dict[str, str] | None = None, body: dict[str, Any] | None = None) -> HttpResponse:
+    async def post(
+        self, url: str, *, headers: dict[str, str] | None = None, body: dict[str, Any] | None = None
+    ) -> HttpResponse:
         self.calls.append({"method": "POST", "url": url, "body": body})
         return self._find_response(url)
 
-    async def patch(self, url: str, *, headers: dict[str, str] | None = None, body: dict[str, Any] | None = None) -> HttpResponse:
+    async def patch(
+        self, url: str, *, headers: dict[str, str] | None = None, body: dict[str, Any] | None = None
+    ) -> HttpResponse:
         self.calls.append({"method": "PATCH", "url": url, "body": body})
         return self._find_response(url)
 
@@ -78,6 +87,7 @@ class MockHttpClient:
 # ---------------------------------------------------------------------------
 # OData query builder
 # ---------------------------------------------------------------------------
+
 
 class ODataQuery:
     """Fluent OData query builder for Dataverse Web API.
@@ -177,6 +187,7 @@ class ODataQuery:
 # ---------------------------------------------------------------------------
 # Dataverse API adapter
 # ---------------------------------------------------------------------------
+
 
 class DataverseApi:
     """Extensive async Dataverse Web API client.
@@ -387,37 +398,45 @@ class DataverseApi:
 
     async def plan_check_solution_exists(self, unique_name: str) -> dict[str, Any]:
         """Dry-run: check if a solution already exists."""
-        q = (ODataQuery("solutions")
-             .select("solutionid", "uniquename", "version", "ismanaged", "createdon", "modifiedon")
-             .filter(f"uniquename eq '{unique_name}'")
-             .top(1))
+        q = (
+            ODataQuery("solutions")
+            .select("solutionid", "uniquename", "version", "ismanaged", "createdon", "modifiedon")
+            .filter(f"uniquename eq '{unique_name}'")
+            .top(1)
+        )
         return await self.plan_query(q)
 
     async def plan_list_solution_components(self, solution_id: str) -> dict[str, Any]:
         """Dry-run: list all components in a solution."""
-        q = (ODataQuery("solutioncomponents")
-             .select("solutioncomponentid", "componenttype", "objectid", "rootcomponentbehavior")
-             .filter(f"_solutionid_value eq '{solution_id}'")
-             .top(500))
+        q = (
+            ODataQuery("solutioncomponents")
+            .select("solutioncomponentid", "componenttype", "objectid", "rootcomponentbehavior")
+            .filter(f"_solutionid_value eq '{solution_id}'")
+            .top(500)
+        )
         return await self.plan_query(q)
 
     async def plan_get_solution_layers(self, solution_id: str) -> dict[str, Any]:
         """Dry-run: get solution layer information."""
-        q = (ODataQuery("msdyn_solutionhistories")
-             .select("msdyn_name", "msdyn_solutionversion", "msdyn_publishername", "msdyn_ismanaged")
-             .filter(f"msdyn_solutionid eq '{solution_id}'")
-             .order_by("msdyn_starttime desc")
-             .top(20))
+        q = (
+            ODataQuery("msdyn_solutionhistories")
+            .select("msdyn_name", "msdyn_solutionversion", "msdyn_publishername", "msdyn_ismanaged")
+            .filter(f"msdyn_solutionid eq '{solution_id}'")
+            .order_by("msdyn_starttime desc")
+            .top(20)
+        )
         return await self.plan_query(q)
 
     # -- Publisher operations -----------------------------------------------
 
     async def plan_lookup_publisher(self, prefix: str) -> dict[str, Any]:
         """Dry-run: look up a publisher by prefix."""
-        q = (ODataQuery("publishers")
-             .select("publisherid", "customizationprefix", "friendlyname", "uniquename", "description")
-             .filter(f"customizationprefix eq '{prefix}'")
-             .top(1))
+        q = (
+            ODataQuery("publishers")
+            .select("publisherid", "customizationprefix", "friendlyname", "uniquename", "description")
+            .filter(f"customizationprefix eq '{prefix}'")
+            .top(1)
+        )
         return await self.plan_query(q)
 
     async def plan_create_publisher(
@@ -429,12 +448,15 @@ class DataverseApi:
         description: str = "",
     ) -> dict[str, Any]:
         """Dry-run: create a new publisher."""
-        return await self.plan_create_record("publishers", {
-            "uniquename": unique_name,
-            "friendlyname": friendly_name,
-            "customizationprefix": prefix,
-            "description": description,
-        })
+        return await self.plan_create_record(
+            "publishers",
+            {
+                "uniquename": unique_name,
+                "friendlyname": friendly_name,
+                "customizationprefix": prefix,
+                "description": description,
+            },
+        )
 
     # -- Environment Variable operations ------------------------------------
 
@@ -446,8 +468,12 @@ class DataverseApi:
     ) -> dict[str, Any]:
         """Dry-run: list environment variable definitions."""
         q = ODataQuery("environmentvariabledefinitions").select(
-            "environmentvariabledefinitionid", "schemaname", "displayname",
-            "type", "defaultvalue", "description",
+            "environmentvariabledefinitionid",
+            "schemaname",
+            "displayname",
+            "type",
+            "defaultvalue",
+            "description",
         )
         filters: list[str] = []
         if prefix:
@@ -459,10 +485,12 @@ class DataverseApi:
 
     async def plan_get_env_variable_value(self, definition_id: str) -> dict[str, Any]:
         """Dry-run: get the current value of an environment variable."""
-        q = (ODataQuery("environmentvariablevalues")
-             .select("environmentvariablevalueid", "value", "schemaname")
-             .filter(f"_environmentvariabledefinitionid_value eq '{definition_id}'")
-             .top(1))
+        q = (
+            ODataQuery("environmentvariablevalues")
+            .select("environmentvariablevalueid", "value", "schemaname")
+            .filter(f"_environmentvariabledefinitionid_value eq '{definition_id}'")
+            .top(1)
+        )
         return await self.plan_query(q)
 
     async def plan_create_env_variable(
@@ -475,13 +503,16 @@ class DataverseApi:
         description: str = "",
     ) -> dict[str, Any]:
         """Dry-run: create an environment variable definition."""
-        return await self.plan_create_record("environmentvariabledefinitions", {
-            "schemaname": schema_name,
-            "displayname": display_name,
-            "type": var_type,
-            "defaultvalue": default_value,
-            "description": description,
-        })
+        return await self.plan_create_record(
+            "environmentvariabledefinitions",
+            {
+                "schemaname": schema_name,
+                "displayname": display_name,
+                "type": var_type,
+                "defaultvalue": default_value,
+                "description": description,
+            },
+        )
 
     async def plan_set_env_variable_value(
         self,
@@ -489,11 +520,13 @@ class DataverseApi:
         value: str,
     ) -> dict[str, Any]:
         """Dry-run: set the value of an environment variable."""
-        return await self.plan_create_record("environmentvariablevalues", {
-            "value": value,
-            "EnvironmentVariableDefinitionId@odata.bind":
-                f"/environmentvariabledefinitions({definition_id})",
-        })
+        return await self.plan_create_record(
+            "environmentvariablevalues",
+            {
+                "value": value,
+                "EnvironmentVariableDefinitionId@odata.bind": f"/environmentvariabledefinitions({definition_id})",
+            },
+        )
 
     async def plan_update_env_variable_value(
         self,
@@ -501,9 +534,13 @@ class DataverseApi:
         value: str,
     ) -> dict[str, Any]:
         """Dry-run: update an existing environment variable value."""
-        return await self.plan_update_record("environmentvariablevalues", value_id, {
-            "value": value,
-        })
+        return await self.plan_update_record(
+            "environmentvariablevalues",
+            value_id,
+            {
+                "value": value,
+            },
+        )
 
     # -- Connection Reference operations ------------------------------------
 
@@ -514,8 +551,11 @@ class DataverseApi:
     ) -> dict[str, Any]:
         """Dry-run: list connection references."""
         q = ODataQuery("connectionreferences").select(
-            "connectionreferenceid", "connectionreferencelogicalname",
-            "connectorid", "connectionreferencedisplayname", "description",
+            "connectionreferenceid",
+            "connectionreferencelogicalname",
+            "connectorid",
+            "connectionreferencedisplayname",
+            "description",
         )
         if prefix:
             q.filter(f"startswith(connectionreferencelogicalname, '{prefix}')")
@@ -524,11 +564,18 @@ class DataverseApi:
 
     async def plan_get_connection_reference(self, reference_id: str) -> dict[str, Any]:
         """Dry-run: get a specific connection reference."""
-        q = (ODataQuery("connectionreferences")
-             .by_id(reference_id)
-             .select("connectionreferenceid", "connectionreferencelogicalname",
-                     "connectorid", "connectionreferencedisplayname",
-                     "connectionid", "description"))
+        q = (
+            ODataQuery("connectionreferences")
+            .by_id(reference_id)
+            .select(
+                "connectionreferenceid",
+                "connectionreferencelogicalname",
+                "connectorid",
+                "connectionreferencedisplayname",
+                "connectionid",
+                "description",
+            )
+        )
         return await self.plan_query(q)
 
     # -- Metadata introspection ---------------------------------------------
@@ -643,7 +690,10 @@ class DataverseApi:
     async def plan_list_bot_components(self, *, prefix: str | None = None) -> dict[str, Any]:
         """Dry-run: list Copilot Studio bot components."""
         q = ODataQuery("botcomponents").select(
-            "botcomponentid", "name", "componenttype", "schemaname",
+            "botcomponentid",
+            "name",
+            "componenttype",
+            "schemaname",
         )
         if prefix:
             q.filter(f"startswith(schemaname, '{prefix}')")
@@ -652,9 +702,11 @@ class DataverseApi:
 
     async def plan_get_bot_component(self, component_id: str) -> dict[str, Any]:
         """Dry-run: get a specific bot component."""
-        q = (ODataQuery("botcomponents")
-             .by_id(component_id)
-             .select("botcomponentid", "name", "componenttype", "schemaname", "content"))
+        q = (
+            ODataQuery("botcomponents")
+            .by_id(component_id)
+            .select("botcomponentid", "name", "componenttype", "schemaname", "content")
+        )
         return await self.plan_query(q)
 
 

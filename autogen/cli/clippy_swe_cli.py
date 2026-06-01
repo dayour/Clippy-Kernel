@@ -394,14 +394,14 @@ def interactive(
 ) -> None:
     """
     Start interactive conversational mode (like GitHub Copilot CLI).
-    
+
     Features:
     - Natural language prompts
     - File attachments with @ prefix
     - Shell command execution with ! prefix
     - Slash commands (/model, /clear, /usage, etc.)
     - Session persistence
-    
+
     Examples:
         clippy-swe interactive
         clippy-swe interactive --session my-session.json
@@ -457,7 +457,7 @@ def resolve_issue(
     5. Attempts PR creation only if real changes were applied and tests passed
 
     NOTE: The change-application step is still scaffolded in the current implementation.
-    
+
     Examples:
         clippy-swe resolve-issue owner/repo 123
         clippy-swe resolve-issue owner/repo 456 --token ghp_xxx --create-pr
@@ -523,9 +523,9 @@ def generate_ppt(
 ) -> None:
     """
     Generate PowerPoint presentation from content, images, docs, etc.
-    
+
     Uses Flux 2 for image generation and multi-agent analysis for content.
-    
+
     Examples:
         clippy-swe generate-ppt "content1.txt" "content2.md" --title "My Presentation"
         clippy-swe generate-ppt document.pdf --generate-images --flux-key YOUR_KEY
@@ -585,9 +585,9 @@ def analyze_doc(
 ) -> None:
     """
     Analyze documents (PDF, Word, Excel, PowerPoint, etc.).
-    
+
     Extracts content, provides summary, key points, and insights.
-    
+
     Examples:
         clippy-swe analyze-doc document.pdf
         clippy-swe analyze-doc report.docx --output analysis.txt
@@ -644,9 +644,9 @@ def create_spec(
 ) -> None:
     """
     Create comprehensive feature specification document.
-    
+
     Includes architecture, requirements, user stories, and diagrams.
-    
+
     Examples:
         clippy-swe create-spec "User authentication system"
         clippy-swe create-spec "Real-time chat feature" --diagrams --flux-key YOUR_KEY
@@ -693,7 +693,7 @@ def analyze_recording(
     If ``--transcript`` is supplied, the agent analyzes that transcript.
     Without it, the current built-in transcription path returns placeholder text
     before generating the summary and follow-up insights.
-    
+
     Examples:
         clippy-swe analyze-recording meeting.mp4
         clippy-swe analyze-recording call.mp3 --transcript transcript.txt
@@ -746,9 +746,9 @@ def generate_image(
 ) -> None:
     """
     Generate images using Flux 2 model.
-    
+
     High-quality image generation from text prompts.
-    
+
     Examples:
         clippy-swe generate-image "A futuristic city skyline" --flux-key YOUR_KEY
         clippy-swe generate-image "Software architecture diagram" --width 1920 --height 1080
@@ -794,7 +794,7 @@ def models(
     This command lists the hard-coded model catalog and edits
     ``.clippy_swe_config.json`` in the current workspace. It does not switch the
     active runtime unless another command later loads that config file.
-    
+
     Examples:
         clippy-swe models --list
         clippy-swe models --set gpt-4 --provider openai

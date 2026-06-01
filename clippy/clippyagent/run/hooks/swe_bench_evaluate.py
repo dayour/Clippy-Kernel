@@ -18,7 +18,11 @@ from clippybot.types import AgentRunResult
 
 
 class clippybotbenchEvaluate(RunHook):
-    _SUBSET_MAP = {"lite": "clippybot-bench_lite", "verified": "clippybot-bench_verified", "multimodal": "clippybot-bench_multimodal"}
+    _SUBSET_MAP = {
+        "lite": "clippybot-bench_lite",
+        "verified": "clippybot-bench_verified",
+        "multimodal": "clippybot-bench_multimodal",
+    }
 
     def __init__(self, output_dir: Path, subset: str, split: str, continuous_submission_every: int = 0) -> None:
         super().__init__()
@@ -92,7 +96,9 @@ class clippybotbenchEvaluate(RunHook):
         (self.output_dir / "results.json").unlink(missing_ok=True)
         reports = list(output_dir.glob("*.json"))
         if len(reports) != 1:
-            self.logger.warning("Expected 1 clippybotbench report at %s, found %d. Cannot rename.", output_dir, len(reports))
+            self.logger.warning(
+                "Expected 1 clippybotbench report at %s, found %d. Cannot rename.", output_dir, len(reports)
+            )
             return
         reports[0].rename(self.output_dir / "results.json")
 

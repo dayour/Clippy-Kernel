@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
+
 class IngestorConfig(BaseModel):
     """Configuration for KnowledgeSourceIngestorAgent."""
 
@@ -39,6 +40,7 @@ class IngestorConfig(BaseModel):
 # ---------------------------------------------------------------------------
 # Agent
 # ---------------------------------------------------------------------------
+
 
 class KnowledgeSourceIngestorAgent(CopilotAgentMixin):
     """Configures and validates knowledge sources for a Copilot Studio agent.
@@ -105,9 +107,7 @@ class KnowledgeSourceIngestorAgent(CopilotAgentMixin):
                 parsed = parse_sharepoint_url(src.get("url", ""))
                 entry["parsed_url"] = parsed
                 entry["scope"] = src.get("scope", "site")
-                entry["scopes_required"] = SharePointChecker.SCOPE_MAP.get(
-                    src.get("scope", "site"), ["Sites.Read.All"]
-                )
+                entry["scopes_required"] = SharePointChecker.SCOPE_MAP.get(src.get("scope", "site"), ["Sites.Read.All"])
                 if not parsed["is_valid"]:
                     errors.append(f"Invalid SharePoint URL: {src.get('url', '')}")
                     entry["valid"] = False
@@ -276,6 +276,6 @@ class KnowledgeSourceIngestorAgent(CopilotAgentMixin):
 
 
 __all__ = [
-    "KnowledgeSourceIngestorAgent",
     "IngestorConfig",
+    "KnowledgeSourceIngestorAgent",
 ]

@@ -349,13 +349,10 @@ class SWEEnvironment:
         return False
 
     def __repr__(self) -> str:
-        return (
-            f"SWEEnvironment(working_dir={self._working_dir!r}, "
-            f"running={self._is_running})"
-        )
+        return f"SWEEnvironment(working_dir={self._working_dir!r}, running={self._is_running})"
 
 
 __all__ = [
-    "SWEEnvironmentConfig",
     "SWEEnvironment",
+    "SWEEnvironmentConfig",
 ]

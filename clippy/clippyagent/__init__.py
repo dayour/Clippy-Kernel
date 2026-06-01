@@ -106,9 +106,9 @@ get_logger("clippybot").info(get_agent_version_info())
 
 
 __all__ = [
-    "PACKAGE_DIR",
     "CONFIG_DIR",
+    "PACKAGE_DIR",
+    "__version__",
     "get_agent_commit_hash",
     "get_agent_version_info",
-    "__version__",
 ]

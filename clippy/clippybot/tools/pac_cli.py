@@ -24,6 +24,7 @@ from typing import Any, Protocol, runtime_checkable
 # Command runner abstraction
 # ---------------------------------------------------------------------------
 
+
 @runtime_checkable
 class CommandRunner(Protocol):
     """Protocol for executing shell commands.  Swap with a mock in tests."""
@@ -100,6 +101,7 @@ class MockRunner:
 # PAC CLI adapter
 # ---------------------------------------------------------------------------
 
+
 class PacCli:
     """High-level async wrapper around ``pac`` CLI commands.
 
@@ -150,12 +152,18 @@ class PacCli:
     async def apply_create_solution(self, plan: dict[str, Any]) -> dict[str, Any]:
         """Execute a previously planned ``pac solution init``."""
         d = plan["details"]
-        result = await self._runner.run([
-            "solution", "init",
-            "--publisher-name", d["publisher_name"],
-            "--publisher-prefix", d["prefix"],
-            "--outputDirectory", d["output_path"],
-        ])
+        result = await self._runner.run(
+            [
+                "solution",
+                "init",
+                "--publisher-name",
+                d["publisher_name"],
+                "--publisher-prefix",
+                d["prefix"],
+                "--outputDirectory",
+                d["output_path"],
+            ]
+        )
         return {
             "action": "create_solution",
             "dry_run": False,
@@ -194,9 +202,12 @@ class PacCli:
         """Execute a previously planned solution export."""
         d = plan["details"]
         args = [
-            "solution", "export",
-            "--path", d["solution_path"],
-            "--outputDirectory", d["output_dir"],
+            "solution",
+            "export",
+            "--path",
+            d["solution_path"],
+            "--outputDirectory",
+            d["output_dir"],
         ]
         if d["managed"]:
             args.append("--managed")
@@ -280,12 +291,18 @@ class PacCli:
     async def apply_add_env_variable(self, plan: dict[str, Any]) -> dict[str, Any]:
         """Execute adding an environment variable to a solution."""
         d = plan["details"]
-        result = await self._runner.run([
-            "solution", "add-reference",
-            "--component", "environmentvariabledefinition",
-            "--name", d["name"],
-            "--solutionRootFolder", d["solution_dir"],
-        ])
+        result = await self._runner.run(
+            [
+                "solution",
+                "add-reference",
+                "--component",
+                "environmentvariabledefinition",
+                "--name",
+                d["name"],
+                "--solutionRootFolder",
+                d["solution_dir"],
+            ]
+        )
         return {
             "action": "add_env_variable",
             "dry_run": False,
@@ -323,13 +340,20 @@ class PacCli:
     async def apply_add_connection_reference(self, plan: dict[str, Any]) -> dict[str, Any]:
         """Execute adding a connection reference."""
         d = plan["details"]
-        result = await self._runner.run([
-            "solution", "add-reference",
-            "--component", "connectionreference",
-            "--name", d["name"],
-            "--connectorId", d["connector_id"],
-            "--solutionRootFolder", d["solution_dir"],
-        ])
+        result = await self._runner.run(
+            [
+                "solution",
+                "add-reference",
+                "--component",
+                "connectionreference",
+                "--name",
+                d["name"],
+                "--connectorId",
+                d["connector_id"],
+                "--solutionRootFolder",
+                d["solution_dir"],
+            ]
+        )
         return {
             "action": "add_connection_reference",
             "dry_run": False,
@@ -341,9 +365,9 @@ class PacCli:
 
 
 __all__ = [
-    "PacCli",
-    "CommandRunner",
     "CommandResult",
-    "SubprocessRunner",
+    "CommandRunner",
     "MockRunner",
+    "PacCli",
+    "SubprocessRunner",
 ]

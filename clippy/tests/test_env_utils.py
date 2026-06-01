@@ -4,7 +4,6 @@ import os
 import subprocess
 
 import pytest
-
 from clippybot.run.hooks.open_pr import _remove_triple_backticks, format_trajectory_markdown
 from clippybot.utils.github import (
     InvalidGithubURL,

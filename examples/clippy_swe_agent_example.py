@@ -116,9 +116,7 @@ def example_windows_task():
         print("⚠️  Skipping Windows example (not running on Windows)")
         return
 
-    config = ClippySWEConfig(
-        observer_mode=True, enable_windows_automation=True, enable_app_interaction=True
-    )
+    config = ClippySWEConfig(observer_mode=True, enable_windows_automation=True, enable_app_interaction=True)
     agent = ClippySWEAgent(config=config)
 
     task_description = """

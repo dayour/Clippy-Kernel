@@ -26,8 +26,12 @@ def spec() -> dict:
             {"name": "DeviceSetup", "triggerPhrases": ["new laptop", "setup device"]},
         ],
         "actions": [
-            {"name": "CreateTicket", "connector": "ServiceNow", "auth": "connectionReference",
-             "description": "Create a support ticket"},
+            {
+                "name": "CreateTicket",
+                "connector": "ServiceNow",
+                "auth": "connectionReference",
+                "description": "Create a support ticket",
+            },
         ],
     }
 
@@ -53,7 +57,7 @@ class TestTestSuite:
     def test_score_with_results(self):
         suite = TestSuite("Test")
         suite.results = [{"passed": True}, {"passed": False}, {"passed": True}]
-        assert abs(suite.score() - 2/3) < 0.01
+        assert abs(suite.score() - 2 / 3) < 0.01
 
     def test_to_markdown(self):
         suite = TestSuite("Test")

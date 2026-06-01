@@ -127,7 +127,11 @@ class FalkorGraphQueryEngine:
 
         messages = kwargs.get("messages")
         system_message = kwargs.get("system_message", "")
-        history = self._build_completion_history(messages, system_message) if messages is not None else list(self._chat_history)
+        history = (
+            self._build_completion_history(messages, system_message)
+            if messages is not None
+            else list(self._chat_history)
+        )
 
         async def _query() -> GraphStoreQueryResult:
             async with self._create_rag() as rag:
@@ -136,12 +140,10 @@ class FalkorGraphQueryEngine:
 
         result = self._run_async(_query())
         if messages is None:
-            self._chat_history.extend(
-                [
-                    {"role": "user", "content": question},
-                    {"role": "assistant", "content": result.answer or ""},
-                ]
-            )
+            self._chat_history.extend([
+                {"role": "user", "content": question},
+                {"role": "assistant", "content": result.answer or ""},
+            ])
         return result
 
     def delete(self) -> bool:

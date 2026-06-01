@@ -3,26 +3,24 @@
 from __future__ import annotations
 
 import json
-import pytest
 
 from clippybot.tools.adaptive_cards import (
+    ACTION_TYPES,
     ADAPTIVE_CARD_SCHEMA,
     ADAPTIVE_CARD_VERSION,
-    ACTION_TYPES,
+    ELEMENT_CATALOG,
     AdaptiveCardBuilder,
     AdaptiveCardMetadata,
     AdaptiveCardTemplate,
     AdaptiveCardValidator,
-    CARD_SIZE_LIMIT_BYTES,
-    ELEMENT_CATALOG,
     conditional_expression,
     data_binding,
 )
 
-
 # ---------------------------------------------------------------------------
 # Expression helpers
 # ---------------------------------------------------------------------------
+
 
 class TestExpressionHelpers:
     def test_data_binding(self):
@@ -40,12 +38,24 @@ class TestExpressionHelpers:
 # Element catalog
 # ---------------------------------------------------------------------------
 
+
 class TestElementCatalog:
     def test_catalog_has_all_element_types(self):
         expected = {
-            "TextBlock", "Image", "ColumnSet", "Column", "Container",
-            "FactSet", "ActionSet", "Table", "Input.Text", "Input.Number",
-            "Input.Date", "Input.Toggle", "Input.ChoiceSet", "RichTextBlock",
+            "TextBlock",
+            "Image",
+            "ColumnSet",
+            "Column",
+            "Container",
+            "FactSet",
+            "ActionSet",
+            "Table",
+            "Input.Text",
+            "Input.Number",
+            "Input.Date",
+            "Input.Toggle",
+            "Input.ChoiceSet",
+            "RichTextBlock",
             "ImageSet",
         }
         assert expected == set(ELEMENT_CATALOG.keys())
@@ -61,8 +71,11 @@ class TestElementCatalog:
 
     def test_action_types_catalog(self):
         expected = {
-            "Action.OpenUrl", "Action.Submit", "Action.ShowCard",
-            "Action.Execute", "Action.ToggleVisibility",
+            "Action.OpenUrl",
+            "Action.Submit",
+            "Action.ShowCard",
+            "Action.Execute",
+            "Action.ToggleVisibility",
         }
         assert expected == set(ACTION_TYPES.keys())
 
@@ -70,6 +83,7 @@ class TestElementCatalog:
 # ---------------------------------------------------------------------------
 # AdaptiveCardBuilder
 # ---------------------------------------------------------------------------
+
 
 class TestAdaptiveCardBuilder:
     def test_build_empty_card(self):
@@ -158,11 +172,7 @@ class TestAdaptiveCardBuilder:
         assert c["bleed"] is True
 
     def test_add_fact_set(self):
-        card = (
-            AdaptiveCardBuilder()
-            .add_fact_set([("Name", "Alice"), ("Role", "Admin")])
-            .build()
-        )
+        card = AdaptiveCardBuilder().add_fact_set([("Name", "Alice"), ("Role", "Admin")]).build()
         fs = card["body"][0]
         assert fs["type"] == "FactSet"
         assert len(fs["facts"]) == 2
@@ -186,11 +196,7 @@ class TestAdaptiveCardBuilder:
         assert table["showGridLines"] is False
 
     def test_add_action_set(self):
-        card = (
-            AdaptiveCardBuilder()
-            .add_action_set([{"type": "Action.Submit", "title": "Go"}])
-            .build()
-        )
+        card = AdaptiveCardBuilder().add_action_set([{"type": "Action.Submit", "title": "Go"}]).build()
         assert card["body"][0]["type"] == "ActionSet"
 
     def test_add_input_text(self):
@@ -217,11 +223,7 @@ class TestAdaptiveCardBuilder:
         assert inp["isMultiSelect"] is True
 
     def test_add_input_toggle(self):
-        card = (
-            AdaptiveCardBuilder()
-            .add_input_toggle("agree", "I agree", value_on="yes", value_off="no")
-            .build()
-        )
+        card = AdaptiveCardBuilder().add_input_toggle("agree", "I agree", value_on="yes", value_off="no").build()
         inp = card["body"][0]
         assert inp["type"] == "Input.Toggle"
         assert inp["valueOn"] == "yes"
@@ -288,6 +290,7 @@ class TestAdaptiveCardBuilder:
 # ---------------------------------------------------------------------------
 # AdaptiveCardTemplate
 # ---------------------------------------------------------------------------
+
 
 class TestAdaptiveCardTemplate:
     def test_welcome_card(self):
@@ -408,14 +411,17 @@ class TestAdaptiveCardTemplate:
 
     def test_error_card_with_retry(self):
         card = AdaptiveCardTemplate.error_card(
-            "Timeout", "Request timed out",
+            "Timeout",
+            "Request timed out",
             retry_action={"title": "Retry", "data": {"action": "retry"}},
         )
         assert len(card["actions"]) == 1
 
     def test_action_confirmation_card(self):
         card = AdaptiveCardTemplate.action_confirmation_card(
-            "CreateTicket", "ServiceNow", {"success": True, "message": "Ticket created"},
+            "CreateTicket",
+            "ServiceNow",
+            {"success": True, "message": "Ticket created"},
         )
         assert card["type"] == "AdaptiveCard"
 
@@ -463,6 +469,7 @@ class TestAdaptiveCardTemplate:
 # AdaptiveCardValidator
 # ---------------------------------------------------------------------------
 
+
 class TestAdaptiveCardValidator:
     def test_valid_card(self):
         card = AdaptiveCardBuilder().add_text_block("Hello", wrap=True).build()
@@ -506,6 +513,7 @@ class TestAdaptiveCardValidator:
 # ---------------------------------------------------------------------------
 # AdaptiveCardMetadata
 # ---------------------------------------------------------------------------
+
 
 class TestAdaptiveCardMetadata:
     def test_metadata_creation(self):

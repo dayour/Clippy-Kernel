@@ -31,22 +31,22 @@ from clippybot.swe.tools import (
 )
 
 __all__ = [
-    # Agent
-    "clippyagent",
-    # Tools
-    "SWEToolConfig",
-    "get_swe_tools",
-    "SWETool",
     "BashTool",
     "EditTool",
-    "SearchTool",
     # Environment
     "SWEEnvironment",
     "SWEEnvironmentConfig",
     # Swarms
     "SWESwarmConfig",
     "SWESwarmManager",
+    "SWETool",
+    # Tools
+    "SWEToolConfig",
+    "SearchTool",
+    # Agent
+    "clippyagent",
     "create_code_review_swarm",
     "create_debug_swarm",
     "create_test_swarm",
+    "get_swe_tools",
 ]

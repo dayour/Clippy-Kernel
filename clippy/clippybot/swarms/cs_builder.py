@@ -42,6 +42,7 @@ logger = logging.getLogger(__name__)
 # Checkpoint tracking
 # ---------------------------------------------------------------------------
 
+
 class SwarmCheckpoint:
     """Tracks the state of each pipeline stage."""
 
@@ -51,11 +52,13 @@ class SwarmCheckpoint:
 
     def begin(self, stage: str) -> None:
         self._current = stage
-        self.stages.append({
-            "stage": stage,
-            "status": "running",
-            "start_time": time.time(),
-        })
+        self.stages.append(
+            {
+                "stage": stage,
+                "status": "running",
+                "start_time": time.time(),
+            }
+        )
         logger.info("Stage [%s] started", stage)
 
     def complete(self, result: dict[str, Any] | None = None) -> None:
@@ -81,15 +84,27 @@ class SwarmCheckpoint:
 def _summarize(result: dict[str, Any]) -> dict[str, Any]:
     """Extract a small summary from a result dict."""
     return {
-        k: v for k, v in result.items()
-        if k in ("success", "action", "dry_run", "total_files", "total_actions",
-                  "total_sources", "passed", "readiness_score", "message")
+        k: v
+        for k, v in result.items()
+        if k
+        in (
+            "success",
+            "action",
+            "dry_run",
+            "total_files",
+            "total_actions",
+            "total_sources",
+            "passed",
+            "readiness_score",
+            "message",
+        )
     }
 
 
 # ---------------------------------------------------------------------------
 # Swarm factory
 # ---------------------------------------------------------------------------
+
 
 def create_cs_builder_swarm(
     copilot_config: dict[str, Any] | None = None,
@@ -117,6 +132,7 @@ def create_cs_builder_swarm(
 # ---------------------------------------------------------------------------
 # Run pipeline
 # ---------------------------------------------------------------------------
+
 
 async def run_build(
     spec_path: str,
@@ -285,6 +301,7 @@ async def run_scaffold_only(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _generate_pipeline_cards(results: dict[str, Any]) -> dict[str, Any]:
     """Generate Adaptive Card representations for pipeline reporting."""
     from clippybot.tools.adaptive_cards import AdaptiveCardTemplate
@@ -296,7 +313,8 @@ def _generate_pipeline_cards(results: dict[str, Any]) -> dict[str, Any]:
     checkpoints = results.get("checkpoints", [])
     if checkpoints:
         cards["pipeline_progress_card"] = AdaptiveCardTemplate.pipeline_progress_card(
-            checkpoints, agent_name,
+            checkpoints,
+            agent_name,
         )
 
     # Pipeline summary card — always generated
@@ -326,6 +344,7 @@ def _load_spec(path: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     """CLI entry point for the CS Builder swarm."""

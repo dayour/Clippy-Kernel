@@ -1,7 +1,6 @@
 from unittest.mock import Mock, patch
 
 import requests
-
 from clippybot.agent.problem_statement import clippybotbenchMultimodalProblemStatement
 
 

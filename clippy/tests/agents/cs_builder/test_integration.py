@@ -10,8 +10,9 @@ run with confcutdir isolation from the root conftest.
 from __future__ import annotations
 
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 from clippybot.swarms.cs_builder import (
     create_cs_builder_swarm,

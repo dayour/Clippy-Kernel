@@ -29,11 +29,11 @@ from clippybot.agents.cs_builder.scaffolder import AgentScaffolderAgent
 from clippybot.agents.cs_builder.security import SecurityGovernanceAdvisorAgent
 
 __all__ = [
-    "RequirementsPlannerAgent",
-    "AgentScaffolderAgent",
-    "KnowledgeSourceIngestorAgent",
     "ActionsIntegratorAgent",
-    "SecurityGovernanceAdvisorAgent",
-    "PublisherAgent",
+    "AgentScaffolderAgent",
     "AnalyticsEvaluatorAgent",
+    "KnowledgeSourceIngestorAgent",
+    "PublisherAgent",
+    "RequirementsPlannerAgent",
+    "SecurityGovernanceAdvisorAgent",
 ]

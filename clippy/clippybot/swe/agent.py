@@ -163,6 +163,7 @@ class clippyagent:
 
         # Initialize environment
         from clippybot.swe.environment import SWEEnvironment, SWEEnvironmentConfig
+
         env_config = SWEEnvironmentConfig(working_dir=".", timeout=self._timeout)
         self._environment = SWEEnvironment(env_config)
 
@@ -214,11 +215,7 @@ class clippyagent:
         return result
 
     def __repr__(self) -> str:
-        return (
-            f"clippyagent(name={self.name!r}, "
-            f"tools={len(self._swe_tools)}, "
-            f"running={self._is_running})"
-        )
+        return f"clippyagent(name={self.name!r}, tools={len(self._swe_tools)}, running={self._is_running})"
 
 
 async def create_clippy_agent(

@@ -1,13 +1,13 @@
 import pytest
 import yaml
+from clippybot.agent.agents import DefaultAgent, DefaultAgentConfig
+from clippybot.agent.models import InstantEmptySubmitModelConfig, PredeterminedTestModel
+from clippybot.agent.problem_statement import EmptyProblemStatement, TextProblemStatement
 from swerex.exceptions import SwerexException
 from swerex.runtime.abstract import Action, BashObservation, Observation
 from swerex.runtime.dummy import DummyRuntime
 
 from clippybot import CONFIG_DIR
-from clippybot.agent.agents import DefaultAgent, DefaultAgentConfig
-from clippybot.agent.models import InstantEmptySubmitModelConfig, PredeterminedTestModel
-from clippybot.agent.problem_statement import EmptyProblemStatement, TextProblemStatement
 from clippybot.environment.clippybot_env import clippybotenv
 from clippybot.tools.parsing import FunctionCallingParser, Identity, ThoughtActionParser
 from clippybot.tools.tools import ToolConfig

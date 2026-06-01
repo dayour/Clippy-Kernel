@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from clippybot.agents.cs_builder.actions import ActionsIntegratorAgent, CONNECTOR_CATALOG
+from clippybot.agents.cs_builder.actions import CONNECTOR_CATALOG, ActionsIntegratorAgent
 
 
 @pytest.fixture
@@ -17,8 +17,12 @@ def spec_with_actions() -> dict:
     return {
         "publisher": {"prefix": "contit"},
         "actions": [
-            {"name": "CreateTicket", "connector": "ServiceNow", "auth": "connectionReference",
-             "inputs": {"table": "incident"}},
+            {
+                "name": "CreateTicket",
+                "connector": "ServiceNow",
+                "auth": "connectionReference",
+                "inputs": {"table": "incident"},
+            },
             {"name": "PostToTeams", "connector": "Teams", "auth": "connectionReference"},
         ],
     }

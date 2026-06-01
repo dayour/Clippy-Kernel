@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 # Check for Copilot SDK availability
 try:
     from github_copilot import create_client
+
     COPILOT_SDK_AVAILABLE = True
 except ImportError:
     COPILOT_SDK_AVAILABLE = False
@@ -122,10 +123,7 @@ class CopilotLLMClient:
     async def start(self) -> None:
         """Start the Copilot client session."""
         if not COPILOT_SDK_AVAILABLE:
-            raise RuntimeError(
-                "GitHub Copilot SDK is not available. "
-                "Install with: pip install github-copilot-sdk"
-            )
+            raise RuntimeError("GitHub Copilot SDK is not available. Install with: pip install github-copilot-sdk")
 
         if self._is_running:
             return
@@ -226,10 +224,7 @@ class CopilotLLMClient:
         return response.usage
 
     def __repr__(self) -> str:
-        return (
-            f"CopilotLLMClient(model={self.config.model!r}, "
-            f"running={self._is_running})"
-        )
+        return f"CopilotLLMClient(model={self.config.model!r}, running={self._is_running})"
 
 
 __all__ = [

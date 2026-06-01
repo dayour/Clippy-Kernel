@@ -327,7 +327,8 @@ class clippybotbenchInstances(BaseModel, AbstractInstanceSource):
             self.deployment.platform = "linux/amd64"
 
         instances = [
-            SimpleBatchInstance.from_clippybot_bench(instance).to_full_batch_instance(self.deployment) for instance in ds
+            SimpleBatchInstance.from_clippybot_bench(instance).to_full_batch_instance(self.deployment)
+            for instance in ds
         ]
         return _filter_batch_items(instances, filter_=self.filter, slice_=self.slice, shuffle=self.shuffle)
 

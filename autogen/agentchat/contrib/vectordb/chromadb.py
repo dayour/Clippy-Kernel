@@ -72,7 +72,9 @@ class ChromaVectorDB(VectorDB):
         """
         self.client = client
         self.path = path
-        self.embedding_function = _create_sentence_transformer_embedding_function() if embedding_function is None else embedding_function
+        self.embedding_function = (
+            _create_sentence_transformer_embedding_function() if embedding_function is None else embedding_function
+        )
         self.metadata = metadata if metadata else {"hnsw:space": "ip", "hnsw:construction_ef": 30, "hnsw:M": 32}
         if not self.client:
             self.client = _create_chroma_client(self.path, **kwargs)
@@ -100,7 +102,9 @@ class ChromaVectorDB(VectorDB):
             if self.active_collection and self.active_collection.name == collection_name:
                 collection = self.active_collection
             else:
-                collection = self.client.get_collection(name=collection_name, embedding_function=self.embedding_function)
+                collection = self.client.get_collection(
+                    name=collection_name, embedding_function=self.embedding_function
+                )
         except (ValueError, chromadb.errors.ChromaError):
             collection = None
         if collection is None:
@@ -330,7 +334,9 @@ class ChromaVectorDB(VectorDB):
         results = self._chroma_get_results_to_list_documents(results)
         return results
 
-    def _get_or_create_collection(self, collection_name: str, get_or_create: bool, metadata: dict | None) -> "Collection":
+    def _get_or_create_collection(
+        self, collection_name: str, get_or_create: bool, metadata: dict | None
+    ) -> "Collection":
         if get_or_create and hasattr(self.client, "get_or_create_collection"):
             return self.client.get_or_create_collection(
                 name=collection_name,

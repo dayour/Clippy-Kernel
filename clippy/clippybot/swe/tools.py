@@ -38,11 +38,20 @@ class SWEToolConfig(BaseModel):
 
     blocklist: list[str] = Field(
         default_factory=lambda: [
-            "vim", "vi", "emacs", "nano",  # Interactive editors
-            "less", "more",  # Interactive pagers
-            "gdb", "lldb",  # Interactive debuggers
-            "python", "python3", "ipython",  # Interactive shells (standalone)
-            "bash", "sh", "zsh",  # Shell spawning
+            "vim",
+            "vi",
+            "emacs",
+            "nano",  # Interactive editors
+            "less",
+            "more",  # Interactive pagers
+            "gdb",
+            "lldb",  # Interactive debuggers
+            "python",
+            "python3",
+            "ipython",  # Interactive shells (standalone)
+            "bash",
+            "sh",
+            "zsh",  # Shell spawning
             "rm -rf /",  # Dangerous commands
         ],
         description="Commands blocked from execution",
@@ -247,9 +256,7 @@ class EditTool(SWETool):
             new_file_content = content.replace(old_content, new_content, 1)
             full_path.write_text(new_file_content)
 
-            lines_changed = abs(
-                len(new_content.splitlines()) - len(old_content.splitlines())
-            ) + 1
+            lines_changed = abs(len(new_content.splitlines()) - len(old_content.splitlines())) + 1
 
             return {
                 "success": True,
@@ -336,10 +343,12 @@ class SearchTool(SWETool):
                 # Search for files by name
                 for file_path in working_path.rglob(file_pattern):
                     if file_path.is_file() and re.search(pattern, file_path.name):
-                        matches.append({
-                            "file": str(file_path.relative_to(working_path)),
-                            "type": "filename",
-                        })
+                        matches.append(
+                            {
+                                "file": str(file_path.relative_to(working_path)),
+                                "type": "filename",
+                            }
+                        )
                         if len(matches) >= max_results:
                             break
             else:
@@ -358,12 +367,14 @@ class SearchTool(SWETool):
                                 end = min(len(lines), i + context_lines + 1)
                                 context = lines[start:end]
 
-                                matches.append({
-                                    "file": str(file_path.relative_to(working_path)),
-                                    "line": i + 1,
-                                    "content": line.strip(),
-                                    "context": context,
-                                })
+                                matches.append(
+                                    {
+                                        "file": str(file_path.relative_to(working_path)),
+                                        "line": i + 1,
+                                        "content": line.strip(),
+                                        "context": context,
+                                    }
+                                )
 
                                 if len(matches) >= max_results:
                                     break
@@ -447,10 +458,10 @@ def get_swe_tools(config: SWEToolConfig | None = None) -> list[SWETool]:
 
 
 __all__ = [
-    "SWEToolConfig",
-    "SWETool",
     "BashTool",
     "EditTool",
+    "SWETool",
+    "SWEToolConfig",
     "SearchTool",
     "get_swe_tools",
 ]

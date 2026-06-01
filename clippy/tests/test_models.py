@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from clippybot.agent.models import GenericAPIModelConfig, get_model
 from pydantic import SecretStr
 
-from clippybot.agent.models import GenericAPIModelConfig, get_model
 from clippybot.tools.parsing import Identity
 from clippybot.tools.tools import ToolConfig
 from clippybot.types import History

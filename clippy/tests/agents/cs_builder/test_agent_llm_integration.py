@@ -6,17 +6,18 @@ LLM-powered methods with structural fallbacks.
 
 from __future__ import annotations
 
-import pytest
 from typing import Any
 
+import pytest
+
 from clippybot.agents.cs_builder._base import CopilotAgentMixin
-from clippybot.agents.cs_builder.security import SecurityGovernanceAdvisorAgent
-from clippybot.agents.cs_builder.scaffolder import AgentScaffolderAgent
-from clippybot.agents.cs_builder.ingestor import KnowledgeSourceIngestorAgent
 from clippybot.agents.cs_builder.actions import ActionsIntegratorAgent
-from clippybot.agents.cs_builder.publisher import PublisherAgent
-from clippybot.agents.cs_builder.planner import RequirementsPlannerAgent
 from clippybot.agents.cs_builder.analytics import AnalyticsEvaluatorAgent
+from clippybot.agents.cs_builder.ingestor import KnowledgeSourceIngestorAgent
+from clippybot.agents.cs_builder.planner import RequirementsPlannerAgent
+from clippybot.agents.cs_builder.publisher import PublisherAgent
+from clippybot.agents.cs_builder.scaffolder import AgentScaffolderAgent
+from clippybot.agents.cs_builder.security import SecurityGovernanceAdvisorAgent
 
 
 @pytest.fixture
@@ -30,8 +31,12 @@ def spec() -> dict[str, Any]:
             {"type": "sharepoint", "url": "https://contoso.sharepoint.com/sites/IT", "scope": "site"},
         ],
         "actions": [
-            {"name": "CreateTicket", "connector": "ServiceNow", "auth": "connectionReference",
-             "description": "Create a support ticket"},
+            {
+                "name": "CreateTicket",
+                "connector": "ServiceNow",
+                "auth": "connectionReference",
+                "description": "Create a support ticket",
+            },
         ],
         "channels": ["teams"],
         "security": {
@@ -182,8 +187,7 @@ class TestPlannerFallback:
         """Without LLM, planner uses heuristic extraction."""
         planner = RequirementsPlannerAgent()
         spec = await planner.generate_spec(
-            "Build an IT helpdesk agent that uses SharePoint for knowledge "
-            "and creates ServiceNow tickets."
+            "Build an IT helpdesk agent that uses SharePoint for knowledge and creates ServiceNow tickets."
         )
         assert spec["name"] == "New Agent"
         # Should detect SharePoint and ServiceNow

@@ -198,9 +198,7 @@ class GenericAPIModelConfig(PydanticBaseModel):
             _THREADS_THAT_USED_API_KEYS.append(thread_name)
         thread_idx = _THREADS_THAT_USED_API_KEYS.index(thread_name)
         key_idx = thread_idx % len(api_keys)
-        get_logger("config").debug(
-            f"Choosing API key {key_idx} for thread {thread_name} (idx {thread_idx})"
-        )
+        get_logger("config").debug(f"Choosing API key {key_idx} for thread {thread_name} (idx {thread_idx})")
         return api_keys[key_idx]
 
     @property

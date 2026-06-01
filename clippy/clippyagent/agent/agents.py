@@ -301,7 +301,10 @@ class RetryAgent(AbstractAgent):
         self._hooks.append(hook)
 
     def setup(
-        self, env: clippybotenv, problem_statement: ProblemStatement | ProblemStatementConfig, output_dir: Path = Path(".")
+        self,
+        env: clippybotenv,
+        problem_statement: ProblemStatement | ProblemStatementConfig,
+        output_dir: Path = Path("."),
     ) -> None:
         """Setup the retry agent for a new problem instance.
         This is mostly a bookkeeping step.

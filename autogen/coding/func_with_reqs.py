@@ -6,7 +6,7 @@
 # SPDX-License-Identifier: MIT
 
 import functools
-import importlib
+import importlib.util
 import inspect
 from collections.abc import Callable
 from dataclasses import dataclass, field

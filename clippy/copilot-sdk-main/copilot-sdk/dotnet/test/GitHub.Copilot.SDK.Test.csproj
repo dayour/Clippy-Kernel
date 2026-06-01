@@ -30,6 +30,9 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="StreamJsonRpc" Version="2.24.92" />
+    <!-- Override the vulnerable Nerdbank.MessagePack 1.1.62 pulled transitively
+         by StreamJsonRpc (NU1902: GHSA-92vj-hp7m-gwcj, GHSA-qjvr-435c-5fjh). -->
+    <PackageReference Include="Nerdbank.MessagePack" Version="1.2.4" />
   </ItemGroup>
 
   <ItemGroup>

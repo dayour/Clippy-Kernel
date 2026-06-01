@@ -25,7 +25,11 @@
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.6.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
     <PackageReference Include="StreamJsonRpc" Version="2.24.92" PrivateAssets="compile" />
-    <PackageReference Include="System.Text.Json" Version="10.0.8" />
+    <!-- Pin a patched Nerdbank.MessagePack; the version pulled transitively by
+         StreamJsonRpc 2.24.92 (1.1.62) has known moderate-severity advisories
+         (GHSA-92vj-hp7m-gwcj, GHSA-qjvr-435c-5fjh). System.Text.Json is part of
+         the net10.0 shared framework, so an explicit reference is redundant. -->
+    <PackageReference Include="Nerdbank.MessagePack" Version="1.2.4" PrivateAssets="compile" />
   </ItemGroup>
 
 </Project>

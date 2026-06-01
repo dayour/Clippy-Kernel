@@ -218,6 +218,39 @@ else:
     bedrock_BotoCoreError = bedrock_ClientError = Exception  # noqa: N816
     bedrock_import_exception = ImportError("botocore not found")
 
+
+def _build_retryable_provider_exceptions() -> tuple[type[BaseException], ...]:
+    candidates = (
+        gemini_InternalServerError,
+        gemini_ResourceExhausted,
+        anthorpic_InternalServerError,
+        anthorpic_RateLimitError,
+        mistral_SDKError,
+        mistral_HTTPValidationError,
+        together_TogetherException,
+        groq_InternalServerError,
+        groq_RateLimitError,
+        groq_APIConnectionError,
+        cohere_InternalServerError,
+        cohere_TooManyRequestsError,
+        cohere_ServiceUnavailableError,
+        ollama_RequestError,
+        ollama_ResponseError,
+        bedrock_BotoCoreError,
+        bedrock_ClientError,
+        cerebras_AuthenticationError,
+        cerebras_InternalServerError,
+        cerebras_RateLimitError,
+    )
+    return tuple(
+        error
+        for error in dict.fromkeys(candidates)
+        if inspect.isclass(error) and issubclass(error, BaseException) and error is not Exception
+    )
+
+
+RETRYABLE_PROVIDER_EXCEPTIONS = _build_retryable_provider_exceptions()
+
 logger = logging.getLogger(__name__)
 if not logger.handlers:
     # Add the console handler.
@@ -1195,6 +1228,10 @@ class OpenAIWrapper:
                 request_ts = get_current_ts()
                 response = client.create(params)
             except Exception as e:
+                if RETRYABLE_PROVIDER_EXCEPTIONS and isinstance(e, RETRYABLE_PROVIDER_EXCEPTIONS):
+                    if i == last:
+                        raise
+                    continue
                 if openai_result.is_successful:
                     if APITimeoutError is not None and isinstance(e, APITimeoutError):
                         # logger.debug(f"config {i} timed out", exc_info=True)
@@ -1226,31 +1263,6 @@ class OpenAIWrapper:
                     else:
                         raise
                 else:
-                    raise
-            except (
-                gemini_InternalServerError,
-                gemini_ResourceExhausted,
-                anthorpic_InternalServerError,
-                anthorpic_RateLimitError,
-                mistral_SDKError,
-                mistral_HTTPValidationError,
-                together_TogetherException,
-                groq_InternalServerError,
-                groq_RateLimitError,
-                groq_APIConnectionError,
-                cohere_InternalServerError,
-                cohere_TooManyRequestsError,
-                cohere_ServiceUnavailableError,
-                ollama_RequestError,
-                ollama_ResponseError,
-                bedrock_BotoCoreError,
-                bedrock_ClientError,
-                cerebras_AuthenticationError,
-                cerebras_InternalServerError,
-                cerebras_RateLimitError,
-            ):
-                # logger.debug(f"config {i} failed", exc_info=True)
-                if i == last:
                     raise
             else:
                 # add cost calculation before caching no matter filter is passed or not

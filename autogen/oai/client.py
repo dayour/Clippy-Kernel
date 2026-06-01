@@ -262,6 +262,9 @@ LEGACY_DEFAULT_CACHE_SEED = 41
 LEGACY_CACHE_DIR = ".cache"
 OPEN_API_BASE_URL_PREFIX = "https://api.openai.com"
 
+# These mirror the keyword-only args of openai.OpenAI/AzureOpenAI.__init__ and are used only
+# as a fallback when the openai SDK is not installed. test_fallback_kwargs guards them against
+# SDK drift; resync with the installed openai version if that test fails.
 OPENAI_FALLBACK_KWARGS = {
     "api_key",
     "organization",
@@ -275,6 +278,9 @@ OPENAI_FALLBACK_KWARGS = {
     "http_client",
     "_strict_response_validation",
     "webhook_secret",
+    "workload_identity",
+    "_enforce_credentials",
+    "admin_api_key",
 }
 
 AOPENAI_FALLBACK_KWARGS = {
@@ -295,6 +301,9 @@ AOPENAI_FALLBACK_KWARGS = {
     "base_url",
     "project",
     "webhook_secret",
+    "workload_identity",
+    "_enforce_credentials",
+    "admin_api_key",
 }
 
 

@@ -73,8 +73,29 @@ The result demonstrates engineering excellence across three dimensions:
 | Item | Before | After |
 |---|---|---|
 | requires-python | >=3.10,<3.14 | >=3.10,<3.15 |
-| CI matrix | 3.10, 3.11, 3.12, 3.13 | 3.10, 3.11, 3.12, 3.13, 3.14 |
+| CI matrix (core-test) | 3.10, 3.11, 3.12, 3.13 | 3.10, 3.11, 3.12, 3.13, 3.14 |
 | Python 3.14 status | unsupported | added (GA mid-2026) |
+
+#### Python 3.14 support scope (precise)
+
+Python 3.14 support was added to the **core autogen package**, not blanket across the
+whole monorepo. The boundary is dictated by upstream wheel availability — most notably
+`litellm`, which declares `Requires-Python <3.14` and has no 3.14 wheel, gating every
+component that depends on it.
+
+| Component | 3.14 supported | Reason / gating dependency |
+|---|---|---|
+| autogen core (`.[test,cosmosdb,redis,websockets,openai,docs]`) | Yes | Validated: 1878 passed, 0 modernization regressions on Python 3.14.3 |
+| autogen `interop` extra | No | Pulls `litellm>=1.86.2` (no 3.14 wheel) |
+| clippybot subproject (`clippy/`) | No | Hard dep on `litellm>=1.86.2`; `requires-python` capped `>=3.11,<3.14` |
+| Heavy RAG / graph extras (contrib matrix) | Not yet | Transitive wheels lag on 3.14; matrix stays `<=3.13` |
+
+CI honesty: only `core-test` runs the full Python 3.14 leg (with the `interop` extra
+conditionally skipped on 3.14), and `type-check` runs a single 3.14 leg with
+`optional-dependencies: none`. The `contrib-test` and `test-with-optional-deps` matrices
+remain capped at 3.13 because their extras are not 3.14-ready upstream. Precise statement:
+**core supports 3.14; the interop extra, clippybot subproject, and heavy optional extras do
+not yet.**
 
 ### Core Frameworks and Serialization
 
@@ -200,8 +221,10 @@ All dependency manifests updated in a single atomic commit:
 - `clippy/pyproject.toml` (clippybot): 42 lines changed; application layer pins updated.
 - `website/package.json`: mintlify 4.2.587.
 - `.pre-commit-config.yaml`: pre-commit-hooks v6; codespell 2.4.2.
-- Four CI workflow files: Python 3.14 added to core-test, type-check, contrib-test,
-  test-with-optional-deps matrices.
+- CI workflow files: Python 3.14 added to the `core-test` full matrix (with the `interop`
+  extra conditionally skipped on 3.14) and a single `type-check` leg
+  (`optional-dependencies: none`). The `contrib-test` and `test-with-optional-deps` matrices
+  intentionally remain capped at 3.13, as their heavy extras are not 3.14-ready upstream.
 
 Total: 8 files, 120 insertions, 119 deletions.
 

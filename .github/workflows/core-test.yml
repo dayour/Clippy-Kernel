@@ -80,7 +80,15 @@ jobs:
         shell: bash
       - name: Install packages and dependencies
         run: |
-          uv pip install --system -e .[test,cosmosdb,interop,redis,websockets,openai,docs]
+          uv pip install --system -e .[test,cosmosdb,redis,websockets,openai,docs]
+      # The interop extra pulls litellm>=1.86.2, which has no Python 3.14 wheel
+      # (litellm declares Requires-Python <3.14). Interop-marked tests are
+      # deselected by test-core-skip-llm.sh, so skipping the extra on 3.14 loses
+      # no core coverage.
+      - name: Install interop extra (except on Python 3.14)
+        if: matrix.python-version != '3.14'
+        run: |
+          uv pip install --system -e .[interop]
       - name: Install optional dependencies for code executors
         run: |
           uv pip install --system -e ".[jupyter-executor]"

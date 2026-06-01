@@ -15,7 +15,7 @@ name = "clippybot"
 dynamic = ["version"]
 description = "Hybrid agent toolkit combining a mature local runtime with emerging Copilot Studio, Power Platform, Teams, and Microsoft 365 acceleration flows."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 license = {file = "LICENSE"}
 keywords = ["nlp", "agents", "code"]
 authors = [
@@ -36,7 +36,6 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: 3 :: Only",
 ]
 

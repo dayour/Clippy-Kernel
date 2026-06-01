@@ -36,8 +36,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   removing bare `asyncio.run()` calls that fail inside a running loop.
 - Made the websockets I/O server header shim signature-aware: it introspects `ws_serve` and
   selects `additional_headers` vs `extra_headers` automatically instead of a hardcoded remap.
+- Added GraphRAG `_run_async` loop-safety unit tests (8 parametrized across the Neo4j and
+  FalkorDB engines) that exercise the bridge with and without a running event loop without
+  requiring a live database.
+- Added focused provider-exception-guard tests (`test/oai/test_provider_exception_guards.py`,
+  17 passing) covering cross-config failover for non-OpenAI providers.
 
 ### Fixed
+- **OpenAIWrapper cross-provider failover**: the broad `except Exception` clause in
+  `OpenAIWrapper.create()` preceded the provider-specific retryable-exception clause, making the
+  latter unreachable dead code so non-OpenAI provider errors never triggered cross-config
+  failover. Reworked to precompute `RETRYABLE_PROVIDER_EXCEPTIONS` (excluding any provider symbol
+  aliased to bare `Exception` when its SDK is absent) and test membership at the top of the broad
+  handler.
+- **OpenAI fallback kwargs drift**: openai 2.38.0 added three keyword-only constructor args
+  (`workload_identity`, `_enforce_credentials`, `admin_api_key`); added them to both
+  `OPENAI_FALLBACK_KWARGS` and `AOPENAI_FALLBACK_KWARGS` so `test_fallback_kwargs` passes against
+  the upgraded SDK.
 - Corrected 19 self-referential `ag2[...]` optional-dependency extras to `clippy-kernel[...]`,
   which would otherwise pull the upstream `ag2` package from PyPI instead of the local project.
 - Added a missing `datetime` import in `autogen/mcp/clippy_mcp.py` (latent `NameError`).

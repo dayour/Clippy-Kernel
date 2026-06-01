@@ -1,7 +1,7 @@
 # Clippy-Kernel Total Modernization — Engineering Excellence Showcase
 
 **Branch:** `upgrade/modernization-2026`
-**Commits:** `c0746119` (Phase 1 manifests) + `156faf26` (Phase 2 remediation) + `a479ab6e`, `a7917881`, `d09a5aa5` (Phase 4 hardening)
+**Commits:** `c0746119` (Phase 1 manifests) + `156faf26` (Phase 2 remediation) + `a479ab6e`, `a7917881`, `d09a5aa5`, `f8d31d5b` (Phase 4 hardening) + `7ae907f9`, `3a9c7971`, `acc5eff5` (Phase 4b post-sign-off wave)
 **Date:** 2026-05-31
 **Author:** Daryl Yourk (@dayour) with dayour-swe fleet co-authors
 
@@ -356,6 +356,41 @@ GitHub API, WinError 2 tool-binaries-off-PATH, POSIX-vs-Windows path semantics, 
 JSON fixture) — none introduced by the hardening pass. graphrag modules pass an AST/compile
 audit and ruff is clean across all Phase 4 changes.
 
+**H6 — Documentation modernization.**
+A `[Unreleased]` CHANGELOG section captures the full runtime/toolchain modernization and the
+Phase 4 hardening; emoji decorations were stripped from the file per project policy.
+
+### Phase 4b — Post-Sign-Off Hardening Wave (commits 7ae907f9, 3a9c7971, acc5eff5)
+
+A second dayour-swe wave was deployed after the dayswarm sign-off to push coverage and fix a
+latent bug surfaced while writing tests for the upgraded provider SDKs.
+
+**HB3 — GraphRAG loop-safety unit tests.**
+The H3 loop-safe `_run_async` bridge had no direct coverage (the existing graph_rag tests all
+require a live database plus OpenAI). Added `test_graph_rag_loop_safety.py`: 4 tests
+parametrized across the Neo4j and FalkorDB engines (8 total) that bypass `__init__` via
+`object.__new__` and assert correct behavior both inside and outside a running event loop,
+with per-engine `pytest.importorskip`. Result: 8 passed in a neo4j-extra venv; 8 skip cleanly
+when the extra is absent.
+
+**HB2 — Provider exception-guard fix (HIGH-severity latent bug).**
+While adding failover tests for the upgraded provider SDKs, the wave found that the broad
+`except Exception` clause in `OpenAIWrapper.create()` preceded the provider-specific retryable
+clause. Because every provider exception subclasses `Exception`, the provider clause was
+unreachable dead code and non-OpenAI provider errors never triggered cross-config failover.
+Fixed by precomputing a module-level `RETRYABLE_PROVIDER_EXCEPTIONS` tuple — explicitly
+excluding any provider symbol aliased to bare `Exception` when its SDK is not installed, to
+avoid turning the guard into a catch-all — and testing `isinstance` membership at the top of
+the broad handler. Added `test/oai/test_provider_exception_guards.py` (17 passed, 1 skipped).
+
+**HB2b — OpenAI fallback kwargs resync.**
+openai 2.38.0 added three keyword-only constructor args (`workload_identity`,
+`_enforce_credentials`, `admin_api_key`). The static `OPENAI_FALLBACK_KWARGS` /
+`AOPENAI_FALLBACK_KWARGS` sets (used only when the openai SDK is absent) were stale, failing
+the `test_fallback_kwargs` drift canary after the SDK upgrade. Both sets were resynced and a
+maintainer note added. This was a pre-existing modernization gap, independently verified by
+stashing the HB2 change.
+
 ---
 
 ## 5. Validation Status
@@ -371,6 +406,9 @@ Results below are from actual runs, not projections.
 | autogen core suite (Python 3.14) | `scripts/test-core-skip-llm.sh` family | 1878 passed; 8 Windows-host platform artifacts only; 0 modernization regressions |
 | clippybot suite (Python 3.13) | `pytest -m "not slow and not ctf"` | 336 passed (was 324 pre-Phase-4; +12 from windowed tool restoration); 14 failed + 7 errored, ALL pre-existing/host artifacts (see below); 0 dependency regressions |
 | A2A unit tests (Python 3.13) | `pytest test/a2a` (a2a-sdk 1.1.0) | 12 passed; peer-free conversion coverage added in Phase 4 (closes dayswarm Risk #4) |
+| GraphRAG loop-safety tests (Python 3.13) | `pytest test_graph_rag_loop_safety.py` (neo4j extra) | 8 passed (4 tests x 2 engines); 8 skip cleanly without the extra. Phase 4b coverage for the H3 `_run_async` bridge. |
+| Provider exception guards (Python 3.14) | `pytest test/oai/test_provider_exception_guards.py` | 17 passed, 1 skipped. Phase 4b coverage for the cross-config failover fix (HB2). |
+| OpenAI fallback-kwargs canary (Python 3.14) | `pytest test/oai/test_client.py::test_fallback_kwargs` | PASS after resyncing both fallback kwarg sets with the openai 2.38.0 constructor (HB2b). |
 | Copilot SDK - Go (1.26) | `go test ./...` (root unit) | PASS after `go mod tidy` synced go.sum for jsonschema-go 0.4.3 |
 | Copilot SDK - Node (TS 6 / vitest 4) | `tsc --noEmit` + `vitest run` | Build + typecheck green; 20 unit tests pass after tsconfig TS6 fix |
 | Copilot SDK - Python (3.13 / pytest 9) | `pytest` (unit) | 35 unit tests pass after `requires-python >=3.10` fix |
@@ -523,6 +561,13 @@ The following ordered steps are required before this branch is merge-ready:
     automation currently watches for the wheel. ACTION FOR INTEGRATOR: when litellm ships a
     3.14-compatible release, lift the conditional skips in the `core-test` / `type-check` CI
     legs and widen the clippybot `requires-python` cap; re-run the clippybot suite on 3.14.
+
+11. **Wire up the A2A production import path (dayswarm Phase 4 finding F3).**
+    The Phase 4b review confirmed that `autogen.agentchat.remote` does not exist in this fork,
+    so the production a2a server/client imports that reference it would fail at runtime. The new
+    `test/a2a/` unit tests are peer-free and exercise only the pure conversion logic, so they are
+    unaffected. ACTION FOR INTEGRATOR: either port the upstream `autogen.agentchat.remote`
+    module or repoint the a2a production imports before relying on live A2A agent execution.
 
 ---
 

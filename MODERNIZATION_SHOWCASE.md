@@ -101,7 +101,7 @@ not yet.**
 
 | Package | Before | After | Notes |
 |---|---|---|---|
-| protobuf | 6.33.2 | 7.35.0 | Highest blast radius; affects chromadb, otlp, grpc, retrieve stack |
+| protobuf | 6.33.2 | >=6.33.6,<7 (held; a2a-sdk 1.1.0 caps <7) | Highest blast radius; affects chromadb, otlp, grpc, retrieve stack. Full-send target was 7.x but held at latest 6.x because a2a-sdk 1.1.0 requires protobuf<7 (see Section 5). |
 | pydantic | 2.x (unspecified floor) | >=2.13.4 | union-validation normalization required |
 | pydantic-settings | 2.x | >=2.14.1 | |
 | graphrag_sdk | 0.8.0 | 1.1.1 | Full async rewrite; bridge layer required |
@@ -259,9 +259,11 @@ This was the deepest code migration:
 **B4 — Web and communications.**
 - `duckduckgo_search` was retired upstream in favour of the `ddgs` package. The single
   experimental search module was updated to `from ddgs import DDGS`.
-- websockets 16 removed the `additional_headers` constructor argument and changed the
-  `ssl` parameter semantics. `autogen/io/websockets.py` was updated to use the new
-  `extra_headers` argument and the updated SSL context passing convention.
+- websockets 16 removed the legacy `extra_headers` constructor argument (replaced by
+  `additional_headers`) and changed the `ssl` parameter semantics. `autogen/io/websockets.py`
+  was updated to pass the new `additional_headers` argument and the updated SSL context
+  convention, while still accepting a caller-supplied legacy `extra_headers` kwarg and
+  remapping it to `additional_headers` for backward compatibility.
 
 **B5 — A2A interoperability.**
 `a2a-sdk` 1.x is a complete redesign: the 0.3.x REST-over-HTTP model was replaced with a

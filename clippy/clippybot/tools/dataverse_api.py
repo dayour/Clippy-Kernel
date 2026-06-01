@@ -12,12 +12,8 @@ All public functions support the plan/apply pattern:
 
 from __future__ import annotations
 
-import json
 import time
-import uuid
 from typing import Any, Protocol, runtime_checkable
-from urllib.parse import quote
-
 
 # ---------------------------------------------------------------------------
 # HTTP client abstraction

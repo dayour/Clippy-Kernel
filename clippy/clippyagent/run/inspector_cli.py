@@ -9,15 +9,14 @@ import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+from clippybot.utils.files import load_file
+from clippybot.utils.serialization import _yaml_serialization_with_linebreaks
 from rich.syntax import Syntax
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Container, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Footer, Header, Input, ListItem, ListView, Static
-
-from clippybot.utils.files import load_file
-from clippybot.utils.serialization import _yaml_serialization_with_linebreaks
 
 
 def _move_items_top(d: dict, keys: list[str]) -> dict:
@@ -207,7 +206,7 @@ class TrajectorySelectorScreen(ModalScreen[int]):
         self.all_items = self._get_list_item_texts(self.paths)
         self.filtered_indices = list(range(len(self.all_items)))
 
-    def on_input_changed(self, event: Input.Changed) -> None:
+    async def on_input_changed(self, event: Input.Changed) -> None:
         """Filter list items based on input"""
         filter_text = event.value.lower()
         list_view = self.query_one("#trajectory-list", ListView)
@@ -223,12 +222,14 @@ class TrajectorySelectorScreen(ModalScreen[int]):
             return
 
         # Update ListView with filtered items
-        list_view.clear()
+        await list_view.clear()
         for item in filtered_items:
-            list_view.append(ListItem(Static(item, markup=False)))
+            await list_view.append(ListItem(Static(item, markup=False)))
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         # Map the filtered index back to the original index
+        if event.list_view.index is None:
+            return
         original_index = self.filtered_indices[event.list_view.index]
         print(f"Selected index: {original_index}")
         self.dismiss(original_index)

@@ -46,8 +46,15 @@ from ..llm_config.entry import LLMConfigEntry, LLMConfigEntryDict
 from .oai_models import ChatCompletion, ChatCompletionMessage, ChatCompletionMessageToolCall, Choice, CompletionUsage
 
 with optional_import_block():
-    from cohere import ClientV2 as CohereV2
-    from cohere.types import ToolResult
+    try:
+        from cohere import ClientV2 as CohereV2
+    except ImportError:
+        from cohere import Client as CohereV2
+
+    try:
+        from cohere.types.tool_result import ToolResult
+    except ImportError:
+        from cohere.types import ToolResult
 
 logger = logging.getLogger(__name__)
 if not logger.handlers:

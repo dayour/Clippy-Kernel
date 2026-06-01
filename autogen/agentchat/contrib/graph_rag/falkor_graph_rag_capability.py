@@ -70,11 +70,27 @@ class FalkorGraphRagCapability(GraphRagCapability):
         Returns:
             A tuple containing a boolean indicating success and the assistant's reply.
         """
-        # todo: fix typing, this is not correct
-        question = self._messages_summary(messages, recipient.system_message)  # type: ignore[arg-type]
-        result: GraphStoreQueryResult = self.query_engine.query(question)
+        if not messages:
+            return False, None
+
+        question = self._get_last_question(messages[-1])
+        if not question:
+            return False, None
+
+        result: GraphStoreQueryResult = self.query_engine.query(
+            question,
+            messages=messages[:-1],
+            system_message=recipient.system_message,
+        )
 
         return True, result.answer if result.answer else "I'm sorry, I don't have an answer for that."
+
+    def _get_last_question(self, message: dict[str, Any] | str) -> str | None:
+        if isinstance(message, str):
+            return message
+        if isinstance(message, dict) and "content" in message and message["content"] is not None:
+            return str(message["content"])
+        return None
 
     def _messages_summary(self, messages: dict[str, Any] | str, system_message: str) -> str:
         """Summarize the messages in the conversation history. Excluding any message with 'tool_calls' and 'tool_responses'

@@ -27,13 +27,13 @@ import time
 from pathlib import Path
 from typing import Any
 
-from clippybot.agents.cs_builder.planner import RequirementsPlannerAgent
-from clippybot.agents.cs_builder.scaffolder import AgentScaffolderAgent
-from clippybot.agents.cs_builder.ingestor import KnowledgeSourceIngestorAgent
 from clippybot.agents.cs_builder.actions import ActionsIntegratorAgent
-from clippybot.agents.cs_builder.security import SecurityGovernanceAdvisorAgent
-from clippybot.agents.cs_builder.publisher import PublisherAgent
 from clippybot.agents.cs_builder.analytics import AnalyticsEvaluatorAgent
+from clippybot.agents.cs_builder.ingestor import KnowledgeSourceIngestorAgent
+from clippybot.agents.cs_builder.planner import RequirementsPlannerAgent
+from clippybot.agents.cs_builder.publisher import PublisherAgent
+from clippybot.agents.cs_builder.scaffolder import AgentScaffolderAgent
+from clippybot.agents.cs_builder.security import SecurityGovernanceAdvisorAgent
 
 logger = logging.getLogger(__name__)
 

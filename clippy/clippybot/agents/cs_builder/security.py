@@ -23,8 +23,7 @@ import hashlib
 import json
 import logging
 import re
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -103,7 +102,7 @@ class GovernanceReport:
         self.agent_name = agent_name
         self.spec_path = spec_path
         self.findings: list[Finding] = []
-        self.timestamp = datetime.now(timezone.utc).isoformat()
+        self.timestamp = datetime.now(UTC).isoformat()
         self._hash: str = ""
 
     @property
@@ -156,8 +155,8 @@ class GovernanceReport:
             "",
             "## Summary",
             "",
-            f"| Pass | Warn | Fail |",
-            f"|------|------|------|",
+            "| Pass | Warn | Fail |",
+            "|------|------|------|",
             f"| {self.summary['pass']} | {self.summary['warn']} | {self.summary['fail']} |",
             "",
             "## Findings",
@@ -166,23 +165,23 @@ class GovernanceReport:
         for f in self.findings:
             icon = {"pass": "OK", "warn": "WARN", "fail": "FAIL"}.get(f.severity, "?")
             lines.append(f"### [{icon}] {f.rule_id}")
-            lines.append(f"")
+            lines.append("")
             lines.append(f"{f.message}")
             if f.location:
-                lines.append(f"")
+                lines.append("")
                 lines.append(f"**Location:** `{f.location}`")
             if f.remediation:
-                lines.append(f"")
+                lines.append("")
                 lines.append(f"**Remediation:** {f.remediation}")
             if f.diff:
-                lines.append(f"")
-                lines.append(f"```diff")
+                lines.append("")
+                lines.append("```diff")
                 lines.append(f"{f.diff}")
-                lines.append(f"```")
+                lines.append("```")
             lines.append("")
 
         if self._hash:
-            lines.append(f"---")
+            lines.append("---")
             lines.append(f"Integrity hash: `{self._hash}`")
 
         return "\n".join(lines)

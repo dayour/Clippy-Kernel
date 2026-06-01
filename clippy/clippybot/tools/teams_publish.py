@@ -17,8 +17,7 @@ import time
 import uuid
 from typing import Any
 
-from clippybot.tools.dataverse_api import HttpClient, HttpResponse, MockHttpClient
-
+from clippybot.tools.dataverse_api import HttpClient, MockHttpClient
 
 # ---------------------------------------------------------------------------
 # Channel definitions

@@ -7,10 +7,9 @@ from typing import Any, Literal, Protocol
 from urllib.parse import urlparse
 
 import requests
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
-
 from clippybot.utils.github import _get_problem_statement_from_github_issue, _parse_gh_issue_url
 from clippybot.utils.log import get_logger
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 logger = get_logger("swea-config")
 

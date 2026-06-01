@@ -132,13 +132,17 @@ class IOWebsockets(IOStream):
         """
         server_dict: dict[str, WebSocketServer] = {}
 
+        if "extra_headers" in kwargs and "additional_headers" not in kwargs:
+            kwargs["additional_headers"] = kwargs.pop("extra_headers")
+        if ssl_context is not None and "ssl" not in kwargs:
+            kwargs["ssl"] = ssl_context
+
         def _run_server() -> None:
             # print(f" - _run_server(): starting server on ws://{host}:{port}", flush=True)
             with ws_serve(
                 handler=partial(IOWebsockets._handler, on_connect=on_connect),
                 host=host,
                 port=port,
-                ssl_context=ssl_context,
                 **kwargs,
             ) as server:
                 # print(f" - _run_server(): server {server} started on ws://{host}:{port}", flush=True)

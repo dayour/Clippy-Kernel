@@ -26,21 +26,20 @@ import sys
 import tempfile
 from getpass import getuser
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import yaml
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from swerex.deployment.abstract import AbstractDeployment
-from swerex.deployment.config import DeploymentConfig, get_deployment
-from typing_extensions import Self
-
 from clippybot.agent.agents import DefaultAgent
 from clippybot.agent.models import ReplayModelConfig
-from clippybot.environment.clippybot_env import clippybotenv
 from clippybot.run.common import BasicCLI, ConfigHelper
 from clippybot.run.run_single import RunSingle, RunSingleConfig
 from clippybot.utils.config import load_environment_variables
 from clippybot.utils.log import get_logger
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from swerex.deployment.abstract import AbstractDeployment
+from swerex.deployment.config import DeploymentConfig, get_deployment
+
+from clippybot.environment.clippybot_env import clippybotenv
 
 
 class RunReplayConfig(BaseSettings, cli_implicit_flags=False):

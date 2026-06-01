@@ -92,7 +92,7 @@ openai = [
 ]
 
 openai-realtime = [
-    "ag2[openai]",
+    "clippy-kernel[openai]",
     "openai[realtime]",
 ]
 
@@ -115,26 +115,26 @@ retrievechat = [
 ]
 
 retrievechat-pgvector = [
-    "ag2[retrievechat]",
+    "clippy-kernel[retrievechat]",
     "pgvector>=0.2.5",
     "psycopg[binary]>=3.1.18; platform_system=='Windows' or platform_system=='Darwin'",
     "psycopg>=3.1.18; platform_system=='Linux'",
 ]
 
 retrievechat-mongodb = [
-    "ag2[retrievechat]",
+    "clippy-kernel[retrievechat]",
     "pymongo>=4.0.0",
     "numpy",
 ]
 
 retrievechat-qdrant = [
-    "ag2[retrievechat]",
+    "clippy-kernel[retrievechat]",
     "qdrant_client",
     "fastembed>=0.3.1",
 ]
 
 retrievechat-couchbase = [
-    "ag2[retrievechat]",
+    "clippy-kernel[retrievechat]",
     "couchbase>=4.3.0",
     "numpy",
 ]
@@ -175,13 +175,13 @@ google-client = [
 ]
 
 google-api = [
-    "ag2[google-client]",
+    "clippy-kernel[google-client]",
     "google-auth-httplib2>=0.4.0,<0.5",
     "google-auth-oauthlib>=1.4.0,<2.0",
 ]
 
 google-search = [
-    "ag2[google-client]",
+    "clippy-kernel[google-client]",
 ]
 
 wikipedia = [
@@ -221,7 +221,7 @@ copilot-sdk = [
     "httpx>=0.28.1",
     "anthropic>=0.105.2",
     "google-generativeai>=0.8.0",
-    "ag2[openai]",  # For OpenAI models
+    "clippy-kernel[openai]",  # For OpenAI models
     "python-pptx>=1.0.0",  # For PowerPoint generation
     "python-docx>=1.1.0",  # For Word processing
     "PyPDF2>=3.0.0",  # For PDF processing
@@ -230,7 +230,7 @@ copilot-sdk = [
 ]
 
 windows-clippy-mcp = [
-    "ag2[mcp]",
+    "clippy-kernel[mcp]",
     "azure-identity>=1.25.3",
     "azure-keyvault-secrets>=4.11.0",
     "websockets>=16.0",
@@ -246,7 +246,7 @@ interop-crewai = [
 interop-langchain = ["langchain-community>=0.4.2,<1"]
 interop-pydantic-ai = ["pydantic-ai>=1.104.0,<2"]
 interop =[
-    "ag2[interop-crewai, interop-langchain, interop-pydantic-ai]"
+    "clippy-kernel[interop-crewai, interop-langchain, interop-pydantic-ai]"
 ]
 
 autobuild = [
@@ -257,7 +257,7 @@ autobuild = [
 
 blendsearch = ["flaml[blendsearch]"]
 mathchat = ["sympy", "wolframalpha"]
-captainagent = ["ag2[autobuild]", "pandas"]
+captainagent = ["clippy-kernel[autobuild]", "pandas"]
 teachable = ["chromadb"]
 lmm = ["replicate", "pillow"]
 graph = ["networkx", "matplotlib"]
@@ -271,8 +271,8 @@ gemini = [
 ]
 
 gemini-realtime = [
-    "ag2[gemini]",
-    "ag2[websockets]",
+    "clippy-kernel[gemini]",
+    "clippy-kernel[websockets]",
 ]
 
 together = ["together>=2.16.0"]
@@ -292,7 +292,7 @@ groq = ["groq>=1.4.0"]
 cohere = ["cohere>=7.0.2"]
 ollama = ["ollama>=0.6.2", "fix_busted_json>=0.0.18"]
 bedrock = ["boto3>=1.43.18"]
-deepseek = ["ag2[openai]"]
+deepseek = ["clippy-kernel[openai]"]
 
 tracing = [
     "opentelemetry-api>=1.42.1",
@@ -325,9 +325,9 @@ test = [
 ]
 
 docs = [
-    "ag2[a2a]",  # A2A is exposed in the public API by the optional `autogen.a2a` module
-    "ag2[tracing]",  # Tracing is exposed in the public API by the optional `autogen.opentelemetry` module
-    "ag2[ag-ui]",  # AG-UI is exposed in the public API by the optional `autogen.ag_ui` module
+    "clippy-kernel[a2a]",  # A2A is exposed in the public API by the optional `autogen.a2a` module
+    "clippy-kernel[tracing]",  # Tracing is exposed in the public API by the optional `autogen.opentelemetry` module
+    "clippy-kernel[ag-ui]",  # AG-UI is exposed in the public API by the optional `autogen.ag_ui` module
     "mkdocs-material>=9.7.1,<10",
     "mkdocstrings[python]>=1.0.4,<2",
     "mkdocs-literate-nav>=0.6.2,<1",
@@ -358,7 +358,7 @@ types = [
     "types-python-dateutil",
     "types-requests",
     "types-ujson",
-    "ag2[test, openai, a2a, ag-ui]",
+    "clippy-kernel[test, openai, a2a, ag-ui]",
 ]
 
 lint = [
@@ -369,7 +369,7 @@ lint = [
 
 dev = [
     "toml>=0.10.2,<1",
-    "ag2[lint,test,types,docs]",
+    "clippy-kernel[lint,test,types,docs]",
     "pre-commit>=4.6.0,<5",
     "detect-secrets>=1.5.0,<2",
     "uv>=0.11.17,<1",
@@ -377,10 +377,10 @@ dev = [
 
 
 [project.urls]
-Homepage = "https://ag2.ai/"
-Documentation = "https://docs.ag2.ai"
-Tracker = "https://github.com/ag2ai/ag2/issues"
-Source = "https://github.com/ag2ai/ag2"
+Homepage = "https://github.com/dayour/Clippy-Kernel"
+Documentation = "https://github.com/dayour/Clippy-Kernel/tree/main/website"
+Tracker = "https://github.com/dayour/Clippy-Kernel/issues"
+Source = "https://github.com/dayour/Clippy-Kernel"
 Discord = "https://discord.gg/pAbnFJrkgZ"
 
 [project.scripts]

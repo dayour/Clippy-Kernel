@@ -42,17 +42,8 @@ from pathlib import Path
 from typing import Self
 
 import yaml
-from pydantic import Field, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from rich.live import Live
-from swerex.deployment.hooks.status import SetStatusDeploymentHook
-
-from clippybot import TRAJECTORY_DIR
 from clippybot.agent.agents import AgentConfig, get_agent_from_config
 from clippybot.agent.hooks.status import SetStatusAgentHook
-from clippybot.environment.hooks.status import SetStatusEnvironmentHook
-from clippybot.environment.clippybot_env import clippybotenv
-from clippybot.exceptions import ModelConfigurationError, TotalCostLimitExceededError
 from clippybot.run._progress import RunBatchProgressManager
 from clippybot.run.batch_instances import BatchInstance, BatchInstanceSourceConfig, clippybotbenchInstances
 from clippybot.run.common import BasicCLI, ConfigHelper, save_predictions
@@ -60,7 +51,6 @@ from clippybot.run.hooks.abstract import CombinedRunHooks, RunHook
 from clippybot.run.hooks.apply_patch import SaveApplyPatchHook
 from clippybot.run.merge_predictions import merge_predictions
 from clippybot.run.run_single import RunSingleConfig
-from clippybot.types import AgentRunResult
 from clippybot.utils.config import load_environment_variables
 from clippybot.utils.log import (
     add_file_handler,
@@ -70,6 +60,16 @@ from clippybot.utils.log import (
     remove_file_handler,
     set_stream_handler_levels,
 )
+from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from rich.live import Live
+from swerex.deployment.hooks.status import SetStatusDeploymentHook
+
+from clippybot import TRAJECTORY_DIR
+from clippybot.environment.clippybot_env import clippybotenv
+from clippybot.environment.hooks.status import SetStatusEnvironmentHook
+from clippybot.exceptions import ModelConfigurationError, TotalCostLimitExceededError
+from clippybot.types import AgentRunResult
 
 
 class RunBatchConfig(BaseSettings, cli_implicit_flags=False):
@@ -99,6 +99,13 @@ class RunBatchConfig(BaseSettings, cli_implicit_flags=False):
 
     # pydantic config
     model_config = SettingsConfigDict(extra="forbid", env_prefix="clippybot_")
+
+    @field_validator("agent", mode="before")
+    @classmethod
+    def _normalize_agent_config(cls, value):
+        if isinstance(value, BaseModel):
+            return value.model_dump()
+        return value
 
     def set_default_output_dir(self) -> None:
         # Needs to be called explicitly, because self._config_files will be setup

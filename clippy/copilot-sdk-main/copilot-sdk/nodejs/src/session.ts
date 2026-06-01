@@ -7,7 +7,7 @@
  * @module session
  */
 
-import type { MessageConnection } from "vscode-jsonrpc/node";
+import type { MessageConnection } from "vscode-jsonrpc/node.js";
 import type {
     MessageOptions,
     PermissionHandler,
@@ -144,8 +144,8 @@ export class CopilotSession {
     ): Promise<AssistantMessageEvent | undefined> {
         const effectiveTimeout = timeout ?? 60_000;
 
-        let resolveIdle: () => void;
-        let rejectWithError: (error: Error) => void;
+        let resolveIdle!: () => void;
+        let rejectWithError!: (error: Error) => void;
         const idlePromise = new Promise<void>((resolve, reject) => {
             resolveIdle = resolve;
             rejectWithError = reject;

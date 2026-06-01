@@ -87,9 +87,15 @@ from .client_utils import FormatterProtocol, validate_parameter
 from .oai_models import ChatCompletion, ChatCompletionMessage, ChatCompletionMessageToolCall, Choice, CompletionUsage
 
 with optional_import_block():
-    from anthropic import Anthropic, AnthropicBedrock, AnthropicVertex
     from anthropic import __version__ as anthropic_version
     from anthropic.types import Message, TextBlock, ToolUseBlock
+
+    try:
+        from anthropic import Anthropic
+        from anthropic.lib.bedrock import AnthropicBedrock
+        from anthropic.lib.vertex import AnthropicVertex
+    except ImportError:
+        from anthropic import Anthropic, AnthropicBedrock, AnthropicVertex
 
     TOOL_ENABLED = anthropic_version >= "0.23.1"
     if TOOL_ENABLED:

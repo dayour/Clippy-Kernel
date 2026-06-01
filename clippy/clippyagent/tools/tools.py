@@ -11,19 +11,18 @@ import os
 import re
 from functools import cached_property
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
+from clippybot.utils.log import get_logger
 from pydantic import BaseModel, Field
 from swerex.runtime.abstract import Command as RexCommand
 from swerex.runtime.abstract import UploadRequest
-from typing_extensions import Self
 
 from clippybot.environment.clippybot_env import clippybotenv
 from clippybot.tools.bundle import Bundle
 from clippybot.tools.commands import BASH_COMMAND, Command
 from clippybot.tools.parsing import FunctionCallingParser, JsonParser, ParseFunction
 from clippybot.tools.utils import _guard_multiline_input, generate_command_docs
-from clippybot.utils.log import get_logger
 
 
 class ToolFilterConfig(BaseModel):

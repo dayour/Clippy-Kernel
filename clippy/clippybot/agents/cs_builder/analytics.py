@@ -19,7 +19,6 @@ from __future__ import annotations
 
 import json
 import logging
-import time
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -315,11 +314,11 @@ class TestSuite:
             lines.extend(["", "## Reasoning Trace", ""])
             for step in self.reasoning_steps:
                 lines.append(f"### {step.step_name}")
-                lines.append(f"")
+                lines.append("")
                 lines.append(f"{step.reasoning[:500]}")
                 if step.conclusions:
-                    lines.append(f"")
-                    lines.append(f"**Conclusions:**")
+                    lines.append("")
+                    lines.append("**Conclusions:**")
                     for c in step.conclusions:
                         lines.append(f"- {c}")
                 lines.append("")

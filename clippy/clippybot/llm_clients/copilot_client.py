@@ -7,8 +7,8 @@ enabling use of Copilot's models within the clippybot framework.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Literal
 from dataclasses import dataclass, field
+from typing import Literal
 
 from pydantic import BaseModel, Field
 

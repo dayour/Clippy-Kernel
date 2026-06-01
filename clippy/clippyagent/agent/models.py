@@ -14,6 +14,7 @@ from typing import Annotated, Any, Literal
 
 import litellm
 import litellm.types.utils
+from clippybot.utils.log import get_logger
 from pydantic import BaseModel as PydanticBaseModel
 from pydantic import ConfigDict, Field, SecretStr
 from swerex.exceptions import SwerexException
@@ -38,7 +39,6 @@ from clippybot.exceptions import (
 )
 from clippybot.tools.tools import ToolConfig
 from clippybot.types import History, HistoryItem
-from clippybot.utils.log import get_logger
 
 try:
     import readline  # noqa: F401
@@ -47,6 +47,20 @@ except ImportError:
 
 litellm.suppress_debug_info = True
 
+
+def _get_litellm_exception(name: str, fallback: type[Exception] = Exception) -> type[Exception]:
+    """Resolve LiteLLM exception classes defensively across minor releases."""
+    return getattr(litellm.exceptions, name, fallback)
+
+
+LITELLM_UNSUPPORTED_PARAMS_ERROR = _get_litellm_exception("UnsupportedParamsError", TypeError)
+LITELLM_NOT_FOUND_ERROR = _get_litellm_exception("NotFoundError")
+LITELLM_PERMISSION_DENIED_ERROR = _get_litellm_exception("PermissionDeniedError")
+LITELLM_CONTEXT_WINDOW_ERROR = _get_litellm_exception("ContextWindowExceededError")
+LITELLM_API_ERROR = _get_litellm_exception("APIError")
+LITELLM_CONTENT_POLICY_ERROR = _get_litellm_exception("ContentPolicyViolationError")
+LITELLM_AUTHENTICATION_ERROR = _get_litellm_exception("AuthenticationError")
+LITELLM_BAD_REQUEST_ERROR = _get_litellm_exception("BadRequestError", ValueError)
 
 _THREADS_THAT_USED_API_KEYS = []
 """Keeps track of thread orders so that we can choose the same API key for the same thread."""
@@ -708,27 +722,37 @@ class LiteLLMModel(AbstractModel):
         if self.tools.use_function_calling:
             extra_args["tools"] = self.tools.tools
         # We need to always set max_tokens for anthropic models
-        completion_kwargs = self.config.completion_kwargs
+        completion_kwargs = dict(self.config.completion_kwargs)
         if self.lm_provider == "anthropic":
-            completion_kwargs["max_tokens"] = self.model_max_output_tokens
+            completion_kwargs.setdefault("max_tokens", self.model_max_output_tokens)
+        request_kwargs: dict[str, Any] = {
+            "model": self.config.name,
+            "messages": messages,
+            "temperature": self.config.temperature if temperature is None else temperature,
+            "drop_params": completion_kwargs.pop("drop_params", True),
+            **completion_kwargs,
+            **extra_args,
+        }
+        if self.config.top_p is not None:
+            request_kwargs["top_p"] = self.config.top_p
+        if self.config.api_version is not None:
+            request_kwargs["api_version"] = self.config.api_version
+        api_key = self.config.choose_api_key()
+        if api_key is not None:
+            request_kwargs["api_key"] = api_key
+        if self.config.fallbacks:
+            request_kwargs["fallbacks"] = self.config.fallbacks
+        if n is not None:
+            request_kwargs["n"] = n
         try:
             response: litellm.types.utils.ModelResponse = litellm.completion(  # type: ignore
-                model=self.config.name,
-                messages=messages,
-                temperature=self.config.temperature if temperature is None else temperature,
-                top_p=self.config.top_p,
-                api_version=self.config.api_version,
-                api_key=self.config.choose_api_key(),
-                fallbacks=self.config.fallbacks,
-                **completion_kwargs,
-                **extra_args,
-                n=n,
+                **request_kwargs,
             )
-        except litellm.exceptions.ContextWindowExceededError as e:
+        except LITELLM_CONTEXT_WINDOW_ERROR as e:
             raise ContextWindowExceededError from e
-        except litellm.exceptions.ContentPolicyViolationError as e:
+        except LITELLM_CONTENT_POLICY_ERROR as e:
             raise ContentPolicyViolationError from e
-        except litellm.exceptions.BadRequestError as e:
+        except LITELLM_BAD_REQUEST_ERROR as e:
             if "is longer than the model's context length" in str(e):
                 raise ContextWindowExceededError from e
             raise
@@ -808,14 +832,14 @@ class LiteLLMModel(AbstractModel):
                     ContextWindowExceededError,
                     CostLimitExceededError,
                     RuntimeError,
-                    litellm.exceptions.UnsupportedParamsError,
-                    litellm.exceptions.NotFoundError,
-                    litellm.exceptions.PermissionDeniedError,
-                    litellm.exceptions.ContextWindowExceededError,
-                    litellm.exceptions.APIError,
-                    litellm.exceptions.ContentPolicyViolationError,
+                    LITELLM_UNSUPPORTED_PARAMS_ERROR,
+                    LITELLM_NOT_FOUND_ERROR,
+                    LITELLM_PERMISSION_DENIED_ERROR,
+                    LITELLM_CONTEXT_WINDOW_ERROR,
+                    LITELLM_API_ERROR,
+                    LITELLM_CONTENT_POLICY_ERROR,
                     TypeError,
-                    litellm.exceptions.AuthenticationError,
+                    LITELLM_AUTHENTICATION_ERROR,
                     ContentPolicyViolationError,
                     ModelConfigurationError,
                     KeyboardInterrupt,

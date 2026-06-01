@@ -5,7 +5,6 @@ import json
 from pathlib import Path
 
 import numpy as np
-
 from clippybot.utils.log import get_logger
 
 """Calculate statistics from .traj files."""

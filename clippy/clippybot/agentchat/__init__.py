@@ -8,8 +8,8 @@ This module provides conversable agents with LLM backends:
 from __future__ import annotations
 
 from clippybot.agentchat.copilot_agents import (
-    CopilotConversableAgent,
     CopilotAssistantAgent,
+    CopilotConversableAgent,
 )
 
 __all__ = [

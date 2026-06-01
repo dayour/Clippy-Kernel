@@ -19,7 +19,6 @@ from urllib.parse import urlparse
 
 from clippybot.tools.dataverse_api import HttpClient, HttpResponse, MockHttpClient
 
-
 # ---------------------------------------------------------------------------
 # SharePoint URL parser
 # ---------------------------------------------------------------------------

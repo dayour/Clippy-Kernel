@@ -12,8 +12,9 @@ from time import time
 
 from clippybot.run.hooks.abstract import RunHook
 from clippybot.run.merge_predictions import merge_predictions
-from clippybot.types import AgentRunResult
 from clippybot.utils.log import get_logger
+
+from clippybot.types import AgentRunResult
 
 
 class clippybotbenchEvaluate(RunHook):

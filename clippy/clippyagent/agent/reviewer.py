@@ -10,9 +10,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Literal
 
 import numpy as np
-from jinja2 import Template
-from pydantic import BaseModel, ConfigDict
-
 from clippybot.agent.history_processors import _set_cache_control
 from clippybot.agent.models import (
     AbstractModel,
@@ -21,10 +18,13 @@ from clippybot.agent.models import (
     get_model,
 )
 from clippybot.agent.problem_statement import ProblemStatement
+from clippybot.utils.log import get_logger
+from jinja2 import Template
+from pydantic import BaseModel, ConfigDict, field_validator
+
 from clippybot.tools.parsing import ActionParser
 from clippybot.tools.tools import ToolConfig
 from clippybot.types import AgentInfo, Trajectory, TrajectoryStep
-from clippybot.utils.log import get_logger
 
 
 class ReviewSubmission(BaseModel):
@@ -132,6 +132,13 @@ class PreselectorConfig(BaseModel):
     submission_template: str
     max_len_submission: int = 5000
 
+    @field_validator("model", mode="before")
+    @classmethod
+    def _normalize_model_config(cls, value: Any) -> Any:
+        if isinstance(value, BaseModel):
+            return value.model_dump()
+        return value
+
 
 class ChooserConfig(BaseModel):
     model: ModelConfig
@@ -140,6 +147,13 @@ class ChooserConfig(BaseModel):
     submission_template: str
     max_len_submission: int = 5000
     preselector: PreselectorConfig | None = None
+
+    @field_validator("model", mode="before")
+    @classmethod
+    def _normalize_model_config(cls, value: Any) -> Any:
+        if isinstance(value, BaseModel):
+            return value.model_dump()
+        return value
 
 
 class TrajFormatterConfig(BaseModel):
@@ -222,6 +236,13 @@ class ScoreRetryLoopConfig(BaseModel):
     model: ModelConfig
 
     model_config = ConfigDict(extra="forbid")
+
+    @field_validator("model", mode="before")
+    @classmethod
+    def _normalize_model_config(cls, value: Any) -> Any:
+        if isinstance(value, BaseModel):
+            return value.model_dump()
+        return value
 
     def validate(self):
         """Checks config. Raises `ValueError` in case of misconfiguration"""

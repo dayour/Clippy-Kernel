@@ -33,16 +33,12 @@ from pathlib import Path
 from typing import Self
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
-
 from clippybot.agent.agents import AbstractAgent, AgentConfig, get_agent_from_config
 from clippybot.agent.problem_statement import (
     EmptyProblemStatement,
     ProblemStatement,
     ProblemStatementConfig,
 )
-from clippybot.environment.clippybot_env import EnvironmentConfig, clippybotenv
 from clippybot.run.common import AutoCorrectSuggestion as ACS
 from clippybot.run.common import BasicCLI, ConfigHelper, save_predictions
 from clippybot.run.hooks.abstract import CombinedRunHooks, RunHook
@@ -50,6 +46,10 @@ from clippybot.run.hooks.apply_patch import SaveApplyPatchHook
 from clippybot.run.hooks.open_pr import OpenPRConfig, OpenPRHook
 from clippybot.utils.config import load_environment_variables
 from clippybot.utils.log import add_file_handler, get_logger
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from clippybot.environment.clippybot_env import EnvironmentConfig, clippybotenv
 
 
 class RunSingleActionConfig(BaseModel):
@@ -95,6 +95,13 @@ class RunSingleConfig(BaseSettings, cli_implicit_flags=False):
 
     # pydantic config
     model_config = SettingsConfigDict(extra="forbid", env_prefix="clippybot_")
+
+    @field_validator("agent", mode="before")
+    @classmethod
+    def _normalize_agent_config(cls, value):
+        if isinstance(value, BaseModel):
+            return value.model_dump()
+        return value
 
     def set_default_output_dir(self) -> None:
         # Needs to be called explicitly, because self._config_files will be setup

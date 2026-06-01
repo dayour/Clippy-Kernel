@@ -3,8 +3,15 @@ import random
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
+from clippybot.agent.problem_statement import (
+    ProblemStatementConfig,
+    TextProblemStatement,
+    clippybotbenchMultimodalProblemStatement,
+)
+from clippybot.utils.files import load_file
+from clippybot.utils.log import get_logger
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from swerex.deployment.config import (
     DeploymentConfig,
@@ -12,17 +19,9 @@ from swerex.deployment.config import (
     DummyDeploymentConfig,
     LocalDeploymentConfig,
 )
-from typing_extensions import Self
 
-from clippybot.agent.problem_statement import (
-    ProblemStatementConfig,
-    clippybotbenchMultimodalProblemStatement,
-    TextProblemStatement,
-)
-from clippybot.environment.repo import GithubRepoConfig, LocalRepoConfig, PreExistingRepoConfig
 from clippybot.environment.clippybot_env import EnvironmentConfig
-from clippybot.utils.files import load_file
-from clippybot.utils.log import get_logger
+from clippybot.environment.repo import GithubRepoConfig, LocalRepoConfig, PreExistingRepoConfig
 
 logger = get_logger("swea-config")
 

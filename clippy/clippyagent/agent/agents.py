@@ -6,18 +6,9 @@ import json
 import logging
 import time
 from pathlib import Path, PurePosixPath
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Literal, Self
 
 import yaml
-from jinja2 import Template
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-from simple_parsing.helpers.fields import field
-from swerex.exceptions import BashIncorrectSyntaxError, CommandTimeoutError, SwerexException
-from tenacity import RetryError
-from typing_extensions import Self
-from unidiff import UnidiffParseError
-
-from clippybot import __version__, get_agent_commit_hash, get_rex_commit_hash, get_rex_version
 from clippybot.agent.action_sampler import AbstractActionSampler, ActionSamplerConfig
 from clippybot.agent.history_processors import DefaultHistoryProcessor, HistoryProcessor
 from clippybot.agent.hooks.abstract import AbstractAgentHook, CombinedAgentHook
@@ -37,6 +28,18 @@ from clippybot.agent.reviewer import (
     ScoreRetryLoop,
     get_retry_loop_from_config,
 )
+from clippybot.utils.config import _convert_paths_to_abspath, _strip_abspath_from_dict
+from clippybot.utils.jinja_warnings import _warn_probably_wrong_jinja_syntax
+from clippybot.utils.log import get_logger
+from clippybot.utils.patch_formatter import PatchFormatter
+from jinja2 import Template
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from simple_parsing.helpers.fields import field
+from swerex.exceptions import BashIncorrectSyntaxError, CommandTimeoutError, SwerexException
+from tenacity import RetryError
+from unidiff import UnidiffParseError
+
+from clippybot import __version__, get_agent_commit_hash, get_rex_commit_hash, get_rex_version
 from clippybot.environment.clippybot_env import clippybotenv
 from clippybot.exceptions import (
     ContentPolicyViolationError,
@@ -51,10 +54,6 @@ from clippybot.tools.parsing import (
 )
 from clippybot.tools.tools import ToolConfig, ToolHandler
 from clippybot.types import AgentInfo, AgentRunResult, StepOutput, Trajectory, TrajectoryStep
-from clippybot.utils.config import _convert_paths_to_abspath, _strip_abspath_from_dict
-from clippybot.utils.jinja_warnings import _warn_probably_wrong_jinja_syntax
-from clippybot.utils.log import get_logger
-from clippybot.utils.patch_formatter import PatchFormatter
 
 
 class TemplateConfig(BaseModel):
@@ -166,6 +165,13 @@ class DefaultAgentConfig(BaseModel):
     # pydantic config
     model_config = ConfigDict(extra="forbid")
 
+    @field_validator("model", mode="before")
+    @classmethod
+    def _normalize_model_config(cls, value: Any) -> Any:
+        if isinstance(value, BaseModel):
+            return value.model_dump()
+        return value
+
 
 class ShellAgentConfig(BaseModel):
     name: str = "main"
@@ -183,6 +189,13 @@ class ShellAgentConfig(BaseModel):
 
     # pydantic config
     model_config = ConfigDict(extra="forbid")
+
+    @field_validator("model", mode="before")
+    @classmethod
+    def _normalize_model_config(cls, value: Any) -> Any:
+        if isinstance(value, BaseModel):
+            return value.model_dump()
+        return value
 
 
 class RetryAgentConfig(BaseModel):

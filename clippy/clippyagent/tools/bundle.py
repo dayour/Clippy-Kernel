@@ -3,10 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
+from clippybot.utils.config import _convert_path_to_abspath
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 
 from clippybot.tools.commands import Command
-from clippybot.utils.config import _convert_path_to_abspath
 
 
 class BundleConfig(BaseModel):

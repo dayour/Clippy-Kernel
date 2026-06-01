@@ -94,10 +94,16 @@ else:
     gemini_import_exception = ImportError("google-genai not found")
 
 with optional_import_block() as anthropic_result:
-    from anthropic import (  # noqa
-        InternalServerError as anthorpic_InternalServerError,
-        RateLimitError as anthorpic_RateLimitError,
-    )
+    try:
+        from anthropic._exceptions import (  # noqa
+            InternalServerError as anthorpic_InternalServerError,
+            RateLimitError as anthorpic_RateLimitError,
+        )
+    except ImportError:
+        from anthropic import (  # noqa
+            InternalServerError as anthorpic_InternalServerError,
+            RateLimitError as anthorpic_RateLimitError,
+        )
 
     from .anthropic import AnthropicClient
 
@@ -108,10 +114,22 @@ else:
     anthropic_import_exception = ImportError("anthropic not found")
 
 with optional_import_block() as mistral_result:
-    from mistralai.models import (  # noqa
-        HTTPValidationError as mistral_HTTPValidationError,
-        SDKError as mistral_SDKError,
-    )
+    try:
+        from mistralai.client.errors import (  # noqa
+            HTTPValidationError as mistral_HTTPValidationError,
+            SDKError as mistral_SDKError,
+        )
+    except ImportError:
+        try:
+            from mistralai.exceptions import (  # noqa
+                HTTPValidationError as mistral_HTTPValidationError,
+                SDKError as mistral_SDKError,
+            )
+        except ImportError:
+            from mistralai.models import (  # noqa
+                HTTPValidationError as mistral_HTTPValidationError,
+                SDKError as mistral_SDKError,
+            )
 
     from .mistral import MistralAIClient
 
@@ -122,7 +140,10 @@ else:
     mistral_import_exception = ImportError("mistralai not found")
 
 with optional_import_block() as together_result:
-    from together.error import TogetherException as together_TogetherException
+    try:
+        from together import TogetherException as together_TogetherException
+    except ImportError:
+        from together.error import TogetherException as together_TogetherException
 
     from .together import TogetherClient
 
@@ -148,11 +169,18 @@ else:
     groq_import_exception = ImportError("groq not found")
 
 with optional_import_block() as cohere_result:
-    from cohere.errors import (  # noqa
-        InternalServerError as cohere_InternalServerError,
-        ServiceUnavailableError as cohere_ServiceUnavailableError,
-        TooManyRequestsError as cohere_TooManyRequestsError,
-    )
+    try:
+        from cohere.errors import (  # noqa
+            InternalServerError as cohere_InternalServerError,
+            ServiceUnavailableError as cohere_ServiceUnavailableError,
+            TooManyRequestsError as cohere_TooManyRequestsError,
+        )
+    except ImportError:
+        from cohere.exceptions import (  # noqa
+            InternalServerError as cohere_InternalServerError,
+            ServiceUnavailableError as cohere_ServiceUnavailableError,
+            TooManyRequestsError as cohere_TooManyRequestsError,
+        )
 
     from .cohere import CohereClient
 

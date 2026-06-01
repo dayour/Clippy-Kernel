@@ -39,6 +39,13 @@ with optional_import_block():
 
 logger = get_logger(__name__)
 
+
+def _create_default_chroma_client() -> Any:
+    if hasattr(chromadb, "EphemeralClient"):
+        return chromadb.EphemeralClient()
+    return chromadb.Client()
+
+
 PROMPT_DEFAULT = """You're a retrieve augmented chatbot. You answer user's questions based on your own knowledge and the
 context provided by the user. You should follow the following steps to answer a question:
 Step 1, you estimate the user's intent based on the question and context. The intent can be a code generation task or
@@ -140,8 +147,8 @@ class RetrieveUserProxyAgent(UserProxyAgent):
                 - `db_config` (Optional, Dict) - the config for the vector db. Default is `{}`. Please make
                     sure you understand the config for the vector db you are using, otherwise, leave it as `{}`.
                     Only valid when `vector_db` is a string.
-                - `client` (Optional, chromadb.Client) - the chromadb client. If key not provided, a
-                     default client `chromadb.Client()` will be used. If you want to use other
+                - `client` (Optional, chromadb.Client) - the chromadb client. If key not provided, an
+                     ephemeral Chroma client will be used. If you want to use other
                      vector db, extend this class and override the `retrieve_docs` function.
                      *[Deprecated]* use `vector_db` instead.
                 - `docs_path` (Optional, Union[str, List[str]]) - the path to the docs directory. It
@@ -314,7 +321,7 @@ class RetrieveUserProxyAgent(UserProxyAgent):
             # if the `vector_db` instance has a 'client' attribute.
             self._client = getattr(self._vector_db, "client", None)
         if self._client is None:
-            self._client = chromadb.Client()
+            self._client = _create_default_chroma_client()
         self.register_reply(Agent, RetrieveUserProxyAgent._generate_retrieve_user_reply, position=2)
         self.register_hook(
             hookable_method="process_message_before_send",

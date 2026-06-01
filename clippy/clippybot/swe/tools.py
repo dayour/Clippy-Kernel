@@ -8,9 +8,8 @@ This module provides specialized tools for software engineering tasks:
 
 from __future__ import annotations
 
-import os
-import subprocess
 import re
+import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, Literal

@@ -14,8 +14,11 @@
     "@github/copilot-sdk": "file:../../../nodejs/src"
   },
   "devDependencies": {
-    "@types/node": "^22.19.7",
+    "@types/node": "^25.9.1",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

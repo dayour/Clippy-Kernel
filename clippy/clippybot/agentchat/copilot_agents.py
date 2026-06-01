@@ -6,15 +6,12 @@ as the LLM backend for conversational AI interactions.
 
 from __future__ import annotations
 
-import asyncio
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from clippybot.llm_clients.copilot_client import (
-    COPILOT_SDK_AVAILABLE,
     CopilotClientConfig,
     CopilotLLMClient,
 )
-
 
 DEFAULT_COPILOT_SYSTEM_MESSAGE = """You are a helpful AI assistant powered by GitHub Copilot.
 You can assist with:
@@ -131,7 +128,7 @@ class CopilotConversableAgent:
     async def generate_reply(
         self,
         messages: list[dict[str, str]] | None = None,
-        sender: "CopilotConversableAgent | None" = None,
+        sender: CopilotConversableAgent | None = None,
     ) -> str | None:
         """Generate a reply to messages.
 

@@ -20,7 +20,7 @@ import logging
 import re
 import time
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -61,7 +61,7 @@ class ScaffoldPlan:
         self.output_dir = output_dir
         self.files: list[dict[str, Any]] = []
         self.warnings: list[str] = []
-        self.timestamp = datetime.now(timezone.utc).isoformat()
+        self.timestamp = datetime.now(UTC).isoformat()
 
     def add_file(self, relative_path: str, content: str, *, description: str = "") -> None:
         self.files.append({

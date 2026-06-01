@@ -265,10 +265,11 @@ class MemoStore:
 
         # Load or create the vector DB on disk.
         settings = Settings(
-            anonymized_telemetry=False, allow_reset=True, is_persistent=True, persist_directory=path_to_db_dir
+            anonymized_telemetry=False,
+            allow_reset=True,
         )
-        self.db_client = chromadb.Client(settings)
-        self.vec_db = self.db_client.create_collection("memos", get_or_create=True)  # The collection is the DB.
+        self.db_client = chromadb.PersistentClient(path=path_to_db_dir, settings=settings)
+        self.vec_db = self.db_client.get_or_create_collection("memos")  # The collection is the DB.
 
         # Load or create the associated memo dict on disk.
         self.path_to_dict = os.path.join(path_to_db_dir, "uid_text_dict.pkl")
@@ -307,8 +308,8 @@ class MemoStore:
     def reset_db(self):
         """Forces immediate deletion of the DB's contents, in memory and on disk."""
         print(colored("\nCLEARING MEMORY", "light_green"))
-        self.db_client.delete_collection("memos")
-        self.vec_db = self.db_client.create_collection("memos")
+        self.db_client.delete_collection(name="memos")
+        self.vec_db = self.db_client.get_or_create_collection("memos")
         self.uid_text_dict = {}
         self._save_memos()
 

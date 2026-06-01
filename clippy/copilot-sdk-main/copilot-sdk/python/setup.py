@@ -5,7 +5,9 @@ setup(
     version="0.1.0",
     packages=find_packages(),
     install_requires=[
-        "typing-extensions>=4.0.0",
+        "python-dateutil>=2.9.0.post0",
+        "pydantic>=2.13.4",
+        "typing-extensions>=4.15.0",
     ],
-    python_requires=">=3.8",
+    python_requires=">=3.9",
 )

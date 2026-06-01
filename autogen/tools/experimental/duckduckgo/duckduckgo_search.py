@@ -8,14 +8,14 @@ from ....import_utils import optional_import_block, require_optional_import
 from ... import Tool
 
 with optional_import_block():
-    from duckduckgo_search import DDGS
+    from ddgs import DDGS
 
 
 @require_optional_import(
     [
-        "duckduckgo_search",
+        "ddgs",
     ],
-    "duckduckgo_search",
+    "duckduckgo",
 )
 def _execute_duckduckgo_query(
     query: str,
@@ -30,13 +30,18 @@ def _execute_duckduckgo_query(
     Returns:
         list[dict[str, Any]]: A list of search results from the DuckDuckGo API.
     """
-    with DDGS() as ddgs:
+    ddgs = DDGS()
+    try:
         try:
             # region='wt-wt' means worldwide
             results = list(ddgs.text(query, region="wt-wt", max_results=num_results))
         except Exception as e:
             print(f"DuckDuckGo Search failed: {e}")
             results = []
+    finally:
+        close = getattr(ddgs, "close", None)
+        if callable(close):
+            close()
     return results
 
 

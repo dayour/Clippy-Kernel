@@ -2,6 +2,7 @@
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *--------------------------------------------------------------------------------------------*/
 
+using System.Text.Json;
 using Xunit;
 
 namespace GitHub.Copilot.SDK.Test;
@@ -28,11 +29,42 @@ public class ClientTests : IAsyncLifetime
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir != null)
         {
-            var path = Path.Combine(dir.FullName, "nodejs/node_modules/@github/copilot/index.js");
+            var path = ResolveCopilotCliPath(Path.Combine(dir.FullName, "nodejs/node_modules/@github/copilot"));
             if (File.Exists(path)) return path;
             dir = dir.Parent;
         }
         throw new InvalidOperationException("CLI not found. Run 'npm install' in the nodejs directory first.");
+    }
+
+    private static string? ResolveCopilotCliPath(string packageRoot)
+    {
+        var legacyEntryPoint = Path.Combine(packageRoot, "index.js");
+        if (File.Exists(legacyEntryPoint)) return legacyEntryPoint;
+
+        var packageJsonPath = Path.Combine(packageRoot, "package.json");
+        if (!File.Exists(packageJsonPath)) return null;
+
+        using var document = JsonDocument.Parse(File.ReadAllText(packageJsonPath));
+        if (!document.RootElement.TryGetProperty("bin", out var bin)) return null;
+
+        if (bin.ValueKind == JsonValueKind.String)
+        {
+            var entryPoint = Path.Combine(packageRoot, bin.GetString()!);
+            return File.Exists(entryPoint) ? entryPoint : null;
+        }
+
+        if (bin.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in bin.EnumerateObject())
+            {
+                if (property.Value.ValueKind != JsonValueKind.String) continue;
+
+                var entryPoint = Path.Combine(packageRoot, property.Value.GetString()!);
+                if (File.Exists(entryPoint)) return entryPoint;
+            }
+        }
+
+        return null;
     }
 
     [Fact]

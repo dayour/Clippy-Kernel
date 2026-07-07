@@ -17,9 +17,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const SNAPSHOTS_DIR = resolve(__dirname, "../../../../test/snapshots");
 
-export const CLI_PATH =
-    process.env.COPILOT_CLI_PATH ||
-    resolve(__dirname, "../../../node_modules/@github/copilot/index.js");
+function resolveCopilotCliPath(): string {
+    if (process.env.COPILOT_CLI_PATH) {
+        return process.env.COPILOT_CLI_PATH;
+    }
+
+    const packageRoot = resolve(__dirname, "../../../node_modules/@github/copilot");
+    const legacyEntryPoint = resolve(packageRoot, "index.js");
+    if (fs.existsSync(legacyEntryPoint)) {
+        return legacyEntryPoint;
+    }
+
+    const packageJson = JSON.parse(fs.readFileSync(resolve(packageRoot, "package.json"), "utf8")) as {
+        bin?: string | Record<string, string>;
+    };
+    const binPath =
+        typeof packageJson.bin === "string"
+            ? packageJson.bin
+            : packageJson.bin?.copilot ?? Object.values(packageJson.bin ?? {})[0];
+
+    if (!binPath) {
+        throw new Error("@github/copilot package does not declare a CLI bin entry");
+    }
+
+    return resolve(packageRoot, binPath);
+}
+
+export const CLI_PATH = resolveCopilotCliPath();
 
 export async function createSdkTestContext({
     logLevel,

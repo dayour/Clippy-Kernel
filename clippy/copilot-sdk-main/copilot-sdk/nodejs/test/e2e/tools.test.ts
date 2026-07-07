@@ -11,11 +11,12 @@ import { createSdkTestContext } from "./harness/sdkTestContext";
 
 describe("Custom tools", async () => {
     const { copilotClient: client, openAiEndpoint, workDir } = await createSdkTestContext();
+    const approvePermissions = () => ({ kind: "approved" as const });
 
     it("invokes built-in tools", async () => {
         await writeFile(join(workDir, "README.md"), "# ELIZA, the only chatbot you'll ever need");
 
-        const session = await client.createSession();
+        const session = await client.createSession({ onPermissionRequest: approvePermissions });
         const assistantMessage = await session.sendAndWait({
             prompt: "What's the first line of README.md in this directory?",
         });
@@ -24,6 +25,7 @@ describe("Custom tools", async () => {
 
     it("invokes custom tool", async () => {
         const session = await client.createSession({
+            onPermissionRequest: approvePermissions,
             tools: [
                 defineTool("encrypt_string", {
                     description: "Encrypts a string",
@@ -43,6 +45,7 @@ describe("Custom tools", async () => {
 
     it("handles tool calling errors", async () => {
         const session = await client.createSession({
+            onPermissionRequest: approvePermissions,
             tools: [
                 defineTool("get_user_location", {
                     description: "Gets the user's location",
@@ -83,6 +86,7 @@ describe("Custom tools", async () => {
 
     it("can receive and return complex types", async () => {
         const session = await client.createSession({
+            onPermissionRequest: approvePermissions,
             tools: [
                 defineTool("db_query", {
                     description: "Performs a database query",

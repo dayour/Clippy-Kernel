@@ -849,8 +849,32 @@ internal class PingRequest
 public class PingResponse
 {
     public string Message { get; set; } = string.Empty;
-    public long Timestamp { get; set; }
+    [JsonConverter(typeof(PingTimestampJsonConverter))]
+    public double Timestamp { get; set; }
     public int? ProtocolVersion { get; set; }
+}
+
+internal sealed class PingTimestampJsonConverter : JsonConverter<double>
+{
+    public override double Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        if (reader.TokenType == JsonTokenType.Number && reader.TryGetDouble(out var numericTimestamp))
+            return numericTimestamp;
+
+        if (reader.TokenType == JsonTokenType.String)
+        {
+            var value = reader.GetString();
+            if (double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var stringTimestamp))
+                return stringTimestamp;
+
+            if (DateTimeOffset.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var dateTimestamp))
+                return dateTimestamp.ToUnixTimeMilliseconds();
+        }
+
+        throw new JsonException("Expected ping timestamp to be a number, numeric string, or ISO 8601 timestamp.");
+    }
+
+    public override void Write(Utf8JsonWriter writer, double value, JsonSerializerOptions options) => writer.WriteNumberValue(value);
 }
 
 /// <summary>

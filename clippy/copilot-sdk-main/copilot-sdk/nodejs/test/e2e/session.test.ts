@@ -4,6 +4,8 @@ import { CopilotClient } from "../../src/index.js";
 import { CLI_PATH, createSdkTestContext } from "./harness/sdkTestContext.js";
 import { getFinalAssistantMessage, getNextEventOfType } from "./harness/sdkTestHelper.js";
 
+const approvePermissions = () => ({ kind: "approved" as const });
+
 describe("Sessions", async () => {
     const { copilotClient: client, openAiEndpoint, homeDir } = await createSdkTestContext();
 
@@ -183,6 +185,7 @@ describe("Sessions", async () => {
 
     it("should create session with custom tool", async () => {
         const session = await client.createSession({
+            onPermissionRequest: approvePermissions,
             tools: [
                 {
                     name: "get_secret_number",
@@ -349,7 +352,7 @@ describe("Send Blocking Behavior", async () => {
     const { copilotClient: client } = await createSdkTestContext();
 
     it("send returns immediately while events stream in background", async () => {
-        const session = await client.createSession();
+        const session = await client.createSession({ onPermissionRequest: approvePermissions });
 
         const events: string[] = [];
         session.on((event) => {

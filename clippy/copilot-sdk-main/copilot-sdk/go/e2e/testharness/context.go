@@ -1,6 +1,7 @@
 package testharness
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -25,14 +26,51 @@ func CLIPath() string {
 			return
 		}
 
-		// Look for CLI in sibling nodejs directory's node_modules
-		abs, err := filepath.Abs("../../nodejs/node_modules/@github/copilot/index.js")
-		if err == nil && fileExists(abs) {
+		if abs, ok := resolveCopilotCLIPath("../../nodejs/node_modules/@github/copilot"); ok {
 			cliPath = abs
 			return
 		}
 	})
 	return cliPath
+}
+
+func resolveCopilotCLIPath(packageRoot string) (string, bool) {
+	absPackageRoot, err := filepath.Abs(packageRoot)
+	if err != nil {
+		return "", false
+	}
+
+	legacyEntryPoint := filepath.Join(absPackageRoot, "index.js")
+	if fileExists(legacyEntryPoint) {
+		return legacyEntryPoint, true
+	}
+
+	packageJSONBytes, err := os.ReadFile(filepath.Join(absPackageRoot, "package.json"))
+	if err != nil {
+		return "", false
+	}
+
+	var packageJSON struct {
+		Bin any `json:"bin"`
+	}
+	if err := json.Unmarshal(packageJSONBytes, &packageJSON); err != nil {
+		return "", false
+	}
+
+	switch bin := packageJSON.Bin.(type) {
+	case string:
+		entryPoint := filepath.Join(absPackageRoot, bin)
+		return entryPoint, fileExists(entryPoint)
+	case map[string]any:
+		for _, value := range bin {
+			if binPath, ok := value.(string); ok {
+				entryPoint := filepath.Join(absPackageRoot, binPath)
+				return entryPoint, fileExists(entryPoint)
+			}
+		}
+	}
+
+	return "", false
 }
 
 // TestContext holds shared resources for E2E tests.

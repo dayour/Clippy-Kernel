@@ -3,6 +3,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace GitHub.Copilot.SDK.Test.Harness;
@@ -61,11 +62,43 @@ public class E2ETestContext : IAsyncDisposable
         var envPath = Environment.GetEnvironmentVariable("COPILOT_CLI_PATH");
         if (!string.IsNullOrEmpty(envPath)) return envPath;
 
-        var path = Path.Combine(repoRoot, "nodejs/node_modules/@github/copilot/index.js");
-        if (!File.Exists(path))
-            throw new InvalidOperationException($"CLI not found at {path}. Run 'npm install' in the nodejs directory first.");
+        var packageRoot = Path.Combine(repoRoot, "nodejs/node_modules/@github/copilot");
+        var path = ResolveCopilotCliPath(packageRoot);
+        if (path is null)
+            throw new InvalidOperationException($"CLI not found under {packageRoot}. Run 'npm install' in the nodejs directory first.");
 
         return path;
+    }
+
+    private static string? ResolveCopilotCliPath(string packageRoot)
+    {
+        var legacyEntryPoint = Path.Combine(packageRoot, "index.js");
+        if (File.Exists(legacyEntryPoint)) return legacyEntryPoint;
+
+        var packageJsonPath = Path.Combine(packageRoot, "package.json");
+        if (!File.Exists(packageJsonPath)) return null;
+
+        using var document = JsonDocument.Parse(File.ReadAllText(packageJsonPath));
+        if (!document.RootElement.TryGetProperty("bin", out var bin)) return null;
+
+        if (bin.ValueKind == JsonValueKind.String)
+        {
+            var entryPoint = Path.Combine(packageRoot, bin.GetString()!);
+            return File.Exists(entryPoint) ? entryPoint : null;
+        }
+
+        if (bin.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in bin.EnumerateObject())
+            {
+                if (property.Value.ValueKind != JsonValueKind.String) continue;
+
+                var entryPoint = Path.Combine(packageRoot, property.Value.GetString()!);
+                if (File.Exists(entryPoint)) return entryPoint;
+            }
+        }
+
+        return null;
     }
 
     public async Task ConfigureForTestAsync(string testFile, [CallerMemberName] string? testName = null)

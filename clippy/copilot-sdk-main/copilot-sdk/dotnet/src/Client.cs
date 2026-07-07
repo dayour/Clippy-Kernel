@@ -365,7 +365,7 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
             config?.InfiniteSessions);
 
         var response = await InvokeRpcAsync<CreateSessionResponse>(
-            connection.Rpc, "session.create", [request], cancellationToken);
+            connection.Rpc, "session.create", request.ToRpcArgs(), cancellationToken);
 
         var session = new CopilotSession(response.SessionId, connection.Rpc, response.WorkspacePath);
         session.RegisterTools(config?.Tools ?? []);
@@ -442,7 +442,7 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
             config?.DisabledSkills);
 
         var response = await InvokeRpcAsync<ResumeSessionResponse>(
-            connection.Rpc, "session.resume", [request], cancellationToken);
+            connection.Rpc, "session.resume", request.ToRpcArgs(), cancellationToken);
 
         var session = new CopilotSession(response.SessionId, connection.Rpc, response.WorkspacePath);
         session.RegisterTools(config?.Tools ?? []);
@@ -507,7 +507,7 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
         var connection = await EnsureConnectedAsync(cancellationToken);
 
         return await InvokeRpcAsync<PingResponse>(
-            connection.Rpc, "ping", [new PingRequest { Message = message }], cancellationToken);
+            connection.Rpc, "ping", RpcArgs.From(("message", message, typeof(string))), cancellationToken);
     }
 
     /// <summary>
@@ -521,7 +521,7 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
         var connection = await EnsureConnectedAsync(cancellationToken);
 
         return await InvokeRpcAsync<GetStatusResponse>(
-            connection.Rpc, "status.get", [], cancellationToken);
+            connection.Rpc, "status.get", RpcArgs.Empty, cancellationToken);
     }
 
     /// <summary>
@@ -535,7 +535,7 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
         var connection = await EnsureConnectedAsync(cancellationToken);
 
         return await InvokeRpcAsync<GetAuthStatusResponse>(
-            connection.Rpc, "auth.getStatus", [], cancellationToken);
+            connection.Rpc, "auth.getStatus", RpcArgs.Empty, cancellationToken);
     }
 
     /// <summary>
@@ -549,7 +549,7 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
         var connection = await EnsureConnectedAsync(cancellationToken);
 
         var response = await InvokeRpcAsync<GetModelsResponse>(
-            connection.Rpc, "models.list", [], cancellationToken);
+            connection.Rpc, "models.list", RpcArgs.Empty, cancellationToken);
 
         return response.Models;
     }
@@ -574,9 +574,9 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
         var connection = await EnsureConnectedAsync(cancellationToken);
 
         var response = await InvokeRpcAsync<GetLastSessionIdResponse>(
-            connection.Rpc, "session.getLastId", [], cancellationToken);
+            connection.Rpc, "session.getLastId", RpcArgs.Empty, cancellationToken);
 
-        return response.SessionId;
+        return response.sessionId;
     }
 
     /// <summary>
@@ -600,11 +600,11 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
         var connection = await EnsureConnectedAsync(cancellationToken);
 
         var response = await InvokeRpcAsync<DeleteSessionResponse>(
-            connection.Rpc, "session.delete", [new DeleteSessionRequest(sessionId)], cancellationToken);
+            connection.Rpc, "session.delete", RpcArgs.From(("sessionId", sessionId, typeof(string))), cancellationToken);
 
-        if (!response.Success)
+        if (!response.success)
         {
-            throw new InvalidOperationException($"Failed to delete session {sessionId}: {response.Error}");
+            throw new InvalidOperationException($"Failed to delete session {sessionId}: {response.error}");
         }
 
         _sessions.TryRemove(sessionId, out _);
@@ -630,20 +630,49 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
         var connection = await EnsureConnectedAsync(cancellationToken);
 
         var response = await InvokeRpcAsync<ListSessionsResponse>(
-            connection.Rpc, "session.list", [], cancellationToken);
+            connection.Rpc, "session.list", RpcArgs.Empty, cancellationToken);
 
-        return response.Sessions;
+        return response.sessions;
     }
 
-    internal static async Task<T> InvokeRpcAsync<T>(JsonRpc rpc, string method, object?[]? args, CancellationToken cancellationToken)
+    internal static async Task<T> InvokeRpcAsync<T>(JsonRpc rpc, string method, RpcArgs args, CancellationToken cancellationToken)
     {
         try
         {
-            return await rpc.InvokeWithCancellationAsync<T>(method, args, cancellationToken);
+            return await rpc.InvokeWithParameterObjectAsync<T>(method, args.Values, args.DeclaredTypes, cancellationToken);
         }
         catch (StreamJsonRpc.RemoteRpcException ex)
         {
             throw new IOException($"Communication error with Copilot CLI: {ex.Message}", ex);
+        }
+    }
+
+    internal sealed class RpcArgs
+    {
+        public static RpcArgs Empty { get; } = new(new Dictionary<string, object?>(), new Dictionary<string, Type>());
+
+        public IReadOnlyDictionary<string, object?> Values { get; }
+        public IReadOnlyDictionary<string, Type> DeclaredTypes { get; }
+
+        private RpcArgs(IReadOnlyDictionary<string, object?> values, IReadOnlyDictionary<string, Type> declaredTypes)
+        {
+            Values = values;
+            DeclaredTypes = declaredTypes;
+        }
+
+        public static RpcArgs From(params (string Name, object? Value, Type Type)[] entries)
+        {
+            var values = new Dictionary<string, object?>();
+            var declaredTypes = new Dictionary<string, Type>();
+
+            foreach (var (name, value, type) in entries)
+            {
+                if (value is null) continue;
+                values[name] = value;
+                declaredTypes[name] = type;
+            }
+
+            return values.Count == 0 ? Empty : new RpcArgs(values, declaredTypes);
         }
     }
 
@@ -662,7 +691,7 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
     {
         var expectedVersion = SdkProtocolVersion.GetVersion();
         var pingResponse = await InvokeRpcAsync<PingResponse>(
-            connection.Rpc, "ping", [new PingRequest()], cancellationToken);
+            connection.Rpc, "ping", RpcArgs.Empty, cancellationToken);
 
         if (!pingResponse.ProtocolVersion.HasValue)
         {
@@ -1088,75 +1117,132 @@ public partial class CopilotClient : IDisposable, IAsyncDisposable
 
     // Request/Response types for RPC
     internal record CreateSessionRequest(
-        string? Model,
-        string? SessionId,
-        List<ToolDefinition>? Tools,
-        SystemMessageConfig? SystemMessage,
-        List<string>? AvailableTools,
-        List<string>? ExcludedTools,
-        ProviderConfig? Provider,
-        bool? RequestPermission,
-        bool? RequestUserInput,
-        bool? Hooks,
-        string? WorkingDirectory,
-        bool? Streaming,
-        Dictionary<string, object>? McpServers,
-        List<CustomAgentConfig>? CustomAgents,
-        string? ConfigDir,
-        List<string>? SkillDirectories,
-        List<string>? DisabledSkills,
-        InfiniteSessionConfig? InfiniteSessions);
+        string? model,
+        string? sessionId,
+        List<ToolDefinition>? tools,
+        SystemMessageConfig? systemMessage,
+        List<string>? availableTools,
+        List<string>? excludedTools,
+        ProviderConfig? provider,
+        bool? requestPermission,
+        bool? requestUserInput,
+        bool? hooks,
+        string? workingDirectory,
+        bool? streaming,
+        Dictionary<string, object>? mcpServers,
+        List<CustomAgentConfig>? customAgents,
+        string? configDir,
+        List<string>? skillDirectories,
+        List<string>? disabledSkills,
+        InfiniteSessionConfig? infiniteSessions)
+    {
+        public RpcArgs ToRpcArgs() => RpcArgs.From(
+            ("model", model, typeof(string)),
+            ("sessionId", sessionId, typeof(string)),
+            ("tools", tools, typeof(List<ToolDefinition>)),
+            ("systemMessage", systemMessage, typeof(SystemMessageConfig)),
+            ("availableTools", availableTools, typeof(List<string>)),
+            ("excludedTools", excludedTools, typeof(List<string>)),
+            ("provider", provider, typeof(ProviderConfig)),
+            ("requestPermission", requestPermission, typeof(bool)),
+            ("requestUserInput", requestUserInput, typeof(bool)),
+            ("hooks", hooks, typeof(bool)),
+            ("workingDirectory", workingDirectory, typeof(string)),
+            ("streaming", streaming, typeof(bool)),
+            ("mcpServers", mcpServers, typeof(Dictionary<string, object>)),
+            ("customAgents", customAgents, typeof(List<CustomAgentConfig>)),
+            ("configDir", configDir, typeof(string)),
+            ("skillDirectories", skillDirectories, typeof(List<string>)),
+            ("disabledSkills", disabledSkills, typeof(List<string>)),
+            ("infiniteSessions", infiniteSessions, typeof(InfiniteSessionConfig)));
+    }
 
     internal record ToolDefinition(
-        string Name,
-        string? Description,
-        JsonElement Parameters /* JSON schema */)
+        string name,
+        string? description,
+        JsonElement parameters /* JSON schema */)
     {
         public static ToolDefinition FromAIFunction(AIFunction function)
             => new ToolDefinition(function.Name, function.Description, function.JsonSchema);
     }
 
-    internal record CreateSessionResponse(
-        string SessionId,
-        string? WorkspacePath);
+    internal sealed class CreateSessionResponse
+    {
+        [JsonPropertyName("sessionId")]
+        public string? SessionIdValue { get; set; }
+
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        public string? WorkspacePath { get; set; }
+
+        [JsonIgnore]
+        public string SessionId => SessionIdValue ?? Id ?? throw new InvalidOperationException("session.create response did not include a sessionId.");
+    }
 
     internal record ResumeSessionRequest(
-        string SessionId,
-        List<ToolDefinition>? Tools,
-        ProviderConfig? Provider,
-        bool? RequestPermission,
-        bool? RequestUserInput,
-        bool? Hooks,
-        string? WorkingDirectory,
-        bool? DisableResume,
-        bool? Streaming,
-        Dictionary<string, object>? McpServers,
-        List<CustomAgentConfig>? CustomAgents,
-        List<string>? SkillDirectories,
-        List<string>? DisabledSkills);
+        string sessionId,
+        List<ToolDefinition>? tools,
+        ProviderConfig? provider,
+        bool? requestPermission,
+        bool? requestUserInput,
+        bool? hooks,
+        string? workingDirectory,
+        bool? disableResume,
+        bool? streaming,
+        Dictionary<string, object>? mcpServers,
+        List<CustomAgentConfig>? customAgents,
+        List<string>? skillDirectories,
+        List<string>? disabledSkills)
+    {
+        public RpcArgs ToRpcArgs() => RpcArgs.From(
+            ("sessionId", sessionId, typeof(string)),
+            ("tools", tools, typeof(List<ToolDefinition>)),
+            ("provider", provider, typeof(ProviderConfig)),
+            ("requestPermission", requestPermission, typeof(bool)),
+            ("requestUserInput", requestUserInput, typeof(bool)),
+            ("hooks", hooks, typeof(bool)),
+            ("workingDirectory", workingDirectory, typeof(string)),
+            ("disableResume", disableResume, typeof(bool)),
+            ("streaming", streaming, typeof(bool)),
+            ("mcpServers", mcpServers, typeof(Dictionary<string, object>)),
+            ("customAgents", customAgents, typeof(List<CustomAgentConfig>)),
+            ("skillDirectories", skillDirectories, typeof(List<string>)),
+            ("disabledSkills", disabledSkills, typeof(List<string>)));
+    }
 
-    internal record ResumeSessionResponse(
-        string SessionId,
-        string? WorkspacePath);
+    internal sealed class ResumeSessionResponse
+    {
+        [JsonPropertyName("sessionId")]
+        public string? SessionIdValue { get; set; }
+
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        public string? WorkspacePath { get; set; }
+
+        [JsonIgnore]
+        public string SessionId => SessionIdValue ?? Id ?? throw new InvalidOperationException("session.resume response did not include a sessionId.");
+    }
 
     internal record GetLastSessionIdResponse(
-        string? SessionId);
+        string? sessionId);
 
     internal record DeleteSessionRequest(
-        string SessionId);
+        string sessionId);
 
     internal record DeleteSessionResponse(
-        bool Success,
-        string? Error);
+        bool success,
+        string? error);
 
     internal record ListSessionsResponse(
-        List<SessionMetadata> Sessions);
+        List<SessionMetadata> sessions);
 
     internal record ToolCallResponse(
-        ToolResultObject? Result);
+        ToolResultObject? result);
 
     internal record PermissionRequestResponse(
-        PermissionRequestResult Result);
+        PermissionRequestResult result);
 
     internal record UserInputRequestResponse(
         string Answer,

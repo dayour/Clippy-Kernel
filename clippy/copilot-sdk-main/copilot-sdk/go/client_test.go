@@ -1,6 +1,7 @@
 package copilot
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -383,9 +384,39 @@ func TestClient_EnvOptions(t *testing.T) {
 }
 
 func findCLIPathForTest() string {
-	abs, _ := filepath.Abs("../nodejs/node_modules/@github/copilot/index.js")
-	if fileExistsForTest(abs) {
-		return abs
+	packageRoot, _ := filepath.Abs("../nodejs/node_modules/@github/copilot")
+	legacyEntryPoint := filepath.Join(packageRoot, "index.js")
+	if fileExistsForTest(legacyEntryPoint) {
+		return legacyEntryPoint
+	}
+
+	packageJSONBytes, err := os.ReadFile(filepath.Join(packageRoot, "package.json"))
+	if err != nil {
+		return ""
+	}
+
+	var packageJSON struct {
+		Bin any `json:"bin"`
+	}
+	if err := json.Unmarshal(packageJSONBytes, &packageJSON); err != nil {
+		return ""
+	}
+
+	switch bin := packageJSON.Bin.(type) {
+	case string:
+		entryPoint := filepath.Join(packageRoot, bin)
+		if fileExistsForTest(entryPoint) {
+			return entryPoint
+		}
+	case map[string]any:
+		for _, value := range bin {
+			if binPath, ok := value.(string); ok {
+				entryPoint := filepath.Join(packageRoot, binPath)
+				if fileExistsForTest(entryPoint) {
+					return entryPoint
+				}
+			}
+		}
 	}
 	return ""
 }

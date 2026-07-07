@@ -84,7 +84,7 @@ public partial class CopilotSession : IAsyncDisposable
         WorkspacePath = workspacePath;
     }
 
-    private Task<T> InvokeRpcAsync<T>(string method, object?[]? args, CancellationToken cancellationToken) =>
+    private Task<T> InvokeRpcAsync<T>(string method, CopilotClient.RpcArgs args, CancellationToken cancellationToken) =>
         CopilotClient.InvokeRpcAsync<T>(_rpc, method, args, cancellationToken);
 
     /// <summary>
@@ -119,16 +119,16 @@ public partial class CopilotSession : IAsyncDisposable
     {
         var request = new SendMessageRequest
         {
-            SessionId = SessionId,
-            Prompt = options.Prompt,
-            Attachments = options.Attachments,
-            Mode = options.Mode
+            sessionId = SessionId,
+            prompt = options.Prompt,
+            attachments = options.Attachments,
+            mode = options.Mode
         };
 
         var response = await InvokeRpcAsync<SendMessageResponse>(
-            "session.send", [request], cancellationToken);
+            "session.send", request.ToRpcArgs(), cancellationToken);
 
-        return response.MessageId;
+        return response.messageId;
     }
 
     /// <summary>
@@ -489,9 +489,9 @@ public partial class CopilotSession : IAsyncDisposable
     public async Task<IReadOnlyList<SessionEvent>> GetMessagesAsync(CancellationToken cancellationToken = default)
     {
         var response = await InvokeRpcAsync<GetMessagesResponse>(
-            "session.getMessages", [new GetMessagesRequest { SessionId = SessionId }], cancellationToken);
+            "session.getMessages", CopilotClient.RpcArgs.From(("sessionId", SessionId, typeof(string))), cancellationToken);
 
-        return response.Events
+        return response.events
             .Select(e => SessionEvent.FromJson(e.ToJsonString()))
             .OfType<SessionEvent>()
             .ToList();
@@ -523,7 +523,7 @@ public partial class CopilotSession : IAsyncDisposable
     public async Task AbortAsync(CancellationToken cancellationToken = default)
     {
         await InvokeRpcAsync<object>(
-            "session.abort", [new SessionAbortRequest { SessionId = SessionId }], cancellationToken);
+            "session.abort", CopilotClient.RpcArgs.From(("sessionId", SessionId, typeof(string))), cancellationToken);
     }
 
     /// <summary>
@@ -554,7 +554,7 @@ public partial class CopilotSession : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await InvokeRpcAsync<object>(
-            "session.destroy", [new SessionDestroyRequest() { SessionId = SessionId }], CancellationToken.None);
+            "session.destroy", CopilotClient.RpcArgs.From(("sessionId", SessionId, typeof(string))), CancellationToken.None);
 
         _eventHandlers.Clear();
         _toolHandlers.Clear();
@@ -577,35 +577,41 @@ public partial class CopilotSession : IAsyncDisposable
 
     internal record SendMessageRequest
     {
-        public string SessionId { get; init; } = string.Empty;
-        public string Prompt { get; init; } = string.Empty;
-        public List<UserMessageDataAttachmentsItem>? Attachments { get; init; }
-        public string? Mode { get; init; }
+        public string sessionId { get; init; } = string.Empty;
+        public string prompt { get; init; } = string.Empty;
+        public List<UserMessageDataAttachmentsItem>? attachments { get; init; }
+        public string? mode { get; init; }
+
+        public CopilotClient.RpcArgs ToRpcArgs() => CopilotClient.RpcArgs.From(
+            ("sessionId", sessionId, typeof(string)),
+            ("prompt", prompt, typeof(string)),
+            ("attachments", attachments, typeof(List<UserMessageDataAttachmentsItem>)),
+            ("mode", mode, typeof(string)));
     }
 
     internal record SendMessageResponse
     {
-        public string MessageId { get; init; } = string.Empty;
+        public string messageId { get; init; } = string.Empty;
     }
 
     internal record GetMessagesRequest
     {
-        public string SessionId { get; init; } = string.Empty;
+        public string sessionId { get; init; } = string.Empty;
     }
 
     internal record GetMessagesResponse
     {
-        public List<JsonObject> Events { get; init; } = new();
+        public List<JsonObject> events { get; init; } = new();
     }
 
     internal record SessionAbortRequest
     {
-        public string SessionId { get; init; } = string.Empty;
+        public string sessionId { get; init; } = string.Empty;
     }
 
     internal record SessionDestroyRequest
     {
-        public string SessionId { get; init; } = string.Empty;
+        public string sessionId { get; init; } = string.Empty;
     }
 
     [JsonSourceGenerationOptions(

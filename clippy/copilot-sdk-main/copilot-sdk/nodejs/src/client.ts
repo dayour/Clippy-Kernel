@@ -27,6 +27,7 @@ import type {
     GetAuthStatusResponse,
     GetStatusResponse,
     ModelInfo,
+    PermissionRequestResult,
     ResumeSessionConfig,
     SessionConfig,
     SessionEvent,
@@ -980,7 +981,7 @@ export class CopilotClient {
             async (params: {
                 sessionId: string;
                 permissionRequest: unknown;
-            }): Promise<{ result: unknown }> => await this.handlePermissionRequest(params)
+            }): Promise<PermissionRequestResult> => await this.handlePermissionRequest(params)
         );
 
         this.connection.onRequest(
@@ -1088,7 +1089,7 @@ export class CopilotClient {
     private async handlePermissionRequest(params: {
         sessionId: string;
         permissionRequest: unknown;
-    }): Promise<{ result: unknown }> {
+    }): Promise<PermissionRequestResult> {
         if (!params || typeof params.sessionId !== "string" || !params.permissionRequest) {
             throw new Error("Invalid permission request payload");
         }
@@ -1100,13 +1101,11 @@ export class CopilotClient {
 
         try {
             const result = await session._handlePermissionRequest(params.permissionRequest);
-            return { result };
+            return result;
         } catch (_error) {
             // If permission handler fails, deny the permission
             return {
-                result: {
-                    kind: "denied-no-approval-rule-and-could-not-request-from-user",
-                },
+                kind: "denied-no-approval-rule-and-could-not-request-from-user",
             };
         }
     }

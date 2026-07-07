@@ -4,10 +4,10 @@ import os
 from pathlib import Path
 from typing import Any
 
+from clippybot.utils.log import get_logger
 from dotenv import load_dotenv
 
 from clippybot import REPO_ROOT
-from clippybot.utils.log import get_logger
 
 logger = get_logger("swea-config")
 

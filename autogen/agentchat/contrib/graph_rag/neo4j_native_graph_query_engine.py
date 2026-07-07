@@ -4,7 +4,8 @@
 
 import asyncio
 import logging
-from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Optional
 
 from ....import_utils import optional_import_block, require_optional_import
 from .document import Document, DocumentType
@@ -189,6 +190,21 @@ class Neo4jNativeGraphQueryEngine:
             from_pdf=True,
         )
 
+    def _run_async(self, coro: Any) -> Any:
+        """Run an async coroutine safely whether or not an event loop is already running.
+
+        Calling ``asyncio.run`` from within a running loop (e.g. when this engine is
+        driven from an async AgentChat context) raises ``RuntimeError``. In that case
+        we offload the coroutine to a dedicated worker thread with its own loop.
+        """
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            return executor.submit(lambda: asyncio.run(coro)).result()
+
     def _build_graph(self, input_doc: list[Document]) -> None:
         """Build the knowledge graph using the provided input documents.
 
@@ -201,9 +217,9 @@ class Neo4jNativeGraphQueryEngine:
                 # todo: we assume this is a path, and not URL
                 with open(doc.path_or_url) as file:  # type: ignore[arg-type]
                     text = file.read()
-                asyncio.run(self.text_kg_builder.run_async(text=text))
+                self._run_async(self.text_kg_builder.run_async(text=text))
             elif doc.doctype == DocumentType.PDF:
-                asyncio.run(self.pdf_kg_builder.run_async(file_path=doc.path_or_url))
+                self._run_async(self.pdf_kg_builder.run_async(file_path=doc.path_or_url))
             else:
                 raise ValueError(f"Unsupported document type: {doc.doctype}")
 

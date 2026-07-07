@@ -6,9 +6,9 @@
 Tests for Windows-Clippy-MCP integration
 """
 
+import builtins
 import json
 import tempfile
-import builtins
 from pathlib import Path
 from unittest.mock import Mock, patch
 

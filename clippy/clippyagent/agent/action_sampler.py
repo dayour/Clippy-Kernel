@@ -2,15 +2,15 @@ from abc import abstractmethod
 from textwrap import dedent
 from typing import Any, Literal
 
+from clippybot.agent.models import AbstractModel
+from clippybot.agent.problem_statement import ProblemStatement
+from clippybot.utils.log import get_logger
 from jinja2 import Template
 from pydantic import BaseModel
 
-from clippybot.agent.models import AbstractModel
-from clippybot.agent.problem_statement import ProblemStatement
 from clippybot.exceptions import FormatError
 from clippybot.tools.tools import ToolHandler
 from clippybot.types import Trajectory
-from clippybot.utils.log import get_logger
 
 
 class ActionSamplerOutput(BaseModel):

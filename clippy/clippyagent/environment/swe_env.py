@@ -4,6 +4,7 @@ import shlex
 from pathlib import PurePath
 from typing import Literal, Self
 
+from clippybot.utils.log import get_logger
 from pydantic import BaseModel, ConfigDict, Field
 from swerex.deployment.abstract import AbstractDeployment
 from swerex.deployment.config import DeploymentConfig, DockerDeploymentConfig, get_deployment
@@ -18,7 +19,6 @@ from swerex.runtime.abstract import Command as RexCommand
 
 from clippybot.environment.hooks.abstract import CombinedEnvHooks, EnvHook
 from clippybot.environment.repo import Repo, RepoConfig
-from clippybot.utils.log import get_logger
 
 
 class EnvironmentConfig(BaseModel):

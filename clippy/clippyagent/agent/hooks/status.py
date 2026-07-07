@@ -1,6 +1,7 @@
 from collections.abc import Callable
 
 from clippybot.agent.hooks.abstract import AbstractAgentHook
+
 from clippybot.types import AgentInfo, StepOutput
 
 

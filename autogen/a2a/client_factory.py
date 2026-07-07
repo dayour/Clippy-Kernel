@@ -7,8 +7,10 @@ import typing
 from typing import Any, Protocol
 from uuid import uuid4
 
-from a2a.types import AgentCapabilities, AgentCard, DataPart, Message, Part, Role, SendMessageSuccessResponse, TextPart
-from a2a.utils.constants import AGENT_CARD_WELL_KNOWN_PATH, EXTENDED_AGENT_CARD_PATH, PREV_AGENT_CARD_WELL_KNOWN_PATH
+from a2a.types import AgentCapabilities, AgentCard, AgentInterface, Message, Part, Role, SendMessageResponse
+from a2a.utils.constants import AGENT_CARD_WELL_KNOWN_PATH
+from google.protobuf.json_format import MessageToJson
+from google.protobuf.struct_pb2 import Value
 from httpx import MockTransport, Request, Response
 from httpx._client import AsyncClient, Client, EventHook
 from httpx._config import DEFAULT_LIMITS, DEFAULT_MAX_REDIRECTS, DEFAULT_TIMEOUT_CONFIG, Limits
@@ -17,6 +19,34 @@ from httpx._types import AuthTypes, CertTypes, CookieTypes, HeaderTypes, ProxyTy
 from httpx._urls import URL
 
 from autogen.doc_utils import export_module
+
+EXTENDED_AGENT_CARD_PATH = "/extendedAgentCard"
+PREV_AGENT_CARD_WELL_KNOWN_PATH = "/.well-known/agent.json"
+
+
+def _value_from_python(data: Any) -> Value:
+    value = Value()
+    if data is None:
+        value.null_value = 0
+    elif isinstance(data, bool):
+        value.bool_value = data
+    elif isinstance(data, (int, float)):
+        value.number_value = data
+    elif isinstance(data, str):
+        value.string_value = data
+    else:
+        from google.protobuf.json_format import ParseDict
+
+        ParseDict(data, value)
+    return value
+
+
+def _response_message_to_part(response_message: str | dict[str, Any] | Part) -> Part:
+    if isinstance(response_message, Part):
+        return response_message
+    if isinstance(response_message, str):
+        return Part(text=response_message, media_type="text/plain")
+    return Part(data=_value_from_python({"role": "assistant", **response_message}), media_type="application/json")
 
 
 class ClientFactory(Protocol):
@@ -32,45 +62,6 @@ class HttpxClientFactory(ClientFactory):
     cookie persistence, etc.
 
     It can be shared between tasks.
-
-    Usage:
-
-    ```python
-    >>> factory = HttpxClientFactory()
-    >>> async with factory() as client:
-    >>>     response = await client.get('https://example.org')
-    ```
-
-    **Parameters:**
-
-    * **auth** - *(optional)* An authentication class to use when sending
-    requests.
-    * **params** - *(optional)* Query parameters to include in request URLs, as
-    a string, dictionary, or sequence of two-tuples.
-    * **headers** - *(optional)* Dictionary of HTTP headers to include when
-    sending requests.
-    * **cookies** - *(optional)* Dictionary of Cookie items to include when
-    sending requests.
-    * **verify** - *(optional)* Either `True` to use an SSL context with the
-    default CA bundle, `False` to disable verification, or an instance of
-    `ssl.SSLContext` to use a custom context.
-    * **http2** - *(optional)* A boolean indicating if HTTP/2 support should be
-    enabled. Defaults to `False`.
-    * **proxy** - *(optional)* A proxy URL where all the traffic should be routed.
-    * **timeout** - *(optional)* The timeout configuration to use when sending
-    requests.
-    * **limits** - *(optional)* The limits configuration to use.
-    * **max_redirects** - *(optional)* The maximum number of redirect responses
-    that should be followed.
-    * **base_url** - *(optional)* A URL to use as the base when building
-    request URLs.
-    * **transport** - *(optional)* A transport class to use for sending requests
-    over the network.
-    * **trust_env** - *(optional)* Enables or disables usage of environment
-    variables for configuration.
-    * **default_encoding** - *(optional)* The default encoding to use for decoding
-    response text, if no charset information is included in a response Content-Type
-    header. Set to a callable for automatic character set detection. Default: "utf-8".
     """
 
     def __init__(
@@ -137,34 +128,11 @@ class EmptyClientFactory(ClientFactory):
 
 @export_module("autogen.a2a")
 def MockClient(  # noqa: N802
-    response_message: str | dict[str, Any] | TextPart | DataPart | Part,
+    response_message: str | dict[str, Any] | Part,
 ) -> HttpxClientFactory:
-    """Create a mock HTTP client for testing A2A agent interactions.
+    """Create a mock HTTP client for testing A2A agent interactions."""
 
-    This function creates a mock HTTP client that simulates responses from an A2A agent server.
-    It handles both agent card requests and message sending requests with configurable responses.
-
-    Args:
-        response_message: The message to return in response to SendMessage requests.
-
-    Returns:
-        An HttpxClientFactory configured with a mock transport that handles requests
-        to agent card endpoints and message sending endpoints.
-
-    Example:
-        >>> client = MockClient("Hello, world!")
-        >>> agent = A2aRemoteAgent(name="remote", url="http://fake", client=client)
-    """
-    if isinstance(response_message, Part):
-        parts = [response_message]
-    elif isinstance(response_message, (DataPart, TextPart)):
-        parts = [Part(root=response_message)]
-    elif isinstance(response_message, str):
-        parts = [Part(root=DataPart(data={"role": "assistant", "content": response_message}))]
-    elif isinstance(response_message, dict):
-        parts = [Part(root=DataPart(data={"role": "assistant", **response_message}))]
-    else:
-        raise ValueError(f"Invalid message type: {type(response_message)}")
+    response_part = _response_message_to_part(response_message)
 
     async def mock_handler(request: Request) -> Response:
         if (
@@ -174,28 +142,37 @@ def MockClient(  # noqa: N802
         ):
             return Response(
                 status_code=200,
-                content=AgentCard(
-                    capabilities=AgentCapabilities(streaming=False),
-                    default_input_modes=["text"],
-                    default_output_modes=["text"],
-                    name="mock_agent",
-                    description="mock_agent",
-                    url="http://localhost:8000",
-                    supports_authenticated_extended_card=False,
-                    version="0.1.0",
-                    skills=[],
-                ).model_dump_json(),
+                content=MessageToJson(
+                    AgentCard(
+                        capabilities=AgentCapabilities(streaming=False),
+                        default_input_modes=["text"],
+                        default_output_modes=["text"],
+                        supported_interfaces=[
+                            AgentInterface(
+                                url="http://localhost:8000",
+                                protocol_binding="JSONRPC",
+                                protocol_version="1.0",
+                            )
+                        ],
+                        name="mock_agent",
+                        description="mock_agent",
+                        version="0.1.0",
+                        skills=[],
+                    )
+                ),
             )
 
         return Response(
             status_code=200,
-            content=SendMessageSuccessResponse(
-                result=Message(
-                    message_id=str(uuid4()),
-                    role=Role.agent,
-                    parts=parts,
-                ),
-            ).model_dump_json(),
+            content=MessageToJson(
+                SendMessageResponse(
+                    message=Message(
+                        message_id=str(uuid4()),
+                        role=Role.ROLE_AGENT,
+                        parts=[response_part],
+                    )
+                )
+            ),
         )
 
     return HttpxClientFactory(transport=MockTransport(handler=mock_handler))

@@ -20,7 +20,7 @@ import logging
 import re
 import time
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
+
 
 class ScaffolderConfig(BaseModel):
     """Configuration for AgentScaffolderAgent."""
@@ -53,6 +54,7 @@ class ScaffolderConfig(BaseModel):
 # Plan data structure
 # ---------------------------------------------------------------------------
 
+
 class ScaffoldPlan:
     """A plan describing every file that will be created or modified."""
 
@@ -61,15 +63,17 @@ class ScaffoldPlan:
         self.output_dir = output_dir
         self.files: list[dict[str, Any]] = []
         self.warnings: list[str] = []
-        self.timestamp = datetime.now(timezone.utc).isoformat()
+        self.timestamp = datetime.now(UTC).isoformat()
 
     def add_file(self, relative_path: str, content: str, *, description: str = "") -> None:
-        self.files.append({
-            "path": relative_path,
-            "size_bytes": len(content.encode("utf-8")),
-            "description": description,
-            "_content": content,
-        })
+        self.files.append(
+            {
+                "path": relative_path,
+                "size_bytes": len(content.encode("utf-8")),
+                "description": description,
+                "_content": content,
+            }
+        )
 
     @property
     def success(self) -> bool:
@@ -83,10 +87,7 @@ class ScaffoldPlan:
             "output_dir": self.output_dir,
             "timestamp": self.timestamp,
             "total_files": len(self.files),
-            "files": [
-                {k: v for k, v in f.items() if k != "_content"}
-                for f in self.files
-            ],
+            "files": [{k: v for k, v in f.items() if k != "_content"} for f in self.files],
             "warnings": self.warnings,
             "success": self.success,
         }
@@ -98,6 +99,7 @@ class ScaffoldPlan:
 # ---------------------------------------------------------------------------
 # Agent
 # ---------------------------------------------------------------------------
+
 
 class AgentScaffolderAgent(CopilotAgentMixin):
     """Generates a Power Platform solution skeleton from an agent spec.
@@ -331,7 +333,7 @@ class AgentScaffolderAgent(CopilotAgentMixin):
             '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n'
             '  <Default Extension="xml" ContentType="application/xml" />\n'
             '  <Default Extension="json" ContentType="application/json" />\n'
-            '</Types>'
+            "</Types>"
         )
 
     @staticmethod
@@ -360,25 +362,31 @@ class AgentScaffolderAgent(CopilotAgentMixin):
         }
 
         for topic in spec.get("topics", []):
-            bot["topics"].append({
-                "name": topic["name"],
-                "triggerPhrases": topic.get("triggerPhrases", []),
-                "description": topic.get("description", ""),
-            })
+            bot["topics"].append(
+                {
+                    "name": topic["name"],
+                    "triggerPhrases": topic.get("triggerPhrases", []),
+                    "description": topic.get("description", ""),
+                }
+            )
 
         for ks in spec.get("knowledgeSources", []):
-            bot["knowledgeSources"].append({
-                "type": ks["type"],
-                "reference": ks.get("url") or ks.get("path") or ks.get("table", ""),
-                "scope": ks.get("scope"),
-            })
+            bot["knowledgeSources"].append(
+                {
+                    "type": ks["type"],
+                    "reference": ks.get("url") or ks.get("path") or ks.get("table", ""),
+                    "scope": ks.get("scope"),
+                }
+            )
 
         for action in spec.get("actions", []):
-            bot["actions"].append({
-                "name": action["name"],
-                "connector": action["connector"],
-                "connectionReference": f"{prefix}_{action['connector']}_cr",
-            })
+            bot["actions"].append(
+                {
+                    "name": action["name"],
+                    "connector": action["connector"],
+                    "connectionReference": f"{prefix}_{action['connector']}_cr",
+                }
+            )
 
         # Card template references
         card_refs = ["welcome_card.json", "error_card.json"]
@@ -446,11 +454,13 @@ class AgentScaffolderAgent(CopilotAgentMixin):
             description=spec.get("description", ""),
             topics=topics,
         )
-        files.append((
-            f"{card_dir}/welcome_card.json",
-            json.dumps(welcome, indent=2),
-            "Welcome card with topic buttons",
-        ))
+        files.append(
+            (
+                f"{card_dir}/welcome_card.json",
+                json.dumps(welcome, indent=2),
+                "Welcome card with topic buttons",
+            )
+        )
 
         # Error card
         error = AdaptiveCardTemplate.error_card(
@@ -459,27 +469,29 @@ class AgentScaffolderAgent(CopilotAgentMixin):
             details="",
             retry_action={"title": "Retry", "data": {"action": "retry"}},
         )
-        files.append((
-            f"{card_dir}/error_card.json",
-            json.dumps(error, indent=2),
-            "Error card template",
-        ))
+        files.append(
+            (
+                f"{card_dir}/error_card.json",
+                json.dumps(error, indent=2),
+                "Error card template",
+            )
+        )
 
         # Per-topic cards
         for topic in topics:
             topic_name = topic.get("name", "topic")
-            topic_card = (
-                AdaptiveCardTemplate.welcome_card(
-                    agent_name=topic_name,
-                    description=topic.get("description", f"Help with {topic_name}"),
-                    topics=[],
+            topic_card = AdaptiveCardTemplate.welcome_card(
+                agent_name=topic_name,
+                description=topic.get("description", f"Help with {topic_name}"),
+                topics=[],
+            )
+            files.append(
+                (
+                    f"{card_dir}/{topic_name}_card.json",
+                    json.dumps(topic_card, indent=2),
+                    f"Response template for topic: {topic_name}",
                 )
             )
-            files.append((
-                f"{card_dir}/{topic_name}_card.json",
-                json.dumps(topic_card, indent=2),
-                f"Response template for topic: {topic_name}",
-            ))
 
         return files
 
@@ -493,24 +505,28 @@ class AgentScaffolderAgent(CopilotAgentMixin):
         # Telemetry connection string
         telemetry = spec.get("telemetry", {})
         if telemetry.get("enable") and telemetry.get("appInsightsConnectionString"):
-            env_vars.append({
-                "schema_name": f"{prefix}_AppInsightsConnectionString",
-                "display_name": "App Insights Connection String",
-                "type_code": 100000000,  # String
-                "default_value": "",
-                "description": "Application Insights connection string for telemetry.",
-            })
+            env_vars.append(
+                {
+                    "schema_name": f"{prefix}_AppInsightsConnectionString",
+                    "display_name": "App Insights Connection String",
+                    "type_code": 100000000,  # String
+                    "default_value": "",
+                    "description": "Application Insights connection string for telemetry.",
+                }
+            )
 
         # Action-specific env vars (e.g., API base URLs)
         for action in spec.get("actions", []):
             if action.get("inputs"):
-                env_vars.append({
-                    "schema_name": f"{prefix}_{action['name']}_BaseUrl",
-                    "display_name": f"{action['name']} Base URL",
-                    "type_code": 100000000,
-                    "default_value": "",
-                    "description": f"Base URL for the {action['connector']} connector used by {action['name']}.",
-                })
+                env_vars.append(
+                    {
+                        "schema_name": f"{prefix}_{action['name']}_BaseUrl",
+                        "display_name": f"{action['name']} Base URL",
+                        "type_code": 100000000,
+                        "default_value": "",
+                        "description": f"Base URL for the {action['connector']} connector used by {action['name']}.",
+                    }
+                )
 
         return env_vars
 
@@ -525,13 +541,15 @@ class AgentScaffolderAgent(CopilotAgentMixin):
             if connector in seen:
                 continue
             seen.add(connector)
-            refs.append({
-                "schema_name": f"{prefix}_{connector}_cr",
-                "connector": connector,
-                "connectorId": f"/providers/Microsoft.PowerApps/apis/shared_{connector.lower()}",
-                "displayName": f"{connector} Connection",
-                "description": f"Connection reference for {connector} connector.",
-            })
+            refs.append(
+                {
+                    "schema_name": f"{prefix}_{connector}_cr",
+                    "connector": connector,
+                    "connectorId": f"/providers/Microsoft.PowerApps/apis/shared_{connector.lower()}",
+                    "displayName": f"{connector} Connection",
+                    "description": f"Connection reference for {connector} connector.",
+                }
+            )
 
         return refs
 
@@ -717,6 +735,6 @@ jobs:
 
 __all__ = [
     "AgentScaffolderAgent",
-    "ScaffolderConfig",
     "ScaffoldPlan",
+    "ScaffolderConfig",
 ]

@@ -183,8 +183,7 @@ class SqliteLogger(BaseLogger):
 
         except sqlite3.Error as e:
             logger.error(f"[SqliteLogger] start logging error: {e}")
-        finally:
-            return self.session_id
+        return self.session_id
 
     def _get_current_db_version(self) -> None | int:
         self.cur.execute("SELECT version_number FROM version ORDER BY id DESC LIMIT 1")

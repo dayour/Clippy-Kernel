@@ -59,7 +59,7 @@ class GitHubIntegration:
     def __init__(self, agent, github_token: str | None = None):
         """
         Initialize GitHub integration.
-        
+
         Args:
             agent: ClippySWEAgent instance
             github_token: Optional GitHub personal access token
@@ -68,17 +68,15 @@ class GitHubIntegration:
         self.github_token = github_token
         self.workspace = Path(tempfile.mkdtemp(prefix="clippy_gh_"))
 
-    def resolve_issue(
-        self, repository: str, issue_number: int, create_pr: bool = True
-    ) -> PatchResult:
+    def resolve_issue(self, repository: str, issue_number: int, create_pr: bool = True) -> PatchResult:
         """
         Autonomously resolve a GitHub issue.
-        
+
         Args:
             repository: Repository in format "owner/repo"
             issue_number: Issue number to resolve
             create_pr: Whether to create a pull request
-            
+
         Returns:
             PatchResult with resolution details
         """
@@ -226,7 +224,7 @@ class GitHubIntegration:
         {issue.body}
         
         **Repository**: {issue.repository}
-        **Labels**: {', '.join(issue.labels)}
+        **Labels**: {", ".join(issue.labels)}
         
         **Your task:**
         1. Understand the issue thoroughly
@@ -249,9 +247,7 @@ class GitHubIntegration:
             "repository_path": repo_path,
         }
 
-    def _generate_solution(
-        self, issue: GitHubIssue, analysis: dict[str, Any], repo_path: Path
-    ) -> dict[str, Any]:
+    def _generate_solution(self, issue: GitHubIssue, analysis: dict[str, Any], repo_path: Path) -> dict[str, Any]:
         """Generate solution code for the issue."""
         solution_task = f"""
         Based on the analysis, implement a solution for this issue:
@@ -259,7 +255,7 @@ class GitHubIntegration:
         **Issue #{issue.number}: {issue.title}**
         
         **Analysis:**
-        {analysis['analysis']}
+        {analysis["analysis"]}
         
         **Requirements:**
         1. Implement the fix or feature
@@ -295,8 +291,7 @@ class GitHubIntegration:
         changed_files: list[str] = []
 
         logger.warning(
-            "SCAFFOLDED: _apply_changes() is not implemented. "
-            "Changes are NOT being applied to the repository."
+            "SCAFFOLDED: _apply_changes() is not implemented. Changes are NOT being applied to the repository."
         )
 
         return changed_files

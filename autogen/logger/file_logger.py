@@ -78,8 +78,7 @@ class FileLogger(BaseLogger):
             self.logger.info(f"Started new session with Session ID: {self.session_id}")
         except Exception as e:
             logger.error(f"[file_logger] Failed to create logging file: {e}")
-        finally:
-            return self.session_id
+        return self.session_id
 
     def log_chat_completion(
         self,

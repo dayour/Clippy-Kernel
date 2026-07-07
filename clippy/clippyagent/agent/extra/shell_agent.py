@@ -4,6 +4,7 @@ from typing import Self
 from clippybot.agent.agents import DefaultAgent, ShellAgentConfig
 from clippybot.agent.models import HumanModel, HumanModelConfig, get_model
 from clippybot.agent.problem_statement import ProblemStatement, ProblemStatementConfig
+
 from clippybot.environment.clippybot_env import clippybotenv
 from clippybot.tools.parsing import ActionOnlyParser
 from clippybot.tools.tools import ToolHandler

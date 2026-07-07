@@ -59,7 +59,7 @@ class PowerPointSpec:
 class DocumentProcessor:
     """
     Document and media processing capabilities.
-    
+
     Handles PowerPoint generation, document analysis, template creation,
     and multimedia processing.
     """
@@ -67,7 +67,7 @@ class DocumentProcessor:
     def __init__(self, agent, flux_api_key: str | None = None):
         """
         Initialize document processor.
-        
+
         Args:
             agent: ClippySWEAgent instance
             flux_api_key: Optional API key for Flux 2 image generation
@@ -85,13 +85,13 @@ class DocumentProcessor:
     ) -> dict[str, Any]:
         """
         Generate PowerPoint presentation from various content sources.
-        
+
         Args:
             content_sources: List of file paths or text content
             output_path: Path to save the generated PowerPoint
             spec: Optional specification for the presentation
             generate_images: Whether to generate images using Flux 2
-            
+
         Returns:
             Dictionary with generation results
         """
@@ -166,13 +166,13 @@ class DocumentProcessor:
     def analyze_document(self, file_path: Path) -> DocumentAnalysisResult:
         """
         Analyze a document and extract key information.
-        
+
         Supports: PDF, Word (docx), Excel (xlsx), PowerPoint (pptx),
         text files, images, and more.
-        
+
         Args:
             file_path: Path to the document
-            
+
         Returns:
             DocumentAnalysisResult with analysis details
         """
@@ -252,12 +252,12 @@ class DocumentProcessor:
     ) -> dict[str, Any]:
         """
         Create a comprehensive feature specification document.
-        
+
         Args:
             feature_description: Description of the feature
             output_path: Path to save the spec document
             include_diagrams: Whether to generate diagrams using Flux 2
-            
+
         Returns:
             Dictionary with creation results
         """
@@ -327,11 +327,11 @@ class DocumentProcessor:
     ) -> dict[str, Any]:
         """
         Analyze audio/video recording and generate insights.
-        
+
         Args:
             recording_path: Path to audio/video file
             transcript_path: Optional path to existing transcript
-            
+
         Returns:
             Analysis results including transcript, summary, and insights
         """
@@ -389,13 +389,13 @@ class DocumentProcessor:
     ) -> dict[str, Any]:
         """
         Generate image using Flux 2 model.
-        
+
         Args:
             prompt: Text prompt for image generation
             output_path: Path to save generated image
             width: Image width
             height: Image height
-            
+
         Returns:
             Generation results
         """
@@ -472,9 +472,7 @@ class DocumentProcessor:
 
         return content
 
-    def _generate_presentation_outline(
-        self, content: dict[str, Any], spec: PowerPointSpec | None
-    ) -> dict[str, Any]:
+    def _generate_presentation_outline(self, content: dict[str, Any], spec: PowerPointSpec | None) -> dict[str, Any]:
         """Generate presentation outline using agent."""
         outline_task = f"""
         Create a PowerPoint presentation outline with:
@@ -540,9 +538,7 @@ class DocumentProcessor:
             self.generate_image_flux2(slide_info["image_prompt"], image_path)
 
             if image_path.exists():
-                slide.shapes.add_picture(
-                    str(image_path), Inches(1), Inches(1), width=Inches(8)
-                )
+                slide.shapes.add_picture(str(image_path), Inches(1), Inches(1), width=Inches(8))
 
     def _extract_pdf_content(self, file_path: Path) -> str:
         """Extract text from PDF."""

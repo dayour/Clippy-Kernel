@@ -59,6 +59,13 @@ jobs:
           # Browser use doesn't support below python 3.11
           - python-version: "3.10"
             optional-dependencies: "browser-use"
+        include:
+          # Type-check the core package on Python 3.14 with no optional extras.
+          # Heavy optional-dependency combinations are not yet 3.14-ready
+          # upstream (notably litellm, which gates the interop extras), so the
+          # full python x optional-dependencies fan-out stays at <=3.13.
+          - python-version: "3.14"
+            optional-dependencies: "none"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

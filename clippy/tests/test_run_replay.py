@@ -3,9 +3,8 @@ from __future__ import annotations
 import subprocess
 
 import pytest
-from swerex.deployment.config import DockerDeploymentConfig
-
 from clippybot.run.run_replay import RunReplay, RunReplayConfig
+from swerex.deployment.config import DockerDeploymentConfig
 
 
 @pytest.fixture

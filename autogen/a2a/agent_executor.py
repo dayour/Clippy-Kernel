@@ -9,7 +9,7 @@ from a2a.server.agent_execution import AgentExecutor, RequestContext
 from a2a.server.events import EventQueue
 from a2a.server.tasks import TaskUpdater
 from a2a.types import InternalError, Task, TaskState, TaskStatus
-from a2a.utils.errors import ServerError
+from google.protobuf.timestamp_pb2 import Timestamp
 
 from autogen import ConversableAgent
 from autogen.agentchat.remote import AgentService
@@ -23,13 +23,15 @@ from .utils import (
 )
 
 
+def _task_status(state: TaskState) -> TaskStatus:
+    timestamp = Timestamp()
+    timestamp.FromDatetime(datetime.now(timezone.utc))
+    return TaskStatus(state=state, timestamp=timestamp)
+
+
 @export_module("autogen.a2a")
 class AutogenAgentExecutor(AgentExecutor):
-    """An agent executor that bridges Autogen ConversableAgents with A2A protocols.
-
-    This class wraps an Autogen ConversableAgent to enable it to be executed within
-    the A2A framework, handling message processing, task management, and event publishing.
-    """
+    """An agent executor that bridges Autogen ConversableAgents with A2A protocols."""
 
     def __init__(self, agent: ConversableAgent) -> None:
         self.agent = AgentService(agent)
@@ -40,21 +42,16 @@ class AutogenAgentExecutor(AgentExecutor):
         task = context.current_task
         if not task:
             request = context.message
-            # build task object manually to allow empty messages
             task = Task(
-                status=TaskStatus(
-                    state=TaskState.submitted,
-                    timestamp=datetime.now(timezone.utc).isoformat(),
-                ),
-                id=request.task_id or str(uuid4()),
-                context_id=request.context_id or str(uuid4()),
+                id=context.task_id or request.task_id or str(uuid4()),
+                context_id=context.context_id or request.context_id or str(uuid4()),
+                status=_task_status(TaskState.TASK_STATE_SUBMITTED),
                 history=[request],
             )
-            # publish the task status submitted event
             await event_queue.enqueue_event(task)
 
         updater = TaskUpdater(event_queue, task.id, task.context_id)
-        await updater.update_status(state=TaskState.working)
+        await updater.start_work()
 
         artifact = make_artifact(message=None)
 
@@ -68,8 +65,7 @@ class AutogenAgentExecutor(AgentExecutor):
                             task_id=task.id,
                             text=response.input_required,
                             context=response.context,
-                        ),
-                        final=True,
+                        )
                     )
                     return
 
@@ -81,7 +77,7 @@ class AutogenAgentExecutor(AgentExecutor):
                     )
 
                     await updater.add_artifact(
-                        parts=artifact.parts,
+                        parts=list(artifact.parts),
                         artifact_id=artifact.artifact_id,
                         name=artifact.name,
                         append=streaming_started,
@@ -98,14 +94,14 @@ class AutogenAgentExecutor(AgentExecutor):
                     )
 
         except Exception as e:
-            raise ServerError(error=InternalError()) from e
+            raise InternalError() from e
 
         await updater.add_artifact(
             artifact_id=artifact.artifact_id,
             name=artifact.name,
-            parts=artifact.parts,
-            metadata=artifact.metadata,
-            extensions=artifact.extensions,
+            parts=list(artifact.parts),
+            metadata=artifact.metadata if artifact.metadata.fields else None,
+            extensions=list(artifact.extensions),
             append=streaming_started,
             last_chunk=True,
         )

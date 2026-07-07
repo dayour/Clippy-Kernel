@@ -23,9 +23,8 @@ import string
 from collections import Counter
 from functools import cached_property
 
-from pydantic import BaseModel, field_validator, model_validator
-
 from clippybot.utils.jinja_warnings import _warn_probably_wrong_jinja_syntax
+from pydantic import BaseModel, field_validator, model_validator
 
 ARGUMENT_NAME_PATTERN = r"[a-zA-Z_][a-zA-Z0-9_-]*"
 

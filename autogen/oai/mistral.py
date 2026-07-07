@@ -41,16 +41,28 @@ from .oai_models import ChatCompletion, ChatCompletionMessage, ChatCompletionMes
 with optional_import_block():
     # Mistral libraries
     # pip install mistralai
-    from mistralai import (
-        AssistantMessage,
-        Function,
-        FunctionCall,
-        Mistral,
-        SystemMessage,
-        ToolCall,
-        ToolMessage,
-        UserMessage,
-    )
+    try:
+        from mistralai.client import Mistral
+        from mistralai.client.models import (
+            AssistantMessage,
+            Function,
+            FunctionCall,
+            SystemMessage,
+            ToolCall,
+            ToolMessage,
+            UserMessage,
+        )
+    except ImportError:
+        from mistralai import (
+            AssistantMessage,
+            Function,
+            FunctionCall,
+            Mistral,
+            SystemMessage,
+            ToolCall,
+            ToolMessage,
+            UserMessage,
+        )
 
 
 class MistralEntryDict(LLMConfigEntryDict, total=False):

@@ -32,8 +32,7 @@ from typing import Any
 # ---------------------------------------------------------------------------
 
 LOGIC_APPS_SCHEMA = (
-    "https://schema.management.azure.com/providers/"
-    "Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#"
+    "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#"
 )
 
 # ---------------------------------------------------------------------------
@@ -146,6 +145,7 @@ def env_var_expression(var_name: str) -> str:
 # ---------------------------------------------------------------------------
 # Helper: deterministic metadata ID
 # ---------------------------------------------------------------------------
+
 
 def _operation_metadata_id() -> str:
     """Generate a deterministic-format GUID for operationMetadataId.
@@ -312,9 +312,7 @@ class FlowDefinitionBuilder:
         """
         catalog = CONNECTOR_OPERATIONS.get(trigger_connector)
         api_id = (
-            catalog["api_id"]
-            if catalog
-            else f"/providers/Microsoft.PowerApps/apis/shared_{trigger_connector.lower()}"
+            catalog["api_id"] if catalog else f"/providers/Microsoft.PowerApps/apis/shared_{trigger_connector.lower()}"
         )
 
         cr_name = f"{self.prefix}_{trigger_connector}_cr"
@@ -528,10 +526,13 @@ class FlowDefinitionBuilder:
         # -- Non-HTTP connectors: request trigger + connector action + response
         cr_name = f"{prefix}_{connector}_cr"
 
-        trigger_schema: dict[str, Any] = action_inputs.get("request_schema", {
-            "type": "object",
-            "properties": {},
-        })
+        trigger_schema: dict[str, Any] = action_inputs.get(
+            "request_schema",
+            {
+                "type": "object",
+                "properties": {},
+            },
+        )
 
         method = action_inputs.get("method", "POST")
 
@@ -663,10 +664,7 @@ class FlowMetadata:
         return json.dumps(self.definition, indent=indent)
 
     def __repr__(self) -> str:
-        return (
-            f"FlowMetadata(name={self.name!r}, display_name={self.display_name!r}, "
-            f"flow_type={self.flow_type!r})"
-        )
+        return f"FlowMetadata(name={self.name!r}, display_name={self.display_name!r}, flow_type={self.flow_type!r})"
 
 
 # ---------------------------------------------------------------------------
@@ -675,9 +673,9 @@ class FlowMetadata:
 
 __all__ = [
     "CONNECTOR_OPERATIONS",
+    "LOGIC_APPS_SCHEMA",
     "FlowDefinitionBuilder",
     "FlowMetadata",
-    "LOGIC_APPS_SCHEMA",
     "connection_ref_expression",
     "env_var_expression",
 ]

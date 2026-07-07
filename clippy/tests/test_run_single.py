@@ -3,14 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
-from clippybot import CONFIG_DIR, TOOLS_DIR
 from clippybot.agent.agents import DefaultAgentConfig
 from clippybot.agent.models import InstantEmptySubmitModelConfig
-from clippybot.environment.clippybot_env import EnvironmentConfig
 from clippybot.run.common import BasicCLI
 from clippybot.run.hooks.abstract import RunHook
 from clippybot.run.run_single import RunSingle, RunSingleConfig
+
+from clippybot import CONFIG_DIR, TOOLS_DIR
+from clippybot.environment.clippybot_env import EnvironmentConfig
 from clippybot.tools.bundle import Bundle
 
 

@@ -2,17 +2,15 @@ import asyncio
 import os
 import shlex
 from pathlib import Path
-from typing import Any, Literal, Protocol
+from typing import Any, Literal, Protocol, Self
 
+from clippybot.utils.github import _parse_gh_repo_url
+from clippybot.utils.log import get_logger
 from git import InvalidGitRepositoryError
 from git import Repo as GitRepo
 from pydantic import BaseModel, ConfigDict, Field
 from swerex.deployment.abstract import AbstractDeployment
 from swerex.runtime.abstract import Command, UploadRequest
-from typing_extensions import Self
-
-from clippybot.utils.github import _parse_gh_repo_url
-from clippybot.utils.log import get_logger
 
 logger = get_logger("swea-config")
 

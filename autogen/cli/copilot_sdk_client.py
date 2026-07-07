@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 class ModelProvider(str, Enum):
     """Supported AI model providers."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     GOOGLE = "google"
@@ -58,11 +59,7 @@ class CopilotSession:
 
     def add_message(self, role: str, content: str, metadata: dict[str, Any] | None = None):
         """Add a message to session history."""
-        message = {
-            "role": role,
-            "content": content,
-            "metadata": metadata or {}
-        }
+        message = {"role": role, "content": content, "metadata": metadata or {}}
         self.history.append(message)
 
         # Manage context window
@@ -73,7 +70,7 @@ class CopilotSession:
 class CopilotSDKClient:
     """
     Client for GitHub Copilot SDK integration.
-    
+
     Provides unified interface to multiple AI models (OpenAI, Claude, Gemini)
     with Copilot-style features including tool execution, streaming, and
     multi-turn conversations.
@@ -90,11 +87,11 @@ class CopilotSDKClient:
     ):
         """
         Initialize Copilot SDK client.
-        
+
         Args:
             github_token: GitHub personal access token for Copilot API
             openai_api_key: OpenAI API key
-            anthropic_api_key: Anthropic API key  
+            anthropic_api_key: Anthropic API key
             google_api_key: Google AI API key
             default_model: Default model to use
             default_provider: Default provider
@@ -150,7 +147,7 @@ class CopilotSDKClient:
                 "Authorization": f"Bearer {self.github_token}" if self.github_token else "",
                 "Content-Type": "application/json",
             },
-            timeout=60.0
+            timeout=60.0,
         )
 
     def create_session(
@@ -161,12 +158,12 @@ class CopilotSDKClient:
     ) -> CopilotSession:
         """
         Create a new Copilot session.
-        
+
         Args:
             model: Model to use (e.g., "gpt-4", "claude-3-opus", "gemini-pro")
             provider: Provider to use
             context_window: Maximum context window size
-            
+
         Returns:
             CopilotSession object
         """
@@ -207,7 +204,7 @@ class CopilotSDKClient:
     ) -> None:
         """
         Register a tool that can be called by the AI model.
-        
+
         Args:
             name: Tool name
             func: Callable function
@@ -231,13 +228,13 @@ class CopilotSDKClient:
     ) -> dict[str, Any] | AsyncIterator[dict[str, Any]]:
         """
         Send a message in a session.
-        
+
         Args:
             session_id: Session ID
             message: User message
             stream: Whether to stream the response
             execute_tools: Whether to execute tools if called
-            
+
         Returns:
             Response dict or async iterator for streaming
         """
@@ -271,10 +268,7 @@ class CopilotSDKClient:
 
         try:
             # Prepare messages
-            messages = [
-                {"role": msg["role"], "content": msg["content"]}
-                for msg in session.history
-            ]
+            messages = [{"role": msg["role"], "content": msg["content"]} for msg in session.history]
 
             # Prepare tools if registered
             tools = None
@@ -286,7 +280,7 @@ class CopilotSDKClient:
                             "name": tool["name"],
                             "description": tool["description"],
                             "parameters": tool["parameters"],
-                        }
+                        },
                     }
                     for tool in self.registered_tools.values()
                 ]
@@ -323,15 +317,14 @@ class CopilotSDKClient:
                         tool_name = tool_call.function.name
                         if tool_name in self.registered_tools:
                             import json
+
                             args = json.loads(tool_call.function.arguments)
                             func = self.registered_tools[tool_name]["function"]
                             result = func(**args)
 
                             # Add tool result to session
                             session.add_message(
-                                "tool",
-                                str(result),
-                                {"tool_name": tool_name, "tool_call_id": tool_call.id}
+                                "tool", str(result), {"tool_name": tool_name, "tool_call_id": tool_call.id}
                             )
 
                 content = message.content or ""
@@ -367,10 +360,7 @@ class CopilotSDKClient:
             messages = []
             for msg in session.history:
                 if msg["role"] in ["user", "assistant"]:
-                    messages.append({
-                        "role": msg["role"],
-                        "content": msg["content"]
-                    })
+                    messages.append({"role": msg["role"], "content": msg["content"]})
 
             # Prepare tools
             tools = None
@@ -445,10 +435,7 @@ class CopilotSDKClient:
             chat_history = []
             for msg in session.history[:-1]:  # Exclude last message (current)
                 if msg["role"] in ["user", "model"]:
-                    chat_history.append({
-                        "role": msg["role"],
-                        "parts": [msg["content"]]
-                    })
+                    chat_history.append({"role": msg["role"], "parts": [msg["content"]]})
 
             chat = model.start_chat(history=chat_history)
 

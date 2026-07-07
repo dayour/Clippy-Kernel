@@ -7,7 +7,7 @@ import os
 import tempfile
 from datetime import timedelta
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import anyio
 import pytest

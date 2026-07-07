@@ -8,9 +8,8 @@ This module provides the clippyagent class that combines:
 
 from __future__ import annotations
 
-import asyncio
-from pathlib import Path
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -120,7 +119,7 @@ class clippyagent:
 
     def _create_tools(self) -> list:
         """Create SWE tools based on configuration."""
-        from clippybot.swe.tools import get_swe_tools, SWEToolConfig
+        from clippybot.swe.tools import SWEToolConfig, get_swe_tools
 
         config = SWEToolConfig(
             enable_bash=self._enable_bash,
@@ -164,6 +163,7 @@ class clippyagent:
 
         # Initialize environment
         from clippybot.swe.environment import SWEEnvironment, SWEEnvironmentConfig
+
         env_config = SWEEnvironmentConfig(working_dir=".", timeout=self._timeout)
         self._environment = SWEEnvironment(env_config)
 
@@ -215,11 +215,7 @@ class clippyagent:
         return result
 
     def __repr__(self) -> str:
-        return (
-            f"clippyagent(name={self.name!r}, "
-            f"tools={len(self._swe_tools)}, "
-            f"running={self._is_running})"
-        )
+        return f"clippyagent(name={self.name!r}, tools={len(self._swe_tools)}, running={self._is_running})"
 
 
 async def create_clippy_agent(

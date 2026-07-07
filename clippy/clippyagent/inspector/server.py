@@ -109,7 +109,9 @@ def append_results(traj_path: Path, instance_id: str, content, results, results_
 
         status.append("**** Statuses ****")
         status.append(f"  {'PASS' if is_completed else 'FAIL'} Completed (The agent successfully ran)")
-        status.append(f"  {'PASS' if is_submitted else 'FAIL'} Submitted (The agent successfully submitted a pull request)")
+        status.append(
+            f"  {'PASS' if is_submitted else 'FAIL'} Submitted (The agent successfully submitted a pull request)"
+        )
         status.append(
             f"  {'PASS' if is_resolved else 'FAIL'} Resolved (The pull request {'' if is_resolved else 'has not '}"
             "successfully resolved the issue during eval)"

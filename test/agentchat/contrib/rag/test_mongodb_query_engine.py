@@ -25,7 +25,6 @@ MONGO_CONN_STR = "mongodb://localhost:27017/?directConnection=true"
 
 
 @pytest.fixture(scope="module")
-@pytest.mark.openai
 @skip_on_missing_imports(["pymongo", "llama_index"], "mongodb_query_engine")
 def mongodb_query_engine() -> MongoDBQueryEngine:
     """

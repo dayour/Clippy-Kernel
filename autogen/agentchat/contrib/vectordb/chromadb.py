@@ -26,6 +26,25 @@ CHROMADB_MAX_BATCH_SIZE = os.environ.get("CHROMADB_MAX_BATCH_SIZE", 40000)
 logger = get_logger(__name__)
 
 
+def _create_sentence_transformer_embedding_function() -> Any:
+    embedding_function_cls = getattr(ef, "SentenceTransformerEmbeddingFunction", None)
+    if embedding_function_cls is None:
+        from chromadb.utils.embedding_functions.sentence_transformer_embedding_function import (
+            SentenceTransformerEmbeddingFunction,
+        )
+
+        embedding_function_cls = SentenceTransformerEmbeddingFunction
+    return embedding_function_cls(model_name="all-MiniLM-L6-v2")
+
+
+def _create_chroma_client(path: str | None, **kwargs: Any) -> Any:
+    if path is not None:
+        return chromadb.PersistentClient(path=path, **kwargs)
+    if hasattr(chromadb, "EphemeralClient"):
+        return chromadb.EphemeralClient(**kwargs)
+    return chromadb.Client(**kwargs)
+
+
 @require_optional_import("chromadb", "retrievechat")
 class ChromaVectorDB(VectorDB):
     """A vector database that uses ChromaDB as the backend."""
@@ -54,16 +73,11 @@ class ChromaVectorDB(VectorDB):
         self.client = client
         self.path = path
         self.embedding_function = (
-            ef.SentenceTransformerEmbeddingFunction("all-MiniLM-L6-v2")
-            if embedding_function is None
-            else embedding_function
+            _create_sentence_transformer_embedding_function() if embedding_function is None else embedding_function
         )
         self.metadata = metadata if metadata else {"hnsw:space": "ip", "hnsw:construction_ef": 30, "hnsw:M": 32}
         if not self.client:
-            if self.path is not None:
-                self.client = chromadb.PersistentClient(path=self.path, **kwargs)
-            else:
-                self.client = chromadb.Client(**kwargs)
+            self.client = _create_chroma_client(self.path, **kwargs)
         self.active_collection = None
         self.type = "chroma"
 
@@ -88,28 +102,30 @@ class ChromaVectorDB(VectorDB):
             if self.active_collection and self.active_collection.name == collection_name:
                 collection = self.active_collection
             else:
-                collection = self.client.get_collection(collection_name, embedding_function=self.embedding_function)
+                collection = self.client.get_collection(
+                    name=collection_name, embedding_function=self.embedding_function
+                )
         except (ValueError, chromadb.errors.ChromaError):
             collection = None
         if collection is None:
-            return self.client.create_collection(
+            collection = self._get_or_create_collection(
                 collection_name,
-                embedding_function=self.embedding_function,
                 get_or_create=get_or_create,
                 metadata=self.metadata,
             )
         elif overwrite:
-            self.client.delete_collection(collection_name)
-            return self.client.create_collection(
-                collection_name,
+            self.client.delete_collection(name=collection_name)
+            collection = self.client.create_collection(
+                name=collection_name,
                 embedding_function=self.embedding_function,
-                get_or_create=get_or_create,
                 metadata=self.metadata,
             )
         elif get_or_create:
-            return collection
+            collection = self._get_or_create_collection(collection_name, get_or_create=True, metadata=self.metadata)
         else:
             raise ValueError(f"Collection {collection_name} already exists.")
+        self.active_collection = collection
+        return collection
 
     def get_collection(self, collection_name: str = None) -> "Collection":
         """Get the collection from the vector database.
@@ -144,7 +160,7 @@ class ChromaVectorDB(VectorDB):
         Returns:
             None
         """
-        self.client.delete_collection(collection_name)
+        self.client.delete_collection(name=collection_name)
         if self.active_collection and self.active_collection.name == collection_name:
             self.active_collection = None
 
@@ -220,7 +236,7 @@ class ChromaVectorDB(VectorDB):
             None
         """
         collection = self.get_collection(collection_name)
-        collection.delete(ids, **kwargs)
+        collection.delete(ids=ids, **kwargs)
 
     def retrieve_docs(
         self,
@@ -311,6 +327,25 @@ class ChromaVectorDB(VectorDB):
         """
         collection = self.get_collection(collection_name)
         include = include if include else ["metadatas", "documents"]
-        results = collection.get(ids, include=include, **kwargs)
+        get_kwargs = {"include": include, **kwargs}
+        if ids is not None:
+            get_kwargs["ids"] = ids
+        results = collection.get(**get_kwargs)
         results = self._chroma_get_results_to_list_documents(results)
         return results
+
+    def _get_or_create_collection(
+        self, collection_name: str, get_or_create: bool, metadata: dict | None
+    ) -> "Collection":
+        if get_or_create and hasattr(self.client, "get_or_create_collection"):
+            return self.client.get_or_create_collection(
+                name=collection_name,
+                embedding_function=self.embedding_function,
+                metadata=metadata,
+            )
+        return self.client.create_collection(
+            name=collection_name,
+            embedding_function=self.embedding_function,
+            get_or_create=get_or_create,
+            metadata=metadata,
+        )

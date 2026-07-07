@@ -8,7 +8,7 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.1.0
+    rev: v6.0.0
     hooks:
     - id: check-added-large-files
     - id: check-ast
@@ -21,7 +21,7 @@ repos:
           .devcontainer/.*devcontainer\.json |
           ^notebook/agentchat_pdf_rag/(parsed_elements|processed_elements)\.json$
         )$
-    - id: check-byte-order-marker
+    - id: fix-byte-order-marker
       exclude: .gitignore
     - id: check-merge-conflict
     - id: detect-private-key
@@ -52,7 +52,7 @@ repos:
         require_serial: true
         verbose: true
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
         additional_dependencies:

@@ -10,6 +10,8 @@ from types import UnionType
 from typing import Any
 
 import yaml
+from clippybot.utils.log import get_logger
+from clippybot.utils.serialization import merge_nested_dicts
 from pydantic import ValidationError
 from pydantic_settings import BaseSettings, CliApp, SettingsError
 from rich import print as rich_print
@@ -17,8 +19,6 @@ from rich.panel import Panel
 
 from clippybot import CONFIG_DIR
 from clippybot.types import AgentInfo, AgentRunResult
-from clippybot.utils.log import get_logger
-from clippybot.utils.serialization import merge_nested_dicts
 
 
 def _shorten_strings(data, *, max_length=30):

@@ -43,6 +43,7 @@ class CopilotAgentMixin:
             return
         try:
             from clippybot.llm_clients.copilot_client import CopilotLLMClient
+
             self._llm_client = CopilotLLMClient(self._copilot_config)
             await self._llm_client.start()
             self._llm_session_active = True
@@ -116,15 +117,17 @@ class CopilotAgentMixin:
         elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
 
         # Record reasoning trace
-        self._reasoning_trace.append({
-            "agent": self.name,
-            "system_message_excerpt": system_message[:120],
-            "user_message_excerpt": user_message[:200],
-            "response_excerpt": content[:300],
-            "duration_ms": elapsed_ms,
-            "model": response.model,
-            "usage": response.usage,
-        })
+        self._reasoning_trace.append(
+            {
+                "agent": self.name,
+                "system_message_excerpt": system_message[:120],
+                "user_message_excerpt": user_message[:200],
+                "response_excerpt": content[:300],
+                "duration_ms": elapsed_ms,
+                "model": response.model,
+                "usage": response.usage,
+            }
+        )
 
         if expect_json:
             content = self._extract_json(content)
@@ -165,13 +168,15 @@ class CopilotAgentMixin:
         response = await self._llm_client.create_async(params)
         elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
 
-        self._reasoning_trace.append({
-            "agent": self.name,
-            "turn_count": len(messages),
-            "response_excerpt": response.content[:300],
-            "duration_ms": elapsed_ms,
-            "model": response.model,
-        })
+        self._reasoning_trace.append(
+            {
+                "agent": self.name,
+                "turn_count": len(messages),
+                "response_excerpt": response.content[:300],
+                "duration_ms": elapsed_ms,
+                "model": response.model,
+            }
+        )
 
         return response.content
 
@@ -210,11 +215,13 @@ class CopilotAgentMixin:
             reasoning = await self._llm_chat(messages, temperature=temperature)
             messages.append({"role": "assistant", "content": reasoning})
 
-            results.append({
-                "step": step_instruction,
-                "step_number": i + 1,
-                "reasoning": reasoning,
-            })
+            results.append(
+                {
+                    "step": step_instruction,
+                    "step_number": i + 1,
+                    "reasoning": reasoning,
+                }
+            )
 
         return results
 
@@ -266,7 +273,7 @@ class CopilotAgentMixin:
                 elif text[i] == close_ch:
                     depth -= 1
                     if depth == 0:
-                        candidate = text[start:i + 1]
+                        candidate = text[start : i + 1]
                         try:
                             json.loads(candidate)
                             return candidate

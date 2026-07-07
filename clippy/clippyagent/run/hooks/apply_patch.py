@@ -4,14 +4,14 @@ from pathlib import Path
 import rich
 import rich.markdown
 import rich.panel
-
 from clippybot.agent.problem_statement import ProblemStatementConfig
-from clippybot.environment.repo import LocalRepoConfig
-from clippybot.environment.clippybot_env import clippybotenv
 from clippybot.run.common import _is_promising_patch
 from clippybot.run.hooks.abstract import RunHook
-from clippybot.types import AgentRunResult
 from clippybot.utils.log import get_logger
+
+from clippybot.environment.clippybot_env import clippybotenv
+from clippybot.environment.repo import LocalRepoConfig
+from clippybot.types import AgentRunResult
 
 
 class SaveApplyPatchHook(RunHook):

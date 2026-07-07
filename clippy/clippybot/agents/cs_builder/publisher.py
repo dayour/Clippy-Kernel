@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 import logging
-import time
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -23,6 +22,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
+
 
 class PublisherConfig(BaseModel):
     """Configuration for PublisherAgent."""
@@ -41,6 +41,7 @@ class PublisherConfig(BaseModel):
 # ---------------------------------------------------------------------------
 # Agent
 # ---------------------------------------------------------------------------
+
 
 class PublisherAgent(CopilotAgentMixin):
     """Non-destructive publisher for Teams and M365 Copilot channels.
@@ -135,8 +136,7 @@ class PublisherAgent(CopilotAgentMixin):
 
         if "teams" in channels:
             notes.append(
-                "Teams: Requires Teams admin to approve the app in the "
-                "Teams admin center before users can discover it."
+                "Teams: Requires Teams admin to approve the app in the Teams admin center before users can discover it."
             )
 
         if "m365_copilot" in channels:
@@ -148,15 +148,11 @@ class PublisherAgent(CopilotAgentMixin):
         if security.get("rbacRoles"):
             roles = ", ".join(security["rbacRoles"])
             notes.append(
-                f"RBAC: Agent is restricted to these roles/groups: {roles}. "
-                "Ensure these groups exist in Entra ID."
+                f"RBAC: Agent is restricted to these roles/groups: {roles}. Ensure these groups exist in Entra ID."
             )
 
         if not security.get("allowExternal", False):
-            notes.append(
-                "External access is disabled. Only authenticated internal "
-                "users can interact with this agent."
-            )
+            notes.append("External access is disabled. Only authenticated internal users can interact with this agent.")
 
         return notes
 
@@ -261,59 +257,71 @@ class PublisherAgent(CopilotAgentMixin):
         # Security checks
         if not security.get("authenticationMode"):
             blocking.append("Authentication mode not configured")
-        checklist.append({
-            "category": "security",
-            "item": "Authentication mode configured",
-            "status": "passed" if security.get("authenticationMode") else "blocked",
-            "priority": "critical",
-            "notes": f"Mode: {security.get('authenticationMode', 'not set')}",
-        })
+        checklist.append(
+            {
+                "category": "security",
+                "item": "Authentication mode configured",
+                "status": "passed" if security.get("authenticationMode") else "blocked",
+                "priority": "critical",
+                "notes": f"Mode: {security.get('authenticationMode', 'not set')}",
+            }
+        )
 
         if not security.get("dataLossPrevention"):
-            checklist.append({
-                "category": "security",
-                "item": "DLP policies configured",
-                "status": "blocked",
-                "priority": "high",
-                "notes": "No DLP policies defined",
-            })
+            checklist.append(
+                {
+                    "category": "security",
+                    "item": "DLP policies configured",
+                    "status": "blocked",
+                    "priority": "high",
+                    "notes": "No DLP policies defined",
+                }
+            )
             blocking.append("No DLP policies configured")
         else:
-            checklist.append({
-                "category": "security",
-                "item": "DLP policies configured",
-                "status": "passed",
-                "priority": "high",
-                "notes": f"Policies: {', '.join(security['dataLossPrevention'])}",
-            })
+            checklist.append(
+                {
+                    "category": "security",
+                    "item": "DLP policies configured",
+                    "status": "passed",
+                    "priority": "high",
+                    "notes": f"Policies: {', '.join(security['dataLossPrevention'])}",
+                }
+            )
 
         # Approval checks
         for channel in channels:
             if channel == "teams":
-                checklist.append({
-                    "category": "approval",
-                    "item": "Teams admin center approval",
-                    "status": "pending",
-                    "priority": "critical",
-                    "notes": "Requires Teams admin to approve in admin center",
-                })
+                checklist.append(
+                    {
+                        "category": "approval",
+                        "item": "Teams admin center approval",
+                        "status": "pending",
+                        "priority": "critical",
+                        "notes": "Requires Teams admin to approve in admin center",
+                    }
+                )
             elif channel == "m365_copilot":
-                checklist.append({
-                    "category": "approval",
-                    "item": "M365 Copilot extensions review",
-                    "status": "pending",
-                    "priority": "critical",
-                    "notes": "Submit for review in M365 admin center",
-                })
+                checklist.append(
+                    {
+                        "category": "approval",
+                        "item": "M365 Copilot extensions review",
+                        "status": "pending",
+                        "priority": "critical",
+                        "notes": "Submit for review in M365 admin center",
+                    }
+                )
 
         # Testing gate
-        checklist.append({
-            "category": "testing",
-            "item": "Functional tests passed",
-            "status": "pending",
-            "priority": "high",
-            "notes": "Run test suite before publishing",
-        })
+        checklist.append(
+            {
+                "category": "testing",
+                "item": "Functional tests passed",
+                "status": "pending",
+                "priority": "high",
+                "notes": "Run test suite before publishing",
+            }
+        )
 
         return {
             "ready": len(blocking) == 0,

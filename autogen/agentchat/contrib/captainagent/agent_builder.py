@@ -573,10 +573,18 @@ Match roles in the role set to each expert in expert set.
         if len(skills) == 0:
             skills = [building_task]
 
-        chroma_client = chromadb.Client()
+        sentence_transformer_ef = getattr(embedding_functions, "SentenceTransformerEmbeddingFunction", None)
+        if sentence_transformer_ef is None:
+            from chromadb.utils.embedding_functions.sentence_transformer_embedding_function import (
+                SentenceTransformerEmbeddingFunction,
+            )
+
+            sentence_transformer_ef = SentenceTransformerEmbeddingFunction
+
+        chroma_client = chromadb.EphemeralClient() if hasattr(chromadb, "EphemeralClient") else chromadb.Client()
         collection = chroma_client.create_collection(
             name="agent_list",
-            embedding_function=embedding_functions.SentenceTransformerEmbeddingFunction(model_name=embedding_model),
+            embedding_function=sentence_transformer_ef(model_name=embedding_model),
         )
         collection.add(
             documents=[agent["description"] for agent in agent_library],

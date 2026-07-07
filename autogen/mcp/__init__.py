@@ -24,23 +24,28 @@ with optional_import_block() as mcp_optional_import:
     from .mcp_client import create_toolkit
 
 __all__ = [
+    "AzureKeyVaultConfig",
     # clippy kernel tools
     "ClippyKernelToolkit",
-    "create_clippy_kernel_toolkit",
-    "WebScrapingConfig",
-    "DatabaseConfig",
+    "ClippyMCPConfig",
     "CloudConfig",
+    "DatabaseConfig",
+    "EntraIDConfig",
+    "WebScrapingConfig",
+    "WindowsClippyMCPClient",
+    "create_clippy_kernel_toolkit",
+    "create_clippy_toolkit",
+    "create_toolkit",
+    "create_vscode_extension_files",
 ]
 
 if mcp_optional_import.is_successful:
-    __all__.extend(
-        [
-            "AzureKeyVaultConfig",
-            "ClippyMCPConfig",
-            "EntraIDConfig",
-            "WindowsClippyMCPClient",
-            "create_clippy_toolkit",
-            "create_toolkit",
-            "create_vscode_extension_files",
-        ]
-    )
+    __all__.extend([
+        "AzureKeyVaultConfig",
+        "ClippyMCPConfig",
+        "EntraIDConfig",
+        "WindowsClippyMCPClient",
+        "create_clippy_toolkit",
+        "create_toolkit",
+        "create_vscode_extension_files",
+    ])

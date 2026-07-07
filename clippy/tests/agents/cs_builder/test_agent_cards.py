@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-import json
 import pytest
 
-from clippybot.agents.cs_builder.security import GovernanceReport, Finding
-from clippybot.agents.cs_builder.analytics import TestSuite, CoverageReport, ConversationTestCase
-from clippybot.agents.cs_builder.publisher import PublisherAgent
+from clippybot.agents.cs_builder.analytics import ConversationTestCase, CoverageReport, TestSuite
 from clippybot.agents.cs_builder.ingestor import KnowledgeSourceIngestorAgent
+from clippybot.agents.cs_builder.publisher import PublisherAgent
+from clippybot.agents.cs_builder.security import Finding, GovernanceReport
 from clippybot.tools.adaptive_cards import AdaptiveCardValidator
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def good_report() -> GovernanceReport:
@@ -76,6 +75,7 @@ def example_spec() -> dict:
 # GovernanceReport card
 # ---------------------------------------------------------------------------
 
+
 class TestGovernanceReportCard:
     def test_good_report_produces_card(self, good_report):
         card = good_report.to_adaptive_card()
@@ -106,6 +106,7 @@ class TestGovernanceReportCard:
 # TestSuite card
 # ---------------------------------------------------------------------------
 
+
 class TestTestSuiteCard:
     def test_suite_produces_card(self, test_suite):
         card = test_suite.to_adaptive_card()
@@ -130,6 +131,7 @@ class TestTestSuiteCard:
 # CoverageReport card
 # ---------------------------------------------------------------------------
 
+
 class TestCoverageReportCard:
     def test_coverage_produces_card(self, coverage_report):
         card = coverage_report.to_adaptive_card()
@@ -150,6 +152,7 @@ class TestCoverageReportCard:
 # ---------------------------------------------------------------------------
 # Publisher approval card
 # ---------------------------------------------------------------------------
+
 
 class TestPublisherApprovalCard:
     @pytest.mark.asyncio
@@ -183,6 +186,7 @@ class TestPublisherApprovalCard:
 # ---------------------------------------------------------------------------
 # Ingestor status card
 # ---------------------------------------------------------------------------
+
 
 class TestIngestorStatusCard:
     @pytest.mark.asyncio

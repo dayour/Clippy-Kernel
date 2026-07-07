@@ -94,10 +94,16 @@ else:
     gemini_import_exception = ImportError("google-genai not found")
 
 with optional_import_block() as anthropic_result:
-    from anthropic import (  # noqa
-        InternalServerError as anthorpic_InternalServerError,
-        RateLimitError as anthorpic_RateLimitError,
-    )
+    try:
+        from anthropic._exceptions import (  # noqa
+            InternalServerError as anthorpic_InternalServerError,
+            RateLimitError as anthorpic_RateLimitError,
+        )
+    except ImportError:
+        from anthropic import (  # noqa
+            InternalServerError as anthorpic_InternalServerError,
+            RateLimitError as anthorpic_RateLimitError,
+        )
 
     from .anthropic import AnthropicClient
 
@@ -108,10 +114,22 @@ else:
     anthropic_import_exception = ImportError("anthropic not found")
 
 with optional_import_block() as mistral_result:
-    from mistralai.models import (  # noqa
-        HTTPValidationError as mistral_HTTPValidationError,
-        SDKError as mistral_SDKError,
-    )
+    try:
+        from mistralai.client.errors import (  # noqa
+            HTTPValidationError as mistral_HTTPValidationError,
+            SDKError as mistral_SDKError,
+        )
+    except ImportError:
+        try:
+            from mistralai.exceptions import (  # noqa
+                HTTPValidationError as mistral_HTTPValidationError,
+                SDKError as mistral_SDKError,
+            )
+        except ImportError:
+            from mistralai.models import (  # noqa
+                HTTPValidationError as mistral_HTTPValidationError,
+                SDKError as mistral_SDKError,
+            )
 
     from .mistral import MistralAIClient
 
@@ -122,7 +140,10 @@ else:
     mistral_import_exception = ImportError("mistralai not found")
 
 with optional_import_block() as together_result:
-    from together.error import TogetherException as together_TogetherException
+    try:
+        from together import TogetherException as together_TogetherException
+    except ImportError:
+        from together.error import TogetherException as together_TogetherException
 
     from .together import TogetherClient
 
@@ -148,11 +169,18 @@ else:
     groq_import_exception = ImportError("groq not found")
 
 with optional_import_block() as cohere_result:
-    from cohere.errors import (  # noqa
-        InternalServerError as cohere_InternalServerError,
-        ServiceUnavailableError as cohere_ServiceUnavailableError,
-        TooManyRequestsError as cohere_TooManyRequestsError,
-    )
+    try:
+        from cohere.errors import (  # noqa
+            InternalServerError as cohere_InternalServerError,
+            ServiceUnavailableError as cohere_ServiceUnavailableError,
+            TooManyRequestsError as cohere_TooManyRequestsError,
+        )
+    except ImportError:
+        from cohere.exceptions import (  # noqa
+            InternalServerError as cohere_InternalServerError,
+            ServiceUnavailableError as cohere_ServiceUnavailableError,
+            TooManyRequestsError as cohere_TooManyRequestsError,
+        )
 
     from .cohere import CohereClient
 
@@ -190,6 +218,39 @@ else:
     bedrock_BotoCoreError = bedrock_ClientError = Exception  # noqa: N816
     bedrock_import_exception = ImportError("botocore not found")
 
+
+def _build_retryable_provider_exceptions() -> tuple[type[BaseException], ...]:
+    candidates = (
+        gemini_InternalServerError,
+        gemini_ResourceExhausted,
+        anthorpic_InternalServerError,
+        anthorpic_RateLimitError,
+        mistral_SDKError,
+        mistral_HTTPValidationError,
+        together_TogetherException,
+        groq_InternalServerError,
+        groq_RateLimitError,
+        groq_APIConnectionError,
+        cohere_InternalServerError,
+        cohere_TooManyRequestsError,
+        cohere_ServiceUnavailableError,
+        ollama_RequestError,
+        ollama_ResponseError,
+        bedrock_BotoCoreError,
+        bedrock_ClientError,
+        cerebras_AuthenticationError,
+        cerebras_InternalServerError,
+        cerebras_RateLimitError,
+    )
+    return tuple(
+        error
+        for error in dict.fromkeys(candidates)
+        if inspect.isclass(error) and issubclass(error, BaseException) and error is not Exception
+    )
+
+
+RETRYABLE_PROVIDER_EXCEPTIONS = _build_retryable_provider_exceptions()
+
 logger = logging.getLogger(__name__)
 if not logger.handlers:
     # Add the console handler.
@@ -200,41 +261,6 @@ if not logger.handlers:
 LEGACY_DEFAULT_CACHE_SEED = 41
 LEGACY_CACHE_DIR = ".cache"
 OPEN_API_BASE_URL_PREFIX = "https://api.openai.com"
-
-OPENAI_FALLBACK_KWARGS = {
-    "api_key",
-    "organization",
-    "project",
-    "base_url",
-    "websocket_base_url",
-    "timeout",
-    "max_retries",
-    "default_headers",
-    "default_query",
-    "http_client",
-    "_strict_response_validation",
-    "webhook_secret",
-}
-
-AOPENAI_FALLBACK_KWARGS = {
-    "azure_endpoint",
-    "azure_deployment",
-    "api_version",
-    "api_key",
-    "azure_ad_token",
-    "azure_ad_token_provider",
-    "organization",
-    "websocket_base_url",
-    "timeout",
-    "max_retries",
-    "default_headers",
-    "default_query",
-    "http_client",
-    "_strict_response_validation",
-    "base_url",
-    "project",
-    "webhook_secret",
-}
 
 
 @lru_cache(maxsize=128)
@@ -1167,6 +1193,10 @@ class OpenAIWrapper:
                 request_ts = get_current_ts()
                 response = client.create(params)
             except Exception as e:
+                if RETRYABLE_PROVIDER_EXCEPTIONS and isinstance(e, RETRYABLE_PROVIDER_EXCEPTIONS):
+                    if i == last:
+                        raise
+                    continue
                 if openai_result.is_successful:
                     if APITimeoutError is not None and isinstance(e, APITimeoutError):
                         # logger.debug(f"config {i} timed out", exc_info=True)
@@ -1198,31 +1228,6 @@ class OpenAIWrapper:
                     else:
                         raise
                 else:
-                    raise
-            except (
-                gemini_InternalServerError,
-                gemini_ResourceExhausted,
-                anthorpic_InternalServerError,
-                anthorpic_RateLimitError,
-                mistral_SDKError,
-                mistral_HTTPValidationError,
-                together_TogetherException,
-                groq_InternalServerError,
-                groq_RateLimitError,
-                groq_APIConnectionError,
-                cohere_InternalServerError,
-                cohere_TooManyRequestsError,
-                cohere_ServiceUnavailableError,
-                ollama_RequestError,
-                ollama_ResponseError,
-                bedrock_BotoCoreError,
-                bedrock_ClientError,
-                cerebras_AuthenticationError,
-                cerebras_InternalServerError,
-                cerebras_RateLimitError,
-            ):
-                # logger.debug(f"config {i} failed", exc_info=True)
-                if i == last:
                     raise
             else:
                 # add cost calculation before caching no matter filter is passed or not

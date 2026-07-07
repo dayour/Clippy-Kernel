@@ -4,6 +4,7 @@
 #
 # Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
 # SPDX-License-Identifier: MIT
+import inspect
 import logging
 import ssl
 import threading
@@ -24,6 +25,26 @@ with optional_import_block():
     from websockets.sync.server import serve as ws_serve
 
 __all__ = ("IOWebsockets",)
+
+
+def _supported_header_kwarg(default: str = "additional_headers") -> str:
+    """Return the server-side header keyword the installed websockets accepts.
+
+    websockets renamed this argument from ``extra_headers`` (<16) to
+    ``additional_headers`` (>=16). We introspect ``ws_serve`` so callers can pass
+    either name and stay correct across websockets versions; if neither explicit
+    name is present (e.g. the function only accepts ``**kwargs``), we fall back to
+    the modern default.
+    """
+    try:
+        params = inspect.signature(ws_serve).parameters
+    except (TypeError, ValueError, NameError):
+        return default
+    if "additional_headers" in params:
+        return "additional_headers"
+    if "extra_headers" in params:
+        return "extra_headers"
+    return default
 
 
 logger = logging.getLogger(__name__)
@@ -132,13 +153,25 @@ class IOWebsockets(IOStream):
         """
         server_dict: dict[str, WebSocketServer] = {}
 
+        # websockets renamed the server-side header kwarg from extra_headers (<16)
+        # to additional_headers (>=16). Accept either name from the caller and pass
+        # it under whichever name the installed websockets actually supports.
+        header_value = None
+        if "extra_headers" in kwargs:
+            header_value = kwargs.pop("extra_headers")
+        if "additional_headers" in kwargs:
+            header_value = kwargs.pop("additional_headers")
+        if header_value is not None:
+            kwargs[_supported_header_kwarg()] = header_value
+        if ssl_context is not None and "ssl" not in kwargs:
+            kwargs["ssl"] = ssl_context
+
         def _run_server() -> None:
             # print(f" - _run_server(): starting server on ws://{host}:{port}", flush=True)
             with ws_serve(
                 handler=partial(IOWebsockets._handler, on_connect=on_connect),
                 host=host,
                 port=port,
-                ssl_context=ssl_context,
                 **kwargs,
             ) as server:
                 # print(f" - _run_server(): server {server} started on ws://{host}:{port}", flush=True)

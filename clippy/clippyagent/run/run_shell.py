@@ -16,10 +16,6 @@ import logging
 from pathlib import Path
 
 import yaml
-from rich.prompt import Prompt
-from swerex.deployment.config import DockerDeploymentConfig
-
-from clippybot import CONFIG_DIR
 from clippybot.agent.agents import AbstractAgent, ShellAgentConfig
 from clippybot.agent.extra.shell_agent import ShellAgent
 from clippybot.agent.problem_statement import (
@@ -28,13 +24,17 @@ from clippybot.agent.problem_statement import (
     ProblemStatementConfig,
     TextProblemStatement,
 )
-from clippybot.environment.repo import PreExistingRepoConfig
-from clippybot.environment.clippybot_env import EnvironmentConfig, clippybotenv
 from clippybot.run.common import save_predictions
 from clippybot.run.hooks.abstract import CombinedRunHooks, RunHook
 from clippybot.utils.config import load_environment_variables
 from clippybot.utils.github import _is_github_issue_url
 from clippybot.utils.log import add_file_handler, get_logger, set_stream_handler_levels
+from rich.prompt import Prompt
+from swerex.deployment.config import DockerDeploymentConfig
+
+from clippybot import CONFIG_DIR
+from clippybot.environment.clippybot_env import EnvironmentConfig, clippybotenv
+from clippybot.environment.repo import PreExistingRepoConfig
 
 
 class RunShell:

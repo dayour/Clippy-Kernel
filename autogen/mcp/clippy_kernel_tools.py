@@ -997,9 +997,7 @@ class ClippyKernelToolkit(Toolkit):
         try:
             azure_identity = importlib.import_module("azure.identity")
         except ImportError as exc:
-            raise ImportError(
-                "The `azure-identity` package is required for Microsoft 365 Copilot SDK tools."
-            ) from exc
+            raise ImportError("The `azure-identity` package is required for Microsoft 365 Copilot SDK tools.") from exc
 
         credential_mode = self.m365_copilot_config.credential_mode.lower()
         tenant_id = self.m365_copilot_config.tenant_id
@@ -1010,9 +1008,7 @@ class ClippyKernelToolkit(Toolkit):
         if credential_mode == "device_code":
             client_id = self.m365_copilot_config.client_id
             if not client_id:
-                raise ValueError(
-                    "A client ID is required when `m365_copilot_credential_mode` is set to `device_code`."
-                )
+                raise ValueError("A client ID is required when `m365_copilot_credential_mode` is set to `device_code`.")
 
             def _prompt_callback(verification_uri: str, user_code: str, expires_on: datetime) -> None:
                 logger.info(
@@ -1027,9 +1023,7 @@ class ClippyKernelToolkit(Toolkit):
                 credential_kwargs["tenant_id"] = tenant_id
             return azure_identity.DeviceCodeCredential(**credential_kwargs)
 
-        raise ValueError(
-            "Unsupported `m365_copilot_credential_mode`. Use `default` or `device_code`."
-        )
+        raise ValueError("Unsupported `m365_copilot_credential_mode`. Use `default` or `device_code`.")
 
     def _create_m365_copilot_client(self) -> Any:
         """Create the stable Microsoft 365 Copilot service client."""
@@ -1097,7 +1091,10 @@ class ClippyKernelToolkit(Toolkit):
             return [self._serialize_m365_copilot_value(item) for item in value]
 
         if is_dataclass(value):
-            return {field_info.name: self._serialize_m365_copilot_value(getattr(value, field_info.name)) for field_info in fields(value)}
+            return {
+                field_info.name: self._serialize_m365_copilot_value(getattr(value, field_info.name))
+                for field_info in fields(value)
+            }
 
         if hasattr(value, "__dict__"):
             return {
@@ -1108,7 +1105,9 @@ class ClippyKernelToolkit(Toolkit):
 
         return str(value)
 
-    def _build_m365_request_configuration(self, query_cls: type[Any], config_cls: type[Any], **kwargs: Any) -> Any | None:
+    def _build_m365_request_configuration(
+        self, query_cls: type[Any], config_cls: type[Any], **kwargs: Any
+    ) -> Any | None:
         """Build a request configuration only when query parameters are supplied."""
         query_values = {key: value for key, value in kwargs.items() if value is not None}
         if not query_values:
@@ -1119,9 +1118,7 @@ class ClippyKernelToolkit(Toolkit):
         """Resolve a user identifier from the call or the default configuration."""
         resolved_user_id = user_id or self.m365_copilot_config.default_user_id
         if not resolved_user_id:
-            raise ValueError(
-                "A `user_id` is required unless `m365_copilot_default_user_id` is configured."
-            )
+            raise ValueError("A `user_id` is required unless `m365_copilot_default_user_id` is configured.")
         return resolved_user_id
 
     def _resolve_m365_retrieval_data_source(self, data_source: str) -> Any:
@@ -1154,20 +1151,27 @@ class ClippyKernelToolkit(Toolkit):
                 "or set `m365_copilot_repo_path` to a local Agents-M365Copilot checkout."
             )
 
-        if "azure-identity" in error_text or "defaultazurecredential" in error_text or "devicecodecredential" in error_text:
+        if (
+            "azure-identity" in error_text
+            or "defaultazurecredential" in error_text
+            or "devicecodecredential" in error_text
+        ):
             guidance.append(
                 "Install `azure-identity` or the `windows-clippy-mcp` extras before enabling M365 Copilot SDK tools."
             )
 
-        if "credential" in error_text or "token" in error_text or "authentication" in error_text or "login" in error_text:
+        if (
+            "credential" in error_text
+            or "token" in error_text
+            or "authentication" in error_text
+            or "login" in error_text
+        ):
             guidance.append(
                 "Authenticate with Azure CLI or configure a valid Azure credential source before using M365 Copilot SDK tools."
             )
 
         if "client id" in error_text or "device_code" in error_text:
-            guidance.append(
-                "Set `m365_copilot_client_id` when `m365_copilot_credential_mode` is `device_code`."
-            )
+            guidance.append("Set `m365_copilot_client_id` when `m365_copilot_credential_mode` is `device_code`.")
 
         if "forbidden" in error_text or "license" in error_text or "consent" in error_text or "403" in error_text:
             guidance.append(
@@ -1383,7 +1387,9 @@ class ClippyKernelToolkit(Toolkit):
                 },
             )
 
-        @tool(description="List Microsoft 365 Copilot enterprise or user-scoped interactions through the stable Python SDK.")
+        @tool(
+            description="List Microsoft 365 Copilot enterprise or user-scoped interactions through the stable Python SDK."
+        )
         def m365_copilot_list_interactions(
             user_id: str | None = None,
             top: int = 10,
@@ -1398,9 +1404,9 @@ class ClippyKernelToolkit(Toolkit):
 
             async def _action(client: Any) -> Any:
                 if resolved_user_id:
-                    request_builder = (
-                        client.copilot.users.by_ai_user_id(resolved_user_id).interaction_history.get_all_enterprise_interactions
-                    )
+                    request_builder = client.copilot.users.by_ai_user_id(
+                        resolved_user_id
+                    ).interaction_history.get_all_enterprise_interactions
                 else:
                     request_builder = client.copilot.interaction_history.get_all_enterprise_interactions
 
@@ -1485,7 +1491,9 @@ class ClippyKernelToolkit(Toolkit):
             )
 
         @tool(description="Get Microsoft 365 Copilot admin settings through the stable Python SDK.")
-        def m365_copilot_get_admin_settings(select: list[str] | None = None, expand: list[str] | None = None) -> dict[str, Any]:
+        def m365_copilot_get_admin_settings(
+            select: list[str] | None = None, expand: list[str] | None = None
+        ) -> dict[str, Any]:
             async def _action(client: Any) -> Any:
                 request_builder = client.copilot.admin.settings
                 request_configuration = self._build_m365_request_configuration(

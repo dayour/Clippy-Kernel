@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from clippybot import REPO_ROOT
 from clippybot.utils.config import _convert_path_to_abspath, _convert_paths_to_abspath
+
+from clippybot import REPO_ROOT
 
 
 def test_convert_path_to_abspath():

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import json
+
 import pytest
 
 from clippybot.tools.flow_definitions import (
     CONNECTOR_OPERATIONS,
+    LOGIC_APPS_SCHEMA,
     FlowDefinitionBuilder,
     FlowMetadata,
-    LOGIC_APPS_SCHEMA,
     connection_ref_expression,
     env_var_expression,
 )
@@ -188,6 +189,7 @@ class TestFlowMetadata:
 
     def test_workflow_id_is_uuid(self):
         import uuid
+
         flow_def = {"$schema": LOGIC_APPS_SCHEMA}
         meta = FlowMetadata("test", "Test", "scheduled", flow_def)
         uuid.UUID(meta.workflow_id)  # Should not raise

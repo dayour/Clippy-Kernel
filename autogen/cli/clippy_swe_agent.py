@@ -58,7 +58,11 @@ def _prefer_legacy_workspace_path(legacy_path: Path, shared_path: Path) -> Path:
 
 
 def _default_llm_config_path() -> str:
-    return str(_prefer_legacy_workspace_path(_current_working_dir() / "OAI_CONFIG_LIST", _clippy_state_dir() / "OAI_CONFIG_LIST"))
+    return str(
+        _prefer_legacy_workspace_path(
+            _current_working_dir() / "OAI_CONFIG_LIST", _clippy_state_dir() / "OAI_CONFIG_LIST"
+        )
+    )
 
 
 def _default_task_history_path() -> Path:
@@ -156,7 +160,9 @@ class ClippySWEConfig(BaseModel):
         description="Enable streaming in the optional client path where supported",
     )
     context_window_size: int = Field(default=8192, description="Context window size for conversations")
-    config_dir: Path = Field(default_factory=_copilot_config_dir, description="Shared GitHub Copilot configuration root")
+    config_dir: Path = Field(
+        default_factory=_copilot_config_dir, description="Shared GitHub Copilot configuration root"
+    )
     custom_agents_dir: Path = Field(
         default_factory=_default_custom_agents_dir,
         description="Shared directory for Copilot custom agent definitions",

@@ -11,8 +11,8 @@ from pathlib import Path
 import pytest
 from swerex.deployment.config import DockerDeploymentConfig, DummyDeploymentConfig
 
-from clippybot.environment.repo import LocalRepoConfig
 from clippybot.environment.clippybot_env import EnvironmentConfig, clippybotenv
+from clippybot.environment.repo import LocalRepoConfig
 
 # this is a hack and should be removed when we have a better solution
 _this_dir = Path(__file__).resolve().parent

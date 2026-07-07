@@ -7,10 +7,9 @@ from logging import WARNING, getLogger
 from pathlib import Path
 
 import swerex.utils.log as log_swerex
+from clippybot.utils.log import get_logger
 from git import Repo
 from packaging import version
-
-from clippybot.utils.log import get_logger
 
 __version__ = "1.1.0"
 PYTHON_MINIMUM_VERSION = (3, 11)
@@ -44,7 +43,8 @@ TOOLS_DIR = Path(os.getenv("clippybot_TOOLS_DIR", PACKAGE_DIR.parent / "tools"))
 assert TOOLS_DIR.is_dir(), TOOLS_DIR
 
 TRAJECTORY_DIR = Path(os.getenv("clippybot_TRAJECTORY_DIR", PACKAGE_DIR.parent / "trajectories"))
-assert TRAJECTORY_DIR.is_dir(), TRAJECTORY_DIR
+# Trajectory output is created lazily by the run commands, so importing the
+# package should not fail when the directory has not been materialized yet.
 
 
 def get_agent_commit_hash() -> str:
@@ -106,9 +106,9 @@ get_logger("clippybot").info(get_agent_version_info())
 
 
 __all__ = [
-    "PACKAGE_DIR",
     "CONFIG_DIR",
+    "PACKAGE_DIR",
+    "__version__",
     "get_agent_commit_hash",
     "get_agent_version_info",
-    "__version__",
 ]

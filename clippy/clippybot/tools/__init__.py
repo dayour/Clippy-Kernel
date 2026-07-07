@@ -9,9 +9,9 @@ from __future__ import annotations
 
 __all__ = [
     "adaptive_cards",
-    "pac_cli",
     "dataverse_api",
     "flow_definitions",
+    "pac_cli",
     "sharepoint_check",
     "teams_publish",
 ]

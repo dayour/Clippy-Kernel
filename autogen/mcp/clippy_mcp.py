@@ -15,6 +15,7 @@ This module provides integration between AG2 and Windows-Clippy-MCP, including:
 
 import json
 from contextlib import AsyncExitStack
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +23,7 @@ from pydantic import BaseModel, Field
 
 from ..import_utils import optional_import_block, require_optional_import
 from ..tools import Tool, Toolkit
-from .mcp_client import MCPConfig, StdioConfig
+from .mcp_client import StdioConfig
 
 with optional_import_block():
     from mcp.client.session import ClientSession
@@ -212,7 +213,6 @@ async def create_clippy_toolkit(
 
     # Create MCP configuration
     stdio_config = client.create_stdio_config()
-    mcp_config = MCPConfig(servers=[stdio_config])
 
     # Import necessary MCP functions
     from .mcp_client import create_toolkit

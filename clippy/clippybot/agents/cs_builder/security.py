@@ -23,8 +23,7 @@ import hashlib
 import json
 import logging
 import re
-import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -38,6 +37,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
+
 
 class SecurityAdvisorConfig(BaseModel):
     """Configuration for SecurityGovernanceAdvisorAgent."""
@@ -60,6 +60,7 @@ class SecurityAdvisorConfig(BaseModel):
 # ---------------------------------------------------------------------------
 # Finding / Report data structures
 # ---------------------------------------------------------------------------
+
 
 class Finding:
     """A single governance finding."""
@@ -103,7 +104,7 @@ class GovernanceReport:
         self.agent_name = agent_name
         self.spec_path = spec_path
         self.findings: list[Finding] = []
-        self.timestamp = datetime.now(timezone.utc).isoformat()
+        self.timestamp = datetime.now(UTC).isoformat()
         self._hash: str = ""
 
     @property
@@ -156,8 +157,8 @@ class GovernanceReport:
             "",
             "## Summary",
             "",
-            f"| Pass | Warn | Fail |",
-            f"|------|------|------|",
+            "| Pass | Warn | Fail |",
+            "|------|------|------|",
             f"| {self.summary['pass']} | {self.summary['warn']} | {self.summary['fail']} |",
             "",
             "## Findings",
@@ -166,23 +167,23 @@ class GovernanceReport:
         for f in self.findings:
             icon = {"pass": "OK", "warn": "WARN", "fail": "FAIL"}.get(f.severity, "?")
             lines.append(f"### [{icon}] {f.rule_id}")
-            lines.append(f"")
+            lines.append("")
             lines.append(f"{f.message}")
             if f.location:
-                lines.append(f"")
+                lines.append("")
                 lines.append(f"**Location:** `{f.location}`")
             if f.remediation:
-                lines.append(f"")
+                lines.append("")
                 lines.append(f"**Remediation:** {f.remediation}")
             if f.diff:
-                lines.append(f"")
-                lines.append(f"```diff")
+                lines.append("")
+                lines.append("```diff")
                 lines.append(f"{f.diff}")
-                lines.append(f"```")
+                lines.append("```")
             lines.append("")
 
         if self._hash:
-            lines.append(f"---")
+            lines.append("---")
             lines.append(f"Integrity hash: `{self._hash}`")
 
         return "\n".join(lines)
@@ -193,11 +194,20 @@ class GovernanceReport:
 # ---------------------------------------------------------------------------
 
 SECRET_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("Azure Storage Key", re.compile(r"DefaultEndpointsProtocol=https?;AccountName=.+;AccountKey=[A-Za-z0-9+/=]{40,}", re.I)),
+    (
+        "Azure Storage Key",
+        re.compile(r"DefaultEndpointsProtocol=https?;AccountName=.+;AccountKey=[A-Za-z0-9+/=]{40,}", re.I),
+    ),
     ("Connection String", re.compile(r"(Server|Data Source)=[^;]+;.*(Password|Pwd)=[^;]+", re.I)),
     ("Bearer Token", re.compile(r"Bearer\s+[A-Za-z0-9\-._~+/]+=*", re.I)),
-    ("API Key (generic)", re.compile(r"(?:api[_-]?key|apikey|secret[_-]?key)\s*[:=]\s*['\"]?[A-Za-z0-9\-._]{16,}", re.I)),
-    ("Azure AD Client Secret", re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[A-Za-z0-9~_\-]{30,}", re.I)),
+    (
+        "API Key (generic)",
+        re.compile(r"(?:api[_-]?key|apikey|secret[_-]?key)\s*[:=]\s*['\"]?[A-Za-z0-9\-._]{16,}", re.I),
+    ),
+    (
+        "Azure AD Client Secret",
+        re.compile(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.[A-Za-z0-9~_\-]{30,}", re.I),
+    ),
     ("Private Key Block", re.compile(r"-----BEGIN (RSA |EC )?PRIVATE KEY-----")),
     ("GitHub PAT", re.compile(r"gh[po]_[A-Za-z0-9_]{36,}")),
 ]
@@ -206,6 +216,7 @@ SECRET_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
 # ---------------------------------------------------------------------------
 # Agent
 # ---------------------------------------------------------------------------
+
 
 class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
     """Static-analysis agent that enforces Power Platform / Copilot Studio
@@ -331,23 +342,27 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         for label, pattern in SECRET_PATTERNS:
             match = pattern.search(spec_text)
             if match:
-                report.findings.append(Finding(
-                    rule_id="GOV-001",
-                    severity="fail",
-                    message=f"Potential secret detected: {label}",
-                    location=spec_path,
-                    remediation=(
-                        "Remove the secret from the spec. Use an environment variable "
-                        "name instead and set the actual value in each target environment."
-                    ),
-                    diff=f"- {match.group(0)[:40]}...\n+ <ENV_VARIABLE_NAME>",
-                ))
+                report.findings.append(
+                    Finding(
+                        rule_id="GOV-001",
+                        severity="fail",
+                        message=f"Potential secret detected: {label}",
+                        location=spec_path,
+                        remediation=(
+                            "Remove the secret from the spec. Use an environment variable "
+                            "name instead and set the actual value in each target environment."
+                        ),
+                        diff=f"- {match.group(0)[:40]}...\n+ <ENV_VARIABLE_NAME>",
+                    )
+                )
                 return
-        report.findings.append(Finding(
-            rule_id="GOV-001",
-            severity="pass",
-            message="No embedded secrets detected in spec.",
-        ))
+        report.findings.append(
+            Finding(
+                rule_id="GOV-001",
+                severity="pass",
+                message="No embedded secrets detected in spec.",
+            )
+        )
 
     def _rule_custom_publisher(
         self,
@@ -358,19 +373,23 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         publisher = spec.get("publisher", {})
         name = publisher.get("displayName", "")
         if not name or name.lower() in ("default publisher", "defaultpublisher", ""):
-            report.findings.append(Finding(
-                rule_id="GOV-002",
-                severity="fail",
-                message="Publisher must be a custom publisher, not the Default Publisher.",
-                location="$.publisher.displayName",
-                remediation="Set publisher.displayName to your organization's publisher name.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-002",
+                    severity="fail",
+                    message="Publisher must be a custom publisher, not the Default Publisher.",
+                    location="$.publisher.displayName",
+                    remediation="Set publisher.displayName to your organization's publisher name.",
+                )
+            )
         else:
-            report.findings.append(Finding(
-                rule_id="GOV-002",
-                severity="pass",
-                message=f"Custom publisher configured: '{name}'.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-002",
+                    severity="pass",
+                    message=f"Custom publisher configured: '{name}'.",
+                )
+            )
 
     def _rule_valid_prefix(
         self,
@@ -381,30 +400,36 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         prefix = spec.get("publisher", {}).get("prefix", "")
         default_prefixes = {"new", "cr", "prefix", "default", ""}
         if prefix in default_prefixes:
-            report.findings.append(Finding(
-                rule_id="GOV-003",
-                severity="fail",
-                message=f"Prefix '{prefix}' is a default or empty prefix.",
-                location="$.publisher.prefix",
-                remediation=(
-                    "Set a unique, organization-specific prefix (2-8 lowercase "
-                    "alphanumeric chars starting with a letter)."
-                ),
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-003",
+                    severity="fail",
+                    message=f"Prefix '{prefix}' is a default or empty prefix.",
+                    location="$.publisher.prefix",
+                    remediation=(
+                        "Set a unique, organization-specific prefix (2-8 lowercase "
+                        "alphanumeric chars starting with a letter)."
+                    ),
+                )
+            )
         elif not re.match(r"^[a-z][a-z0-9]{1,7}$", prefix):
-            report.findings.append(Finding(
-                rule_id="GOV-003",
-                severity="fail",
-                message=f"Prefix '{prefix}' does not match required pattern.",
-                location="$.publisher.prefix",
-                remediation="Prefix must be 2-8 lowercase alphanumeric characters, starting with a letter.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-003",
+                    severity="fail",
+                    message=f"Prefix '{prefix}' does not match required pattern.",
+                    location="$.publisher.prefix",
+                    remediation="Prefix must be 2-8 lowercase alphanumeric characters, starting with a letter.",
+                )
+            )
         else:
-            report.findings.append(Finding(
-                rule_id="GOV-003",
-                severity="pass",
-                message=f"Valid custom prefix: '{prefix}'.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-003",
+                    severity="pass",
+                    message=f"Valid custom prefix: '{prefix}'.",
+                )
+            )
 
     def _rule_env_variables(
         self,
@@ -415,23 +440,27 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         alm = spec.get("alm", {})
         use_env = alm.get("useEnvironmentVariables", False)
         if not use_env:
-            report.findings.append(Finding(
-                rule_id="GOV-004",
-                severity="fail",
-                message="alm.useEnvironmentVariables is not enabled.",
-                location="$.alm.useEnvironmentVariables",
-                remediation=(
-                    "Set alm.useEnvironmentVariables to true. This ensures "
-                    "environment-specific settings (URLs, keys) are externalized."
-                ),
-                diff="- \"useEnvironmentVariables\": false\n+ \"useEnvironmentVariables\": true",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-004",
+                    severity="fail",
+                    message="alm.useEnvironmentVariables is not enabled.",
+                    location="$.alm.useEnvironmentVariables",
+                    remediation=(
+                        "Set alm.useEnvironmentVariables to true. This ensures "
+                        "environment-specific settings (URLs, keys) are externalized."
+                    ),
+                    diff='- "useEnvironmentVariables": false\n+ "useEnvironmentVariables": true',
+                )
+            )
         else:
-            report.findings.append(Finding(
-                rule_id="GOV-004",
-                severity="pass",
-                message="Environment variables are enabled.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-004",
+                    severity="pass",
+                    message="Environment variables are enabled.",
+                )
+            )
 
     def _rule_connection_references(
         self,
@@ -441,34 +470,37 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         """GOV-005: All actions must use connectionReference auth."""
         actions = spec.get("actions", [])
         if not actions:
-            report.findings.append(Finding(
-                rule_id="GOV-005",
-                severity="pass",
-                message="No actions defined — rule not applicable.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-005",
+                    severity="pass",
+                    message="No actions defined — rule not applicable.",
+                )
+            )
             return
 
-        bad_actions = [
-            a["name"] for a in actions
-            if a.get("auth") != "connectionReference"
-        ]
+        bad_actions = [a["name"] for a in actions if a.get("auth") != "connectionReference"]
         if bad_actions:
-            report.findings.append(Finding(
-                rule_id="GOV-005",
-                severity="fail" if self._config.strict_mode else "warn",
-                message=(
-                    f"Actions using non-connectionReference auth: {', '.join(bad_actions)}. "
-                    "Connection references enable per-environment credential management."
-                ),
-                location="$.actions[*].auth",
-                remediation="Change auth to 'connectionReference' for all actions.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-005",
+                    severity="fail" if self._config.strict_mode else "warn",
+                    message=(
+                        f"Actions using non-connectionReference auth: {', '.join(bad_actions)}. "
+                        "Connection references enable per-environment credential management."
+                    ),
+                    location="$.actions[*].auth",
+                    remediation="Change auth to 'connectionReference' for all actions.",
+                )
+            )
         else:
-            report.findings.append(Finding(
-                rule_id="GOV-005",
-                severity="pass",
-                message="All actions use connectionReference authentication.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-005",
+                    severity="pass",
+                    message="All actions use connectionReference authentication.",
+                )
+            )
 
     def _rule_managed_outside_dev(
         self,
@@ -481,23 +513,27 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         managed = alm.get("managedOutsideDev", False)
 
         if targets and not managed:
-            report.findings.append(Finding(
-                rule_id="GOV-006",
-                severity="warn",
-                message=(
-                    f"Non-dev targets {targets} are defined but managedOutsideDev is false. "
-                    "Unmanaged solutions in test/prod environments cannot be properly uninstalled."
-                ),
-                location="$.alm.managedOutsideDev",
-                remediation="Set alm.managedOutsideDev to true for proper ALM lifecycle.",
-                diff="- \"managedOutsideDev\": false\n+ \"managedOutsideDev\": true",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-006",
+                    severity="warn",
+                    message=(
+                        f"Non-dev targets {targets} are defined but managedOutsideDev is false. "
+                        "Unmanaged solutions in test/prod environments cannot be properly uninstalled."
+                    ),
+                    location="$.alm.managedOutsideDev",
+                    remediation="Set alm.managedOutsideDev to true for proper ALM lifecycle.",
+                    diff='- "managedOutsideDev": false\n+ "managedOutsideDev": true',
+                )
+            )
         else:
-            report.findings.append(Finding(
-                rule_id="GOV-006",
-                severity="pass",
-                message="Managed solution export enabled for non-dev targets.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-006",
+                    severity="pass",
+                    message="Managed solution export enabled for non-dev targets.",
+                )
+            )
 
     def _rule_channel_scope(
         self,
@@ -513,25 +549,29 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         has_external = bool(external_channels & set(channels))
 
         if has_external and not allow_ext:
-            report.findings.append(Finding(
-                rule_id="GOV-007",
-                severity="warn",
-                message=(
-                    "External-facing channels (web/custom) are configured but "
-                    "security.allowExternal is false. Verify this is intentional."
-                ),
-                location="$.security.allowExternal",
-                remediation=(
-                    "Either remove web/custom channels or set allowExternal to true "
-                    "if external user access is intended."
-                ),
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-007",
+                    severity="warn",
+                    message=(
+                        "External-facing channels (web/custom) are configured but "
+                        "security.allowExternal is false. Verify this is intentional."
+                    ),
+                    location="$.security.allowExternal",
+                    remediation=(
+                        "Either remove web/custom channels or set allowExternal to true "
+                        "if external user access is intended."
+                    ),
+                )
+            )
         else:
-            report.findings.append(Finding(
-                rule_id="GOV-007",
-                severity="pass",
-                message="Channel scope is consistent with external access policy.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-007",
+                    severity="pass",
+                    message="Channel scope is consistent with external access policy.",
+                )
+            )
 
     def _rule_dlp_configured(
         self,
@@ -543,22 +583,23 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         dlp = security.get("dataLossPrevention", [])
 
         if not dlp:
-            report.findings.append(Finding(
-                rule_id="GOV-008",
-                severity="warn",
-                message="No DLP policies configured.",
-                location="$.security.dataLossPrevention",
-                remediation=(
-                    "Consider adding DLP policies (e.g., pii-block, pii-mask) "
-                    "to protect sensitive data."
-                ),
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-008",
+                    severity="warn",
+                    message="No DLP policies configured.",
+                    location="$.security.dataLossPrevention",
+                    remediation=("Consider adding DLP policies (e.g., pii-block, pii-mask) to protect sensitive data."),
+                )
+            )
         else:
-            report.findings.append(Finding(
-                rule_id="GOV-008",
-                severity="pass",
-                message=f"DLP policies configured: {', '.join(dlp)}.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-008",
+                    severity="pass",
+                    message=f"DLP policies configured: {', '.join(dlp)}.",
+                )
+            )
 
     def _rule_no_secrets_in_artifacts(
         self,
@@ -568,11 +609,13 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         """GOV-009: Scan generated solution files for embedded secrets."""
         sol_path = Path(solution_dir)
         if not sol_path.exists():
-            report.findings.append(Finding(
-                rule_id="GOV-009",
-                severity="pass",
-                message=f"Solution directory '{solution_dir}' does not exist yet — skipped.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-009",
+                    severity="pass",
+                    message=f"Solution directory '{solution_dir}' does not exist yet — skipped.",
+                )
+            )
             return
 
         # Scan text files in the solution
@@ -590,20 +633,24 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
             for label, pattern in SECRET_PATTERNS:
                 match = pattern.search(content)
                 if match:
-                    report.findings.append(Finding(
-                        rule_id="GOV-009",
-                        severity="fail",
-                        message=f"Secret detected in artifact: {label}",
-                        location=str(fp),
-                        remediation="Remove the secret and use an environment variable reference.",
-                    ))
+                    report.findings.append(
+                        Finding(
+                            rule_id="GOV-009",
+                            severity="fail",
+                            message=f"Secret detected in artifact: {label}",
+                            location=str(fp),
+                            remediation="Remove the secret and use an environment variable reference.",
+                        )
+                    )
                     return
 
-        report.findings.append(Finding(
-            rule_id="GOV-009",
-            severity="pass",
-            message=f"No secrets found in {scanned} scanned artifact files.",
-        ))
+        report.findings.append(
+            Finding(
+                rule_id="GOV-009",
+                severity="pass",
+                message=f"No secrets found in {scanned} scanned artifact files.",
+            )
+        )
 
     def _rule_consistent_prefix(
         self,
@@ -619,29 +666,35 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
         sol_path = Path(solution_dir)
         solution_xml = sol_path / "solution.xml"
         if not solution_xml.exists():
-            report.findings.append(Finding(
-                rule_id="GOV-010",
-                severity="warn",
-                message="solution.xml not found — cannot verify prefix consistency.",
-                location=str(solution_xml),
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-010",
+                    severity="warn",
+                    message="solution.xml not found — cannot verify prefix consistency.",
+                    location=str(solution_xml),
+                )
+            )
             return
 
         content = solution_xml.read_text(encoding="utf-8", errors="ignore")
         if f"<CustomizationPrefix>{prefix}</CustomizationPrefix>" not in content:
-            report.findings.append(Finding(
-                rule_id="GOV-010",
-                severity="fail",
-                message=f"solution.xml does not contain expected prefix '{prefix}'.",
-                location=str(solution_xml),
-                remediation=f"Ensure the solution uses the publisher prefix '{prefix}'.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-010",
+                    severity="fail",
+                    message=f"solution.xml does not contain expected prefix '{prefix}'.",
+                    location=str(solution_xml),
+                    remediation=f"Ensure the solution uses the publisher prefix '{prefix}'.",
+                )
+            )
         else:
-            report.findings.append(Finding(
-                rule_id="GOV-010",
-                severity="pass",
-                message=f"Prefix '{prefix}' is consistent in solution.xml.",
-            ))
+            report.findings.append(
+                Finding(
+                    rule_id="GOV-010",
+                    severity="pass",
+                    message=f"Prefix '{prefix}' is consistent in solution.xml.",
+                )
+            )
 
     # -- LLM-powered deep review --------------------------------------------
 
@@ -715,13 +768,15 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
             result = json.loads(raw)
 
             for finding_data in result.get("findings", []):
-                report.findings.append(Finding(
-                    rule_id=finding_data.get("rule_id", "DEEP-000"),
-                    severity=finding_data.get("severity", "warn"),
-                    message=finding_data.get("message", ""),
-                    remediation=finding_data.get("remediation", ""),
-                    location=finding_data.get("location", ""),
-                ))
+                report.findings.append(
+                    Finding(
+                        rule_id=finding_data.get("rule_id", "DEEP-000"),
+                        severity=finding_data.get("severity", "warn"),
+                        message=finding_data.get("message", ""),
+                        remediation=finding_data.get("remediation", ""),
+                        location=finding_data.get("location", ""),
+                    )
+                )
 
         except (json.JSONDecodeError, RuntimeError) as exc:
             logger.debug("[%s] Deep review LLM call failed (%s), returning static report", self.name, exc)
@@ -746,8 +801,8 @@ class SecurityGovernanceAdvisorAgent(CopilotAgentMixin):
 
 
 __all__ = [
-    "SecurityGovernanceAdvisorAgent",
-    "SecurityAdvisorConfig",
-    "GovernanceReport",
     "Finding",
+    "GovernanceReport",
+    "SecurityAdvisorConfig",
+    "SecurityGovernanceAdvisorAgent",
 ]

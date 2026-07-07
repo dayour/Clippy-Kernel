@@ -41,6 +41,9 @@ from .utils import gather_usage_summary
 
 __all__ = [
     "Agent",
+    # clippy kernel additions
+    "AgentDevTeam",
+    "AgentRole",
     "AssistantAgent",
     "ChatResult",
     "ContextVariables",
@@ -49,14 +52,19 @@ __all__ = [
     "GroupChatManager",
     "LLMAgent",
     "ReplyResult",
+    "SprintConfig",
+    "SprintPhase",
     "UpdateSystemMessage",
     "UserProxyAgent",
+    "UserStory",
     "a_initiate_chats",
     "a_initiate_group_chat",
     "a_initiate_swarm_chat",
     "a_run_group_chat",
     "a_run_group_chat_iter",
     "a_run_swarm",
+    "create_agent_dev_team",
+    "create_self_improving_team",
     "gather_usage_summary",
     "initiate_chats",
     "initiate_group_chat",
@@ -64,12 +72,4 @@ __all__ = [
     "run_group_chat",
     "run_group_chat_iter",
     "run_swarm",
-    # clippy kernel additions
-    "AgentDevTeam",
-    "create_agent_dev_team",
-    "create_self_improving_team",
-    "SprintConfig",
-    "UserStory",
-    "AgentRole",
-    "SprintPhase",
 ]

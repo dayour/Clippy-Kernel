@@ -162,7 +162,7 @@ def _configure_llm_for_structured_output(
     llm_config: LLMConfig | dict[str, Any] | None, structured_output_type: type[BaseModel]
 ) -> LLMConfig | dict[str, Any]:  # Return type changed, False is no longer a valid return
     """Configure LLM config for structured output using a Pydantic model."""
-    if llm_config is None or llm_config is False:
+    if llm_config is None:
         raise ValueError("LLMConfig cannot be None or False for structured output.")
     if not issubclass(structured_output_type, BaseModel):
         raise TypeError(f"{structured_output_type} must be a Pydantic BaseModel subclass.")

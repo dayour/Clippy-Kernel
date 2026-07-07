@@ -7,11 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+#### Runtime and Toolchain Modernization (branch upgrade/modernization-2026)
+- Python support widened to 3.10-3.14 (`requires-python` raised to `<3.15`); fixed
+  return-in-finally SyntaxWarnings in the logger modules for Python 3.14. Note: the clippybot
+  subproject and the `interop` extra remain capped at 3.13 because litellm has no 3.14 wheel.
+- protobuf raised to `>=6.33.6,<7` (held below 7 by the a2a-sdk 1.x transitive cap).
+- a2a-sdk migrated from 0.3.x to 1.x (full rewrite of the `autogen.a2a` module).
+- graphrag_sdk migrated from 0.8 to the 1.x async-first API.
+- websockets raised to 16; discord.py to 2.7; slack_sdk to 3.42; chromadb to 1.5;
+  duckduckgo_search retired in favour of ddgs.
+- LLM provider SDKs advanced across major boundaries (mistralai, cohere, anthropic, together,
+  google-genai, openai 2.x, MCP 1.25).
+- pydantic floor relaxed to `>=2.12.0,<3` so the opt-in `interop-crewai` extra stays
+  resolvable (crewai 1.14.6 caps pydantic<2.13) while the base resolves the latest 2.13.x.
+- Vendored four-language GitHub Copilot SDK resynced: .NET net8.0 to net10.0; Go 1.26 with
+  jsonschema-go 0.4.3; Node TypeScript 6 / eslint 10 / vitest 4; Python SDK metadata.
+- Development tooling: ruff 0.14.x, mypy 2.x, pytest 9, pre-commit-hooks v6, uv 0.9.x;
+  CI matrices add a Python 3.14 leg with litellm-dependent steps conditionally skipped.
+
+#### Phase 4 Engineering-Excellence Hardening
+- Added 12 peer-free A2A unit tests under `test/a2a/` covering the pure conversion logic;
+  they skip cleanly when a2a-sdk is absent (closes the zero-coverage gap on the 1.x rewrite).
+- Restored the SWE-agent windowed editing tool sources (`windowed_file.py`, `flake8_utils.py`)
+  from authentic upstream; 12 tests now pass and the clippybot suite rose from 324 to 336.
+- Made the Neo4j-native GraphRAG engine event-loop-safe via a loop-aware `_run_async` helper,
+  removing bare `asyncio.run()` calls that fail inside a running loop.
+- Made the websockets I/O server header shim signature-aware: it introspects `ws_serve` and
+  selects `additional_headers` vs `extra_headers` automatically instead of a hardcoded remap.
+- Added GraphRAG `_run_async` loop-safety unit tests (8 parametrized across the Neo4j and
+  FalkorDB engines) that exercise the bridge with and without a running event loop without
+  requiring a live database.
+- Added focused provider-exception-guard tests (`test/oai/test_provider_exception_guards.py`,
+  17 passing) covering cross-config failover for non-OpenAI providers.
+
+### Fixed
+- **OpenAIWrapper cross-provider failover**: the broad `except Exception` clause in
+  `OpenAIWrapper.create()` preceded the provider-specific retryable-exception clause, making the
+  latter unreachable dead code so non-OpenAI provider errors never triggered cross-config
+  failover. Reworked to precompute `RETRYABLE_PROVIDER_EXCEPTIONS` (excluding any provider symbol
+  aliased to bare `Exception` when its SDK is absent) and test membership at the top of the broad
+  handler.
+- **OpenAI fallback kwargs drift**: openai 2.38.0 added three keyword-only constructor args
+  (`workload_identity`, `_enforce_credentials`, `admin_api_key`); added them to both
+  `OPENAI_FALLBACK_KWARGS` and `AOPENAI_FALLBACK_KWARGS` so `test_fallback_kwargs` passes against
+  the upgraded SDK.
+- Corrected 19 self-referential `ag2[...]` optional-dependency extras to `clippy-kernel[...]`,
+  which would otherwise pull the upstream `ag2` package from PyPI instead of the local project.
+- Added a missing `datetime` import in `autogen/mcp/clippy_mcp.py` (latent `NameError`).
+- Fixed an over-broad `lib/` gitignore rule that silently excluded vendored tool library
+  sources from version control.
+
 ## [1.0.2] - 2026-02-22
 
 ### Added
 
-#### 🆕 New AG2 Feature Modules
+#### New AG2 Feature Modules
 - **`autogen.a2a`** - Agent-to-Agent (A2A) communication module
   - Full streaming support for A2A communication (server and client-side)
   - Human-in-the-loop (HITL) event processing in A2A pipelines
@@ -43,7 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ToolCall` helper for tool call testing
   - `tools_message` helper for constructing test messages
 
-#### 🔧 Enhanced Existing Features
+#### Enhanced Existing Features
 - **`run_group_chat_iter`** and **`a_run_group_chat_iter`** - New iterator-based execution functions
   - Step-by-step event processing with full control over each event
   - Supports `yield_on` parameter to filter specific event types
@@ -60,19 +112,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **New exports** from `autogen.agentchat`:
   - `ContextVariables`, `ReplyResult`, `run_group_chat_iter`, `a_run_group_chat_iter`
 
-#### 📦 New Optional Dependencies
+#### New Optional Dependencies
 - `ag2[a2a]` - A2A SDK for Agent-to-Agent communication
 - `ag2[ag-ui]` - AG-UI Protocol for UI streaming
 - `ag2[tracing]` - OpenTelemetry for distributed tracing
 
-#### 🔧 Dependency Updates
+#### Dependency Updates
 - **crawl4ai**: Updated from `>=0.7.8,<0.8` to `>=0.7.8,<0.9` (supports crawl4ai 0.8.x)
 
 
 
 ### Changed
 
-#### 📦 Dependency Updates
+#### Dependency Updates
 - **OpenAI SDK** upgraded from 1.99.3 to 2.14.0
   - Latest features and improvements
   - Enhanced API compatibility
@@ -90,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced features and capabilities
   - Bug fixes and stability improvements
 
-#### 🛠️ Development Tools Updates
+#### Development Tools Updates
 - **pytest** upgraded from 8.4.2 to 9.0.2
   - Latest testing features
   - Enhanced async support
@@ -112,7 +164,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Enhanced dependency resolution
   - Bug fixes
 
-#### 📚 Documentation Dependencies Updates
+#### Documentation Dependencies Updates
 - **mkdocs-material** upgraded from 9.6.19 to 9.7.1
   - Latest theme features
   - Enhanced navigation
@@ -122,7 +174,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Performance improvements
   - Bug fixes
 
-#### 🔧 Optional Dependencies Updates
+#### Optional Dependencies Updates
 - **chromadb** upgraded from 1.0.20 to 1.4.0+
 - **protobuf** upgraded from 6.32.0 to 6.33.2
 - **sentence-transformers** upgraded from ≤5.1.0 to ≥5.2.0
@@ -135,12 +187,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **langchain-community** upgraded from ≥0.3.12 to ≥0.4.1
 - **pydantic-ai** upgraded from ==1.0.1 to ≥1.39.0
 
-#### 🐛 Bug Fixes
+#### Bug Fixes
 - Fixed circular import issue in `agent_dev_team.py`
 - Improved import order to prevent initialization errors
 - Enhanced module loading stability
 
-#### 🔒 Security
+#### Security
 - All dependencies audited for known vulnerabilities
 - Security patches applied through updates
 - Enhanced dependency version constraints
@@ -155,10 +207,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-#### 🤖 Agent Development Team Framework
+#### Agent Development Team Framework
 - **Complete AgentDevTeam implementation** with 6 specialized roles:
   - Product Owner: Requirements analysis and feature prioritization
-  - Technical Architect: System design and architectural decisions  
+  - Technical Architect: System design and architectural decisions
   - Senior Developer: Implementation and code quality
   - QA Engineer: Testing and quality assurance
   - DevOps Engineer: Deployment and infrastructure
@@ -170,11 +222,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Code review automation** with multi-agent peer review processes
 - **Factory functions** for easy team creation and customization
 
-#### 🔧 Enhanced MCP Integration
+#### Enhanced MCP Integration
 - **Comprehensive ClippyKernelToolkit** with 15+ advanced tools:
   - **Development Tools**: Codebase analysis, quality checking, documentation generation
   - **Web Scraping & APIs**: Selenium-based scraping, HTTP client with error handling
-  - **Database Operations**: SQL execution, schema analysis, data management  
+  - **Database Operations**: SQL execution, schema analysis, data management
   - **Cloud Integrations**: AWS S3, Azure Blob Storage, Google Cloud Storage
   - **System Monitoring**: Performance metrics, resource usage, process analysis
 - **Configuration management** with dataclasses for all tool categories
@@ -183,7 +235,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Connection pooling** and resource management
 - **Multi-platform support** for Windows, macOS, and Linux
 
-#### 🌐 Integrated Development Workflows
+#### Integrated Development Workflows
 - **IntegratedDevelopmentWorkflow class** combining agents and tools
 - **Comprehensive project analysis** with multi-tool coordination
 - **Feature implementation** with research and best practices
@@ -192,7 +244,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation automation** with generation and maintenance
 - **End-to-end workflow orchestration** with progress tracking
 
-#### 📚 Documentation & Examples
+#### Documentation & Examples
 - **Complete README transformation** establishing clippy kernel identity
 - **Comprehensive developer guide** with setup, usage, and contribution guidelines
 - **Platform overview documentation** with architecture and research applications
@@ -204,7 +256,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Production deployment scenarios
 - **API documentation** with comprehensive docstrings and type hints
 
-#### 🧪 Testing & Quality Assurance
+#### Testing & Quality Assurance
 - **Comprehensive test suite** with >90% coverage:
   - Unit tests for all core functionality
   - Integration test framework for manual validation
@@ -219,21 +271,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-#### 📦 Project Identity & Branding
+#### Project Identity & Branding
 - **Package name** changed from "ag2" to "clippy-kernel"
 - **Project description** updated to reflect R&D focus and advanced capabilities
 - **Keywords enhancement** with research, development-team, collaborative-ai
 - **Author attribution** updated with proper credits to AG2 community
 - **License information** updated with dual licensing clarity
 
-#### 🏗️ Architecture Enhancements  
+#### Architecture Enhancements
 - **Modular toolkit architecture** with feature-based organization
 - **Plugin-style extensibility** for easy custom tool integration
 - **Improved error handling** with comprehensive exception management
 - **Enhanced logging** throughout all components
 - **Performance optimizations** for large-scale deployments
 
-#### 📁 Repository Structure
+#### Repository Structure
 - **Enhanced .gitignore** with clippy kernel specific entries
 - **Improved examples organization** with dedicated directories
 - **Comprehensive test structure** following best practices
@@ -241,7 +293,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-#### 🔒 Security Enhancements
+#### Security Enhancements
 - **Secure credential management** with Azure Key Vault integration
 - **Input validation** for all external data sources
 - **SQL injection prevention** with parameterized queries
@@ -251,7 +303,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Performance
 
-#### ⚡ Performance Improvements
+#### Performance Improvements
 - **Connection pooling** for database and API operations
 - **Caching mechanisms** for frequently accessed data
 - **Async/await support** for I/O operations
@@ -261,7 +313,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Dependencies
 
-#### 📋 Dependency Management
+#### Dependency Management
 - **Optional dependencies** organized by feature category
 - **Version constraints** for stability and compatibility
 - **Development dependencies** separated from production
@@ -270,19 +322,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Deprecated
 
-#### ⚠️ Deprecation Notices
+#### Deprecation Notices
 - None in this release (baseline R&D platform)
 
 ### Removed
 
-#### 🗑️ Removed Features
+#### Removed Features
 - None in this release (additive transformation)
 
 ### Fixed
 
-#### 🐛 Bug Fixes
+#### Bug Fixes
 - **Import path corrections** for new module structure
-- **Configuration validation** for all tool categories  
+- **Configuration validation** for all tool categories
 - **Error handling improvements** throughout the codebase
 - **Memory leak prevention** in long-running workflows
 - **Cross-platform compatibility** issues resolved
@@ -298,7 +350,7 @@ This was the base AG2 version before the clippy kernel transformation. All subse
 
 ### Version Numbering
 - **Major versions (X.0.0)**: Breaking changes, major new features, platform evolution
-- **Minor versions (X.Y.0)**: New features, enhancements, backward-compatible changes  
+- **Minor versions (X.Y.0)**: New features, enhancements, backward-compatible changes
 - **Patch versions (X.Y.Z)**: Bug fixes, security updates, minor improvements
 
 ### Release Process
@@ -318,4 +370,4 @@ Built on the foundation of AG2 (formerly AutoGen) with extensive enhancements fo
 
 ---
 
-**clippy kernel**: Advancing the state-of-the-art in multi-agent AI research and development. 📎🚀
+**clippy kernel**: Advancing the state-of-the-art in multi-agent AI research and development.

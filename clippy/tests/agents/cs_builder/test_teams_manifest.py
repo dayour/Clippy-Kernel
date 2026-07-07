@@ -7,12 +7,12 @@ import uuid
 
 import pytest
 
+from clippybot.tools.dataverse_api import MockHttpClient
 from clippybot.tools.teams_publish import (
     TeamsAppManifest,
     TeamsAppUploader,
     TeamsPublisher,
 )
-from clippybot.tools.dataverse_api import MockHttpClient, HttpResponse
 
 
 @pytest.fixture

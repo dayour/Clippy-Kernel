@@ -5,10 +5,8 @@ from __future__ import annotations
 import pytest
 
 from clippybot.tools.sharepoint_check import (
-    GraphApiClient,
     MockGraphClient,
     SharePointChecker,
-    parse_sharepoint_url,
 )
 
 

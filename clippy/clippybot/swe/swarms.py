@@ -8,8 +8,8 @@ This module provides swarm capabilities for complex SWE tasks:
 
 from __future__ import annotations
 
-import asyncio
-from typing import Any, Callable, Literal
+from collections.abc import Callable
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -103,7 +103,7 @@ class SWESwarmManager:
         try:
             # Initialize all agents
             for agent in agents:
-                if hasattr(agent, 'start'):
+                if hasattr(agent, "start"):
                     await agent.start()
 
             # Simulate swarm execution
@@ -116,7 +116,7 @@ class SWESwarmManager:
                 "consensus": True if self.config.require_consensus else None,
             }
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             result = {
                 "success": False,
                 "task": task,

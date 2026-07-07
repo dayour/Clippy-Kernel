@@ -197,3 +197,33 @@ class TestConsoleIOWithWebsockets:
 
         mock.assert_called_once_with("Success")
         print("Test passed.", flush=True)
+
+
+@run_for_optional_imports(["websockets"], "websockets")
+class TestWebsocketsHeaderKwargNormalization:
+    """Hardening tests for the websockets <16 (extra_headers) -> >=16 (additional_headers) shim."""
+
+    def test_supported_header_kwarg_is_accepted_by_ws_serve(self) -> None:
+        import inspect
+
+        from websockets.sync.server import serve as ws_serve
+
+        from autogen.io.websockets import _supported_header_kwarg
+
+        name = _supported_header_kwarg()
+        params = inspect.signature(ws_serve).parameters
+        # The chosen name must be one websockets actually accepts, or websockets
+        # must accept arbitrary kwargs (VAR_KEYWORD), in which case the modern
+        # default is correct.
+        accepts_var_keyword = any(p.kind is inspect.Parameter.VAR_KEYWORD for p in params.values())
+        assert name in params or accepts_var_keyword
+        assert name in {"additional_headers", "extra_headers"}
+
+    def test_supported_header_kwarg_fallback_default(self) -> None:
+        from autogen.io.websockets import _supported_header_kwarg
+
+        # A non-introspectable callable must fall back to the provided default.
+        assert _supported_header_kwarg(default="additional_headers") in {
+            "additional_headers",
+            "extra_headers",
+        }

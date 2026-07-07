@@ -7,8 +7,9 @@ folder, exercising all agents and verifying the output structure.
 from __future__ import annotations
 
 import json
-import pytest
 from pathlib import Path
+
+import pytest
 
 from clippybot.swarms.cs_builder import (
     create_cs_builder_swarm,
@@ -33,6 +34,7 @@ def output_dir(tmp_path) -> str:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestCSBuilderSwarm:
     def test_create_swarm_returns_all_agents(self):

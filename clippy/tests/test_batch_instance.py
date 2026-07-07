@@ -1,11 +1,16 @@
 import json
 
 import pytest
+from clippybot.agent.problem_statement import TextProblemStatement
+from clippybot.run.batch_instances import (
+    BatchInstance,
+    SimpleBatchInstance,
+    _slice_spec_to_slice,
+    clippybotbenchInstances,
+)
 from swerex.deployment.config import DockerDeploymentConfig
 
-from clippybot.agent.problem_statement import TextProblemStatement
 from clippybot.environment.repo import PreExistingRepoConfig
-from clippybot.run.batch_instances import BatchInstance, SimpleBatchInstance, clippybotbenchInstances, _slice_spec_to_slice
 
 
 def test_simple_batch_from_clippybot_bench_to_full_batch_instance(test_data_sources_path):

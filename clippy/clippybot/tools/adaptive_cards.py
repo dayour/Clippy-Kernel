@@ -34,7 +34,10 @@ ADAPTIVE_CARD_VERSION = "1.5"
 CARD_SIZE_LIMIT_BYTES = 28 * 1024  # Teams limit
 
 ELEMENT_CATALOG: dict[str, dict[str, Any]] = {
-    "TextBlock": {"type": "TextBlock", "properties": ["text", "size", "weight", "color", "wrap", "isSubtle", "style", "separator", "spacing"]},
+    "TextBlock": {
+        "type": "TextBlock",
+        "properties": ["text", "size", "weight", "color", "wrap", "isSubtle", "style", "separator", "spacing"],
+    },
     "Image": {"type": "Image", "properties": ["url", "altText", "size", "style", "width", "height"]},
     "ColumnSet": {"type": "ColumnSet", "properties": ["columns"]},
     "Column": {"type": "Column", "properties": ["items", "width"]},
@@ -188,10 +191,12 @@ class AdaptiveCardBuilder:
         return self
 
     def add_fact_set(self, facts: list[tuple[str, str]]) -> AdaptiveCardBuilder:
-        self._body.append({
-            "type": "FactSet",
-            "facts": [{"title": t, "value": v} for t, v in facts],
-        })
+        self._body.append(
+            {
+                "type": "FactSet",
+                "facts": [{"title": t, "value": v} for t, v in facts],
+            }
+        )
         return self
 
     def add_table(
@@ -204,17 +209,24 @@ class AdaptiveCardBuilder:
     ) -> AdaptiveCardBuilder:
         table_rows = []
         for row in rows:
-            table_rows.append({
-                "type": "TableRow",
-                "cells": [{"type": "TableCell", "items": [{"type": "TextBlock", "text": cell, "wrap": True}]} for cell in row],
-            })
-        self._body.append({
-            "type": "Table",
-            "columns": columns,
-            "rows": table_rows,
-            "firstRowAsHeader": first_row_as_header,
-            "showGridLines": show_grid_lines,
-        })
+            table_rows.append(
+                {
+                    "type": "TableRow",
+                    "cells": [
+                        {"type": "TableCell", "items": [{"type": "TextBlock", "text": cell, "wrap": True}]}
+                        for cell in row
+                    ],
+                }
+            )
+        self._body.append(
+            {
+                "type": "Table",
+                "columns": columns,
+                "rows": table_rows,
+                "firstRowAsHeader": first_row_as_header,
+                "showGridLines": show_grid_lines,
+            }
+        )
         return self
 
     def add_action_set(self, actions: list[dict[str, Any]]) -> AdaptiveCardBuilder:
@@ -394,11 +406,13 @@ class AdaptiveCardTemplate:
             builder.add_text_block("I can help with:", weight="Bolder", spacing="Medium")
             actions = []
             for topic in topics:
-                actions.append({
-                    "type": "Action.Submit",
-                    "title": topic.get("name", "Topic"),
-                    "data": {"action": "select_topic", "topic": topic.get("name", "")},
-                })
+                actions.append(
+                    {
+                        "type": "Action.Submit",
+                        "title": topic.get("name", "Topic"),
+                        "data": {"action": "select_topic", "topic": topic.get("name", "")},
+                    }
+                )
             builder.add_action_set(actions)
         return builder.build()
 
@@ -417,12 +431,14 @@ class AdaptiveCardTemplate:
                 is_subtle=True,
                 wrap=True,
             )
-            .add_fact_set([
-                ("Status", "PASSED" if passed else "FAILED"),
-                ("Pass", str(summary.get("pass", 0))),
-                ("Warn", str(summary.get("warn", 0))),
-                ("Fail", str(summary.get("fail", 0))),
-            ])
+            .add_fact_set(
+                [
+                    ("Status", "PASSED" if passed else "FAILED"),
+                    ("Pass", str(summary.get("pass", 0))),
+                    ("Warn", str(summary.get("warn", 0))),
+                    ("Fail", str(summary.get("fail", 0))),
+                ]
+            )
         )
 
         # Findings
@@ -455,22 +471,32 @@ class AdaptiveCardTemplate:
                 is_subtle=True,
                 wrap=True,
             )
-            .add_fact_set([
-                ("Score", f"{score:.0%}"),
-                ("Status", status),
-                ("Total Tests", str(total)),
-            ])
+            .add_fact_set(
+                [
+                    ("Score", f"{score:.0%}"),
+                    ("Status", status),
+                    ("Total Tests", str(total)),
+                ]
+            )
         )
 
         # Coverage
         coverage = suite_dict.get("coverage", {})
         if coverage:
             builder.add_text_block("Coverage", size="Medium", weight="Bolder", separator=True)
-            builder.add_fact_set([
-                ("Overall", f"{coverage.get('overall_coverage', 0):.0%}"),
-                ("Topics", f"{sum(coverage.get('topic_coverage', {}).values())}/{len(coverage.get('topic_coverage', {}))}"),
-                ("Actions", f"{sum(coverage.get('action_coverage', {}).values())}/{len(coverage.get('action_coverage', {}))}"),
-            ])
+            builder.add_fact_set(
+                [
+                    ("Overall", f"{coverage.get('overall_coverage', 0):.0%}"),
+                    (
+                        "Topics",
+                        f"{sum(coverage.get('topic_coverage', {}).values())}/{len(coverage.get('topic_coverage', {}))}",
+                    ),
+                    (
+                        "Actions",
+                        f"{sum(coverage.get('action_coverage', {}).values())}/{len(coverage.get('action_coverage', {}))}",
+                    ),
+                ]
+            )
 
             gaps = coverage.get("gaps", [])
             if gaps:
@@ -491,10 +517,12 @@ class AdaptiveCardTemplate:
             AdaptiveCardBuilder()
             .add_text_block("Publish Approval", size="Large", weight="Bolder")
             .add_text_block(f"Agent: {agent_name}", is_subtle=True, wrap=True)
-            .add_fact_set([
-                ("Channels", ", ".join(channels)),
-                ("Ready", "Yes" if checklist.get("ready") else "No"),
-            ])
+            .add_fact_set(
+                [
+                    ("Channels", ", ".join(channels)),
+                    ("Ready", "Yes" if checklist.get("ready") else "No"),
+                ]
+            )
         )
 
         # Blocking items
@@ -523,10 +551,7 @@ class AdaptiveCardTemplate:
     @staticmethod
     def knowledge_source_status_card(sources: list[dict[str, Any]]) -> dict[str, Any]:
         """SharePoint reachability per-source."""
-        builder = (
-            AdaptiveCardBuilder()
-            .add_text_block("Knowledge Source Status", size="Large", weight="Bolder")
-        )
+        builder = AdaptiveCardBuilder().add_text_block("Knowledge Source Status", size="Large", weight="Bolder")
 
         if not sources:
             builder.add_text_block("No knowledge sources configured.", is_subtle=True, wrap=True)
@@ -535,11 +560,13 @@ class AdaptiveCardTemplate:
         for src in sources:
             valid = src.get("valid", False)
             icon = "OK" if valid else "FAIL"
-            builder.add_fact_set([
-                ("Source", src.get("reference", src.get("url", "unknown"))),
-                ("Type", src.get("type", "unknown")),
-                ("Status", f"[{icon}] {'Reachable' if valid else 'Unreachable'}"),
-            ])
+            builder.add_fact_set(
+                [
+                    ("Source", src.get("reference", src.get("url", "unknown"))),
+                    ("Type", src.get("type", "unknown")),
+                    ("Status", f"[{icon}] {'Reachable' if valid else 'Unreachable'}"),
+                ]
+            )
 
         return builder.build()
 
@@ -576,11 +603,13 @@ class AdaptiveCardTemplate:
         builder = (
             AdaptiveCardBuilder()
             .add_text_block("Action Result", size="Large", weight="Bolder")
-            .add_fact_set([
-                ("Action", action_name),
-                ("Connector", connector),
-                ("Status", "Success" if success else "Failed"),
-            ])
+            .add_fact_set(
+                [
+                    ("Action", action_name),
+                    ("Connector", connector),
+                    ("Status", "Success" if success else "Failed"),
+                ]
+            )
         )
         msg = result_summary.get("message", "")
         if msg:
@@ -621,21 +650,25 @@ class AdaptiveCardTemplate:
                 is_subtle=True,
                 wrap=True,
             )
-            .add_fact_set([
-                ("Status", "SUCCESS" if success else "FAILED"),
-                ("Dry Run", str(results.get("dry_run", True))),
-                ("Duration", f"{results.get('duration_s', 0)}s"),
-            ])
+            .add_fact_set(
+                [
+                    ("Status", "SUCCESS" if success else "FAILED"),
+                    ("Dry Run", str(results.get("dry_run", True))),
+                    ("Duration", f"{results.get('duration_s', 0)}s"),
+                ]
+            )
         )
 
         # Stage count
         checkpoints = results.get("checkpoints", [])
         completed = sum(1 for c in checkpoints if c.get("status") == "completed")
         failed = sum(1 for c in checkpoints if c.get("status") == "failed")
-        builder.add_fact_set([
-            ("Stages Completed", str(completed)),
-            ("Stages Failed", str(failed)),
-        ])
+        builder.add_fact_set(
+            [
+                ("Stages Completed", str(completed)),
+                ("Stages Failed", str(failed)),
+            ]
+        )
 
         if results.get("blocked"):
             builder.add_text_block(
@@ -694,7 +727,9 @@ class AdaptiveCardValidator:
         # Size check
         size_result = cls.check_size(card)
         if not size_result["within_limit"]:
-            errors.append(f"Card exceeds Teams size limit: {size_result['size_bytes']} > {CARD_SIZE_LIMIT_BYTES} bytes.")
+            errors.append(
+                f"Card exceeds Teams size limit: {size_result['size_bytes']} > {CARD_SIZE_LIMIT_BYTES} bytes."
+            )
 
         # Accessibility check
         accessibility = cls.check_accessibility(card)
@@ -792,15 +827,15 @@ class AdaptiveCardMetadata:
 # ---------------------------------------------------------------------------
 
 __all__ = [
+    "ACTION_TYPES",
     "ADAPTIVE_CARD_SCHEMA",
     "ADAPTIVE_CARD_VERSION",
-    "ACTION_TYPES",
+    "CARD_SIZE_LIMIT_BYTES",
+    "ELEMENT_CATALOG",
     "AdaptiveCardBuilder",
     "AdaptiveCardMetadata",
     "AdaptiveCardTemplate",
     "AdaptiveCardValidator",
-    "CARD_SIZE_LIMIT_BYTES",
-    "ELEMENT_CATALOG",
     "conditional_expression",
     "data_binding",
 ]

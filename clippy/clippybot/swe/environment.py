@@ -7,11 +7,10 @@ This module provides the execution environment for clippybots:
 
 from __future__ import annotations
 
-import asyncio
 import os
 import subprocess
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -350,13 +349,10 @@ class SWEEnvironment:
         return False
 
     def __repr__(self) -> str:
-        return (
-            f"SWEEnvironment(working_dir={self._working_dir!r}, "
-            f"running={self._is_running})"
-        )
+        return f"SWEEnvironment(working_dir={self._working_dir!r}, running={self._is_running})"
 
 
 __all__ = [
-    "SWEEnvironmentConfig",
     "SWEEnvironment",
+    "SWEEnvironmentConfig",
 ]

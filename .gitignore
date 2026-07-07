@@ -29,6 +29,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+# Do not ignore vendored tool libraries (e.g. clippy/tools/windowed/lib)
+!**/tools/**/lib/
 parts/
 sdist/
 var/

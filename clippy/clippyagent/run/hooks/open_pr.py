@@ -2,12 +2,7 @@ import os
 import random
 import shlex
 
-from ghapi.all import GhApi
-from pydantic import BaseModel
-
-from clippybot.environment.clippybot_env import clippybotenv
 from clippybot.run.hooks.abstract import RunHook
-from clippybot.types import AgentRunResult
 from clippybot.utils.github import (
     InvalidGithubURL,
     _get_associated_commit_urls,
@@ -15,6 +10,11 @@ from clippybot.utils.github import (
     _parse_gh_issue_url,
 )
 from clippybot.utils.log import get_logger
+from ghapi.all import GhApi
+from pydantic import BaseModel
+
+from clippybot.environment.clippybot_env import clippybotenv
+from clippybot.types import AgentRunResult
 
 # NOTE
 # THE IMPLEMENTATION DETAILS HERE WILL CHANGE SOON!

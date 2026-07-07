@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 # Configuration
 # ---------------------------------------------------------------------------
 
+
 class PlannerConfig(BaseModel):
     """Configuration for RequirementsPlannerAgent."""
 
@@ -104,6 +105,7 @@ Only return raw JSON.
 # ---------------------------------------------------------------------------
 # Agent
 # ---------------------------------------------------------------------------
+
 
 class RequirementsPlannerAgent(CopilotAgentMixin):
     """Converts free-form requirements into a structured agent_spec.json.
@@ -228,8 +230,7 @@ class RequirementsPlannerAgent(CopilotAgentMixin):
         try:
             review_prompt = (
                 "Review this agent_spec.json for completeness, security, "
-                "and ALM best practices:\n\n"
-                + json.dumps(spec, indent=2)
+                "and ALM best practices:\n\n" + json.dumps(spec, indent=2)
             )
             raw = await self._llm_complete(
                 system_message=REVIEW_SYSTEM_MESSAGE,
@@ -245,7 +246,8 @@ class RequirementsPlannerAgent(CopilotAgentMixin):
                 revised = self._enforce_enterprise_defaults(revised)
                 logger.info(
                     "[%s] Review found %d issues, applying revised spec",
-                    self.name, len(review.get("issues", [])),
+                    self.name,
+                    len(review.get("issues", [])),
                 )
                 return revised
 
@@ -266,17 +268,11 @@ class RequirementsPlannerAgent(CopilotAgentMixin):
             validation = await self.validate_spec(spec)
             return {
                 "approved": validation["valid"],
-                "issues": [
-                    {"severity": "error", "field": "", "message": e}
-                    for e in validation["errors"]
-                ],
+                "issues": [{"severity": "error", "field": "", "message": e} for e in validation["errors"]],
                 "suggestions": [],
             }
 
-        review_prompt = (
-            "Review this agent_spec.json thoroughly:\n\n"
-            + json.dumps(spec, indent=2)
-        )
+        review_prompt = "Review this agent_spec.json thoroughly:\n\n" + json.dumps(spec, indent=2)
         raw = await self._llm_complete(
             system_message=REVIEW_SYSTEM_MESSAGE,
             user_message=review_prompt,
@@ -326,20 +322,24 @@ class RequirementsPlannerAgent(CopilotAgentMixin):
         req_lower = requirements.lower()
 
         if "sharepoint" in req_lower:
-            spec["knowledgeSources"].append({
-                "type": "sharepoint",
-                "url": "https://TODO.sharepoint.com/sites/TODO",
-                "scope": "site",
-                "description": "SharePoint knowledge source (update URL)",
-            })
+            spec["knowledgeSources"].append(
+                {
+                    "type": "sharepoint",
+                    "url": "https://TODO.sharepoint.com/sites/TODO",
+                    "scope": "site",
+                    "description": "SharePoint knowledge source (update URL)",
+                }
+            )
 
         if "servicenow" in req_lower or "ticket" in req_lower:
-            spec["actions"].append({
-                "name": "CreateTicket",
-                "connector": "ServiceNow",
-                "auth": "connectionReference",
-                "description": "Create support ticket",
-            })
+            spec["actions"].append(
+                {
+                    "name": "CreateTicket",
+                    "connector": "ServiceNow",
+                    "auth": "connectionReference",
+                    "description": "Create support ticket",
+                }
+            )
 
         if "teams" in req_lower:
             if "teams" not in spec["channels"]:
@@ -423,6 +423,6 @@ class RequirementsPlannerAgent(CopilotAgentMixin):
 
 
 __all__ = [
-    "RequirementsPlannerAgent",
     "PlannerConfig",
+    "RequirementsPlannerAgent",
 ]

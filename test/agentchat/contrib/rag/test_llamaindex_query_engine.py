@@ -25,19 +25,18 @@ Please set your OPENAI_API_KEY in your environment variables before running thes
 logger = logging.getLogger(__name__)
 reason = "do not run on MacOS or windows OR dependency is not installed OR " + reason
 
+_NOT_IN_CI_REASON = (
+    "Currently this test is not being run in CI. "
+    "In test optional dependencies workflow, 'rag' is not added yet. "
+    "https://github.com/ag2ai/ag2/issues/1383 issue is created to track this."
+)
+
 input_dir = "/workspaces/ag2/test/agents/experimental/document_agent/pdf_parsed/"
 input_docs = [input_dir + "nvidia_10k_2024.md"]
 docs_to_add = [input_dir + "Toast_financial_report.md"]
 
 
 @pytest.fixture(scope="module")
-@pytest.mark.openai
-@pytest.mark.skip(
-    """Currently this test is not being run in CI.
-    In test optional dependencies workflow, 'rag' is not added yet.
-    https://github.com/ag2ai/ag2/issues/1383 issue is created to track this.
-    """
-)
 @skip_on_missing_imports(["chromadb", "llama_index"], "rag")
 def chroma_query_engine() -> LlamaIndexQueryEngine:
     # For testing purposes, use a host and port that point to your running ChromaDB.
@@ -53,6 +52,7 @@ def chroma_query_engine() -> LlamaIndexQueryEngine:
     return chroma_query_engine
 
 
+@pytest.mark.skip(reason=_NOT_IN_CI_REASON)
 @pytest.mark.openai
 @pytest.mark.skipif(sys.platform in ["darwin", "win32"], reason=reason)
 def test_lllamindex_query_engine_query(chroma_query_engine: LlamaIndexQueryEngine) -> None:
@@ -65,6 +65,7 @@ def test_lllamindex_query_engine_query(chroma_query_engine: LlamaIndexQueryEngin
     assert answer.find("45.3 billion") != -1
 
 
+@pytest.mark.skip(reason=_NOT_IN_CI_REASON)
 @pytest.mark.openai
 @pytest.mark.skipif(sys.platform in ["darwin", "win32"], reason=reason)
 def test_llamaindex_query_engine_connect_db(chroma_query_engine: LlamaIndexQueryEngine) -> None:
@@ -74,6 +75,7 @@ def test_llamaindex_query_engine_connect_db(chroma_query_engine: LlamaIndexQuery
     assert ret is True
 
 
+@pytest.mark.skip(reason=_NOT_IN_CI_REASON)
 @pytest.mark.openai
 @pytest.mark.skipif(sys.platform in ["darwin", "win32"], reason=reason)
 def test_llamaindex_query_engine_add_docs(chroma_query_engine: LlamaIndexQueryEngine) -> None:

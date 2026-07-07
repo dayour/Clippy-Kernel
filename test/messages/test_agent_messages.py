@@ -73,7 +73,7 @@ def enable_color_in_tests(monkeypatch: pytest.MonkeyPatch) -> None:
     def mock_can_do_colour(*args: Any, **kwargs: Any) -> bool:
         return True
 
-    monkeypatch.setattr(termcolor.termcolor, "_can_do_colour", mock_can_do_colour)
+    monkeypatch.setattr(termcolor.termcolor, "can_colorize", mock_can_do_colour)
 
 
 @pytest.fixture

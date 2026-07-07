@@ -29,7 +29,7 @@ keywords = [
     "collaborative-ai"
 ]
 
-requires-python = ">=3.10,<3.14"
+requires-python = ">=3.10,<3.15"
 
 dynamic = ["version"]
 
@@ -44,6 +44,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Topic :: Software Development :: Libraries :: Python Modules",
@@ -59,22 +60,25 @@ dependencies = [
     "python-dotenv",
     "tiktoken",
     # Disallowing 2.6.0 can be removed when this is fixed https://github.com/pydantic/pydantic/issues/8705
-    "pydantic>=2.6.1,<3",
-    "docker",
+    # Floor kept at >=2.12.0 (not 2.13) so the opt-in interop-crewai extra can co-resolve:
+    # crewai 1.14.6 caps pydantic<2.13. Base and all other extras still resolve to the
+    # latest 2.13.x (validated by the core suite); only interop-crewai pins pydantic 2.12.x.
+    "pydantic>=2.12.0,<3",
+    "docker>=7.1.0",
     "packaging",
 #    "fast-depends>=2.4.12,<3",  # integrated into the package
     "httpx>=0.28.1,<1",
-    "anyio>=3.0.0,<5.0.0"  # needed by the internal fast-depends
+    "anyio>=4.13.0,<5.0.0"  # needed by the internal fast-depends
 ]
 
 [project.optional-dependencies]
 
 a2a = [
-    "a2a-sdk[http-server]>=0.3.11,<0.4",
+    "a2a-sdk[http-server]>=1.1.0,<2",
 ]
 
 ag-ui = [
-    "ag-ui-protocol>=0.1.10,<0.2",
+    "ag-ui-protocol>=0.1.18,<0.2",
 ]
 
 flaml = [
@@ -87,11 +91,11 @@ flaml = [
 # public distributions
 
 openai = [
-    "openai>=2.14.0",
+    "openai>=2.38.0",
 ]
 
 openai-realtime = [
-    "ag2[openai]",
+    "clippy-kernel[openai]",
     "openai[realtime]",
 ]
 
@@ -99,14 +103,17 @@ jupyter-executor = [
     "jupyter-kernel-gateway",
     "websocket-client",
     "requests",
-    "jupyter-client>=8.6.0",
-    "ipykernel>=6.29.0",
+    "jupyter-client>=8.8.0",
+    "ipykernel>=7.2.0",
 ]
 
 retrievechat = [
-    "protobuf==6.33.2",
-    "chromadb>=1.4.0,<2.0",
-    "sentence_transformers>=5.2.0,<6.0",
+    # Capped <7: a2a-sdk 1.1.0 requires protobuf<7, so 7.x cannot co-resolve
+    # with the [a2a] extra. 6.33.x is the validated line (matches the prior
+    # 6.33.2 baseline) and still satisfies the retrievechat stack.
+    "protobuf>=6.33.6,<7",
+    "chromadb>=1.5.9,<2.0",
+    "sentence_transformers>=5.5.1,<6.0",
     "pypdf",
     "ipython",
     "beautifulsoup4",
@@ -114,40 +121,40 @@ retrievechat = [
 ]
 
 retrievechat-pgvector = [
-    "ag2[retrievechat]",
+    "clippy-kernel[retrievechat]",
     "pgvector>=0.2.5",
     "psycopg[binary]>=3.1.18; platform_system=='Windows' or platform_system=='Darwin'",
     "psycopg>=3.1.18; platform_system=='Linux'",
 ]
 
 retrievechat-mongodb = [
-    "ag2[retrievechat]",
+    "clippy-kernel[retrievechat]",
     "pymongo>=4.0.0",
     "numpy",
 ]
 
 retrievechat-qdrant = [
-    "ag2[retrievechat]",
+    "clippy-kernel[retrievechat]",
     "qdrant_client",
     "fastembed>=0.3.1",
 ]
 
 retrievechat-couchbase = [
-    "ag2[retrievechat]",
+    "clippy-kernel[retrievechat]",
     "couchbase>=4.3.0",
     "numpy",
 ]
 
 graph-rag-falkor-db = [
-    "graphrag_sdk==0.8.0",
-    "falkordb>=1.0.10",
+    "graphrag_sdk>=1.1.1,<2",
+    "falkordb>=1.6.1",
 ]
 
 rag = [
-    "docling>=2.66.0,<3",
-    "selenium>=4.39.0,<5",
-    "webdriver-manager>=4.0.2,<5",
-    "chromadb>=0.5,<2",
+    "docling>=2.96.0,<3",
+    "selenium>=4.44.0,<5",
+    "webdriver-manager>=4.1.1,<5",
+    "chromadb>=1.5,<2",
     "llama-index>=0.14,<0.15",
     "llama-index-core>=0.14,<0.15",
     "llama-index-vector-stores-chroma>=0.5,<0.6",
@@ -161,30 +168,30 @@ rag = [
 
 
 crawl4ai = [
-    "crawl4ai>=0.7.8,<0.9",
+    "crawl4ai>=0.8.6,<0.9",
 ]
 
 browser-use = [
     # browser-use>=0.11.0 has significant improvements and better dependency management
-    "browser-use>=0.11.2,<1.0",
+    "browser-use>=0.12.9,<1.0",
 ]
 
 google-client = [
-    "google-api-python-client>=2.163.0,<3.0",
+    "google-api-python-client>=2.197.0,<3.0",
 ]
 
 google-api = [
-    "ag2[google-client]",
-    "google-auth-httplib2>=0.2.0,<0.3",
-    "google-auth-oauthlib>=1.2.1,<2.0",
+    "clippy-kernel[google-client]",
+    "google-auth-httplib2>=0.4.0,<0.5",
+    "google-auth-oauthlib>=1.4.0,<2.0",
 ]
 
 google-search = [
-    "ag2[google-client]",
+    "clippy-kernel[google-client]",
 ]
 
 wikipedia = [
-    "wikipedia-api>=0.8.1, <1.0"
+    "wikipedia-api>=0.15.0, <1.0"
 ]
 
 neo4j = [
@@ -198,19 +205,19 @@ neo4j = [
 
 # used for agentchat_realtime_swarm notebook and realtime agent twilio demo
 twilio = [
-    "fastapi>=0.128.0,<1",
-    "uvicorn>=0.30.6,<1",
-    "twilio>=9.3.2"
+    "fastapi>=0.136.3,<1",
+    "uvicorn>=0.48.0,<1",
+    "twilio>=9.10.9"
 ]
 
 mcp = [
     # mcp 1.9.4+ fixes issue #1865 where string parameters are converted to integers
-    "mcp>=1.25.0",
+    "mcp>=1.27.2",
 ]
 
 mcp-proxy-gen = [
-    "fastapi-code-generator>=0.5.4",
-    "fastapi>=0.128.0,<1",
+    "fastapi-code-generator>=0.7.0",
+    "fastapi>=0.136.3,<1",
     "requests",  # do not pin it
     "typer",
     "PyYAML",
@@ -218,53 +225,51 @@ mcp-proxy-gen = [
 
 copilot-sdk = [
     "httpx>=0.28.1",
-    "anthropic>=0.75.0",
+    "anthropic>=0.105.2",
     "google-generativeai>=0.8.0",
-    "ag2[openai]",  # For OpenAI models
+    "clippy-kernel[openai]",  # For OpenAI models
     "python-pptx>=1.0.0",  # For PowerPoint generation
     "python-docx>=1.1.0",  # For Word processing
     "PyPDF2>=3.0.0",  # For PDF processing
-    "pandas>=2.0.0",  # For Excel processing
+    "pandas>=3.0.0",  # For Excel processing
     "openpyxl>=3.1.0",  # For Excel format support
 ]
 
 windows-clippy-mcp = [
-    "ag2[mcp]",
-    "azure-identity>=1.15.0",
-    "azure-keyvault-secrets>=4.7.0",
-    "websockets>=12.0",
-    "fastapi>=0.128.0,<1",
-    "uvicorn>=0.30.0",
+    "clippy-kernel[mcp]",
+    "azure-identity>=1.25.3",
+    "azure-keyvault-secrets>=4.11.0",
+    "websockets>=16.0",
+    "fastapi>=0.136.3,<1",
+    "uvicorn>=0.48.0",
 ]
 
 interop-crewai = [
-    "crewai[tools]>=1.7.2,<2; python_version>='3.10' and python_version<'3.13'",
-    # TODO: crewai needs litellm and litellm version above 1.67.1 has problem in windows.
-    # TODO: Remove the below line once the problem is fixed
-    "litellm<=1.76.3",
-    "weaviate-client>=4,<5; python_version>='3.10' and python_version<'3.13'",
+    "crewai[tools]>=1.14.6,<2; python_version>='3.10' and python_version<'3.13'",
+    "litellm>=1.86.2",
+    "weaviate-client>=4.21.2,<5; python_version>='3.10' and python_version<'3.13'",
 ]
-interop-langchain = ["langchain-community>=0.4.1,<1"]
-interop-pydantic-ai = ["pydantic-ai>=1.39.0,<2"]
+interop-langchain = ["langchain-community>=0.4.2,<1"]
+interop-pydantic-ai = ["pydantic-ai>=1.104.0,<2"]
 interop =[
-    "ag2[interop-crewai, interop-langchain, interop-pydantic-ai]"
+    "clippy-kernel[interop-crewai, interop-langchain, interop-pydantic-ai]"
 ]
 
 autobuild = [
     "chromadb",
-    "sentence_transformers>=5.2.0,<6.0",
+    "sentence_transformers>=5.5.1,<6.0",
     "huggingface-hub"
 ]
 
 blendsearch = ["flaml[blendsearch]"]
 mathchat = ["sympy", "wolframalpha"]
-captainagent = ["ag2[autobuild]", "pandas"]
+captainagent = ["clippy-kernel[autobuild]", "pandas"]
 teachable = ["chromadb"]
 lmm = ["replicate", "pillow"]
 graph = ["networkx", "matplotlib"]
 gemini = [
     "google-api-core",
-    "google-genai>=1.56.0",
+    "google-genai>=2.7.0",
     "google-cloud-aiplatform",
     "google-auth",
     "pillow",
@@ -272,71 +277,71 @@ gemini = [
 ]
 
 gemini-realtime = [
-    "ag2[gemini]",
-    "ag2[websockets]",
+    "clippy-kernel[gemini]",
+    "clippy-kernel[websockets]",
 ]
 
-together = ["together>=1.2"]
+together = ["together>=2.16.0"]
 websurfer = ["beautifulsoup4", "markdownify", "pdfminer.six", "pathvalidate"]
 redis = ["redis"]
-cosmosdb = ["azure-cosmos>=4.2.0"]
-websockets = ["websockets>=14.0,<16"]
+cosmosdb = ["azure-cosmos>=4.16.0"]
+websockets = ["websockets>=16.0,<17"]
 long-context = ["llmlingua<0.3"]
-anthropic = ["anthropic[vertex]>=0.75.0"]
-cerebras = ["cerebras_cloud_sdk>=1.0.0"]
+anthropic = ["anthropic[vertex]>=0.105.2"]
+cerebras = ["cerebras_cloud_sdk>=1.67.0"]
 yepcode = [
     "yepcode-run>=1.6.1",
     "python-dotenv",
 ]
-mistral = ["mistralai>=1.0.1"]
-groq = ["groq>=0.9.0"]
-cohere = ["cohere>=5.13.5"]
-ollama = ["ollama>=0.4.7", "fix_busted_json>=0.0.18"]
-bedrock = ["boto3>=1.34.149"]
-deepseek = ["ag2[openai]"]
+mistral = ["mistralai>=2.4.8"]
+groq = ["groq>=1.4.0"]
+cohere = ["cohere>=7.0.2"]
+ollama = ["ollama>=0.6.2", "fix_busted_json>=0.0.18"]
+bedrock = ["boto3>=1.43.18"]
+deepseek = ["clippy-kernel[openai]"]
 
 tracing = [
-    "opentelemetry-api>=1.20",
-    "opentelemetry-sdk>=1.20",
-    "opentelemetry-exporter-otlp-proto-grpc>=1.20",
+    "opentelemetry-api>=1.42.1",
+    "opentelemetry-sdk>=1.42.1",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.42.1",
 ]
 
-commsagent-discord = ["discord.py>=2.4.0,<2.7"]
-commsagent-slack = ["slack_sdk>=3.33.0,<3.40"]
-commsagent-telegram = ["telethon>=1.38.1, <2"]
+commsagent-discord = ["discord.py>=2.7.1,<3"]
+commsagent-slack = ["slack_sdk>=3.42.0,<4"]
+commsagent-telegram = ["telethon>=1.43.2, <2"]
 
-duckduckgo = ["duckduckgo_search>=8.0.2"]
-tavily = ["tavily-python>=0.7.4"]
+duckduckgo = ["ddgs>=8.1.1"]
+tavily = ["tavily-python>=0.7.25"]
 
 ## dev dependencies
 
 # test dependencies
 test = [
-    "ipykernel>=6.30.1,<7",
-    "nbconvert>=7.16.6,<8",
+    "ipykernel>=7.2.0,<8",
+    "nbconvert>=7.17.1,<8",
     "nbformat>=5.10.4,<6",
-    "pytest-cov>=6.3.0,<7",
-    "pytest-asyncio>=1.1.0,<2",
+    "pytest-cov>=7.1.0,<8",
+    "pytest-asyncio>=1.4.0,<2",
     "pytest>=9.0.2,<10",
     "mock>=5.2.0,<6",
-    "pandas>=2.3.2,<3",
-    "fastapi>=0.128.0,<1",
+    "pandas>=3.0.0,<4",
+    "fastapi>=0.136.3,<1",
     "dirty-equals>=0.9.0,<1",
-    "mcp>=1.25.0"
+    "mcp>=1.27.2"
 ]
 
 docs = [
-    "ag2[a2a]",  # A2A is exposed in the public API by the optional `autogen.a2a` module
-    "ag2[tracing]",  # Tracing is exposed in the public API by the optional `autogen.opentelemetry` module
-    "ag2[ag-ui]",  # AG-UI is exposed in the public API by the optional `autogen.ag_ui` module
+    "clippy-kernel[a2a]",  # A2A is exposed in the public API by the optional `autogen.a2a` module
+    "clippy-kernel[tracing]",  # Tracing is exposed in the public API by the optional `autogen.opentelemetry` module
+    "clippy-kernel[ag-ui]",  # AG-UI is exposed in the public API by the optional `autogen.ag_ui` module
     "mkdocs-material>=9.7.1,<10",
-    "mkdocstrings[python]>=0.30.0,<1",
+    "mkdocstrings[python]>=1.0.4,<2",
     "mkdocs-literate-nav>=0.6.2,<1",
     "mdx-include>=1.4.2,<2",
     # ToDo: currently problematic and cannot be upgraded
     "mkdocs-git-revision-date-localized-plugin==1.4.7",
     "mike>=2.1.3,<3",
-    "typer>=0.17.4,<1",
+    "typer>=0.26.4,<1",
     "mkdocs-minify-plugin>=0.8.0,<1",
     "mkdocs-macros-plugin>=1.3.9,<2",  # includes with variables
     "mkdocs-glightbox>=0.5.1,<1",  # img zoom
@@ -346,42 +351,42 @@ docs = [
     "pdoc3>=0.11.6,<1",
     "jinja2>=3.1.6,<4",
     "pyyaml>=6.0.2,<7",
-    "termcolor>=3.1.0,<4",
+    "termcolor>=3.3.0,<4",
     "nbclient>=0.10.2,<1",
-    "mcp>=1.25.0",
+    "mcp>=1.27.2",
 ]
 
 types = [
-    "mypy>=1.19.1,<2",
+    "mypy>=2.1.0,<3",
     "types-PyYAML",
     "types-decorator",
     "types-pycurl",
     "types-python-dateutil",
     "types-requests",
     "types-ujson",
-    "ag2[test, openai, a2a, ag-ui]",
+    "clippy-kernel[test, openai, a2a, ag-ui]",
 ]
 
 lint = [
-    "ruff>=0.14.10,<1",
-    "codespell>=2.4.1,<3",
+    "ruff>=0.15.15,<1",
+    "codespell>=2.4.2,<3",
     "pyupgrade-directories>=0.3.0,<1",
 ]
 
 dev = [
     "toml>=0.10.2,<1",
-    "ag2[lint,test,types,docs]",
-    "pre-commit>=4.5.1,<5",
+    "clippy-kernel[lint,test,types,docs]",
+    "pre-commit>=4.6.0,<5",
     "detect-secrets>=1.5.0,<2",
-    "uv>=0.9.21,<1",
+    "uv>=0.11.17,<1",
 ]
 
 
 [project.urls]
-Homepage = "https://ag2.ai/"
-Documentation = "https://docs.ag2.ai"
-Tracker = "https://github.com/ag2ai/ag2/issues"
-Source = "https://github.com/ag2ai/ag2"
+Homepage = "https://github.com/dayour/Clippy-Kernel"
+Documentation = "https://github.com/dayour/Clippy-Kernel/tree/main/website"
+Tracker = "https://github.com/dayour/Clippy-Kernel/issues"
+Source = "https://github.com/dayour/Clippy-Kernel"
 Discord = "https://discord.gg/pAbnFJrkgZ"
 
 [project.scripts]

@@ -5,6 +5,7 @@ from pathlib import Path
 from threading import Lock
 
 import yaml
+from clippybot.agent.models import GLOBAL_STATS
 from rich.console import Group
 from rich.progress import (
     BarColumn,
@@ -18,8 +19,6 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 from rich.table import Table
-
-from clippybot.agent.models import GLOBAL_STATS
 
 
 def _shorten_str(s: str, max_len: int, shorten_left=False) -> str:

@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
+import asyncio
 import warnings
+from collections.abc import Sequence
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Optional
 
 from ....import_utils import optional_import_block, require_optional_import
@@ -12,16 +14,18 @@ from .graph_query_engine import GraphStoreQueryResult
 
 with optional_import_block():
     from falkordb import FalkorDB, Graph
-    from graphrag_sdk import KnowledgeGraph, Source
-    from graphrag_sdk.model_config import KnowledgeGraphModelConfig
-    from graphrag_sdk.models import GenerativeModel
-    from graphrag_sdk.models.openai import OpenAiGenerativeModel
-    from graphrag_sdk.ontology import Ontology
+    from graphrag_sdk import ConnectionConfig, GraphRAG, LiteLLM, LiteLLMEmbedder, Ontology
+    from graphrag_sdk.core.providers import Embedder, LLMInterface
 
 
 @require_optional_import(["falkordb", "graphrag_sdk"], "graph-rag-falkor-db")
 class FalkorGraphQueryEngine:
-    """This is a wrapper for FalkorDB KnowledgeGraph."""
+    """Wrapper for FalkorDB GraphRAG SDK 1.x.
+
+    The upstream SDK is async-first in 1.x, while the AG2 graph query engine
+    contract is still synchronous. This class keeps the public sync methods and
+    bridges them to the async GraphRAG facade internally.
+    """
 
     def __init__(  # type: ignore[no-any-unimported]
         self,
@@ -30,11 +34,15 @@ class FalkorGraphQueryEngine:
         port: int = 6379,
         username: str | None = None,
         password: str | None = None,
-        model: Optional["GenerativeModel"] = None,
+        model: Any | None = None,
         ontology: Optional["Ontology"] = None,
+        llm: Optional["LLMInterface"] = None,
+        embedder: Optional["Embedder"] = None,
+        embedding_dimension: int = 256,
     ):
         """Initialize a FalkorDB knowledge graph.
-        Please also refer to https://github.com/FalkorDB/GraphRAG-SDK/blob/main/graphrag_sdk/kg.py
+
+        Please also refer to https://github.com/FalkorDB/GraphRAG-SDK.
 
         TODO: Fix LLM API cost calculation for FalkorDB usages.
 
@@ -44,20 +52,29 @@ class FalkorGraphQueryEngine:
             port (int): FalkorDB port number.
             username (str|None): FalkorDB username.
             password (str|None): FalkorDB password.
-            model (GenerativeModel): LLM model to use for FalkorDB to build and retrieve from the graph, default to use OAI gpt-4o.
-            ontology: FalkorDB knowledge graph schema/ontology, https://github.com/FalkorDB/GraphRAG-SDK/blob/main/graphrag_sdk/ontology.py
-                If None, FalkorDB will auto generate an ontology from the input docs.
+            model: Back-compat alias for the LLM provider. Accepts either a
+                GraphRAG SDK provider instance or a model name string that will
+                be wrapped with LiteLLM.
+            ontology: FalkorDB knowledge graph ontology. If None, GraphRAG SDK
+                will infer the ontology during the first ingest.
+            llm: Explicit GraphRAG SDK LLM provider. Preferred over ``model``.
+            embedder: Explicit GraphRAG SDK embedding provider.
+            embedding_dimension: Expected embedding dimension for the graph
+                vector store. Defaults to 256, matching the SDK quickstart.
         """
         self.name = name
-        self.ontology_table_name = name + "_ontology"
+        self.ontology_table_name = f"{name}__ontology"
         self.host = host
         self.port = port
         self.username = username
         self.password = password
-        self.model = model or OpenAiGenerativeModel("gpt-4o")
-        self.model_config = KnowledgeGraphModelConfig.with_model(self.model)
+        self.llm = self._coerce_llm(llm=llm, model=model)
+        self.embedder = embedder or LiteLLMEmbedder(
+            model="openai/text-embedding-3-small", dimensions=embedding_dimension
+        )
+        self.embedding_dimension = embedding_dimension
         self.ontology = ontology
-        self.knowledge_graph: KnowledgeGraph | None = None  # type: ignore[no-any-unimported]
+        self._chat_history: list[dict[str, str]] = []
         self.falkordb = FalkorDB(host=self.host, port=self.port, username=self.username, password=self.password)
 
     def connect_db(self) -> None:
@@ -67,58 +84,29 @@ class FalkorGraphQueryEngine:
                 self.ontology = self._load_ontology_from_db()
             except Exception:
                 warnings.warn("Graph Ontology is not loaded.")
-
-            if self.ontology is None:
-                raise ValueError(f"Ontology of the knowledge graph '{self.name}' can't be None.")
-
-            self.knowledge_graph = KnowledgeGraph(
-                name=self.name,
-                host=self.host,
-                port=self.port,
-                username=self.username,
-                password=self.password,
-                model_config=self.model_config,
-                ontology=self.ontology,
-            )
-
-            # Establishing a chat session will maintain the history
-            self._chat_session = self.knowledge_graph.chat_session()
+            self._chat_history = []
         else:
             raise ValueError(f"Knowledge graph '{self.name}' does not exist")
 
     def init_db(self, input_doc: list[Document]) -> None:
         """Build the knowledge graph with input documents."""
-        sources = []
-        for doc in input_doc:
-            if doc.path_or_url and os.path.exists(doc.path_or_url):
-                sources.append(Source(doc.path_or_url))
-
-        if sources:
-            # Auto generate graph ontology if not created by user.
-            if self.ontology is None:
-                self.ontology = Ontology.from_sources(
-                    sources=sources,
-                    model=self.model,
-                )
-            # Save Ontology to graph for future access.
-            self._save_ontology_to_db(self.ontology)
-
-            self.knowledge_graph = KnowledgeGraph(
-                name=self.name,
-                host=self.host,
-                port=self.port,
-                username=self.username,
-                password=self.password,
-                model_config=KnowledgeGraphModelConfig.with_model(self.model),
-                ontology=self.ontology,
-            )
-
-            self.knowledge_graph.process_sources(sources)
-
-            # Establishing a chat session will maintain the history
-            self._chat_session = self.knowledge_graph.chat_session()
-        else:
+        if not input_doc:
             raise ValueError("No input documents could be loaded.")
+
+        async def _init_db() -> None:
+            async with self._create_rag() as rag:
+                for index, doc in enumerate(input_doc):
+                    if doc.path_or_url:
+                        await rag.ingest(doc.path_or_url)
+                    elif isinstance(doc.data, str):
+                        await rag.ingest(source=self._build_document_id(doc, index), text=doc.data)
+                    else:
+                        raise ValueError("Each input document must provide either `path_or_url` or string `data`.")
+                await rag.finalize()
+                self.ontology = await rag.get_ontology()
+
+        self._run_async(_init_db())
+        self._chat_history = []
 
     def add_records(self, new_records: list[Document]) -> bool:
         raise NotImplementedError("This method is not supported by FalkorDB SDK yet.")
@@ -134,12 +122,29 @@ class FalkorGraphQueryEngine:
 
         Returns: FalkorGraphQueryResult
         """
-        if self.knowledge_graph is None:
+        if self.name not in self.falkordb.list_graphs():
             raise ValueError("Knowledge graph has not been selected or created.")
 
-        response = self._chat_session.send_message(question)
+        messages = kwargs.get("messages")
+        system_message = kwargs.get("system_message", "")
+        history = (
+            self._build_completion_history(messages, system_message)
+            if messages is not None
+            else list(self._chat_history)
+        )
 
-        return GraphStoreQueryResult(answer=response["response"], results=[])
+        async def _query() -> GraphStoreQueryResult:
+            async with self._create_rag() as rag:
+                response = await rag.completion(question, history=history or None)
+                return GraphStoreQueryResult(answer=response.answer, results=[])
+
+        result = self._run_async(_query())
+        if messages is None:
+            self._chat_history.extend([
+                {"role": "user", "content": question},
+                {"role": "assistant", "content": result.answer or ""},
+            ])
+        return result
 
     def delete(self) -> bool:
         """Delete graph and its data from database."""
@@ -154,14 +159,77 @@ class FalkorGraphQueryEngine:
         return self.falkordb.select_graph(self.ontology_table_name)
 
     def _save_ontology_to_db(self, ontology: "Ontology") -> None:  # type: ignore[no-any-unimported]
-        """Save graph ontology to a separate table with {graph_name}_ontology"""
-        if self.ontology_table_name in self.falkordb.list_graphs():
-            raise ValueError(f"Knowledge graph {self.name} is already created.")
-        graph = self.__get_ontology_storage_graph()
-        ontology.save_to_graph(graph)
+        """Persist ontology through the GraphRAG facade on first ingest/query."""
+        self.ontology = ontology
 
     def _load_ontology_from_db(self) -> "Ontology":  # type: ignore[no-any-unimported]
         if self.ontology_table_name not in self.falkordb.list_graphs():
             raise ValueError(f"Knowledge graph {self.name} has not been created.")
-        graph = self.__get_ontology_storage_graph()
-        return Ontology.from_schema_graph(graph)
+
+        async def _get_ontology() -> "Ontology":
+            async with self._create_rag() as rag:
+                return await rag.get_ontology()
+
+        return self._run_async(_get_ontology())
+
+    def _create_rag(self) -> "GraphRAG":  # type: ignore[no-any-unimported]
+        return GraphRAG(
+            connection=ConnectionConfig(
+                host=self.host,
+                port=self.port,
+                username=self.username,
+                password=self.password,
+                graph_name=self.name,
+            ),
+            llm=self.llm,
+            embedder=self.embedder,
+            ontology=self.ontology,
+            embedding_dimension=self.embedding_dimension,
+        )
+
+    def _coerce_llm(self, llm: Optional["LLMInterface"], model: Any | None) -> "LLMInterface":  # type: ignore[no-any-unimported]
+        if llm is not None:
+            return llm
+        if model is None:
+            return LiteLLM(model="openai/gpt-4o")
+        if isinstance(model, str):
+            return LiteLLM(model=model)
+        if hasattr(model, "ainvoke") and hasattr(model, "invoke"):
+            return model
+        raise TypeError(
+            "`model` must be a GraphRAG SDK LLM provider or model name string. "
+            "Pass `llm=` for an explicit provider instance."
+        )
+
+    def _build_document_id(self, doc: Document, index: int) -> str:
+        if doc.path_or_url:
+            return doc.path_or_url
+        return f"{self.name}-document-{index}"
+
+    def _build_completion_history(
+        self, messages: Sequence[dict[str, Any]], system_message: str
+    ) -> list[dict[str, str]]:
+        history: list[dict[str, str]] = []
+        if system_message:
+            history.append({"role": "system", "content": system_message})
+        for message in messages:
+            content = message.get("content")
+            if not content or "tool_calls" in message or "tool_responses" in message:
+                continue
+            history.append({"role": self._normalize_chat_role(message), "content": str(content)})
+        return history
+
+    def _normalize_chat_role(self, message: dict[str, Any]) -> str:
+        role = str(message.get("role") or "").lower()
+        if role in {"system", "assistant", "user"}:
+            return role
+        return "assistant" if message.get("name") == "assistant" else "user"
+
+    def _run_async(self, coro: Any) -> Any:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            return executor.submit(lambda: asyncio.run(coro)).result()

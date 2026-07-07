@@ -17,8 +17,7 @@ import time
 import uuid
 from typing import Any
 
-from clippybot.tools.dataverse_api import HttpClient, HttpResponse, MockHttpClient
-
+from clippybot.tools.dataverse_api import HttpClient, MockHttpClient
 
 # ---------------------------------------------------------------------------
 # Channel definitions
@@ -83,6 +82,7 @@ _TEAMS_BOT_NAMESPACE = uuid.UUID("a01e7f3c-6b2d-4a8f-9e5c-1d3b7f9a2c4e")
 # Manifest generator
 # ---------------------------------------------------------------------------
 
+
 class TeamsAppManifest:
     """Generates a Teams app manifest.json for a Copilot Studio agent.
 
@@ -107,10 +107,7 @@ class TeamsAppManifest:
     """
 
     MANIFEST_VERSION = "1.17"
-    SCHEMA_URL = (
-        "https://developer.microsoft.com/en-us/json-schemas"
-        "/teams/v1.17/MicrosoftTeams.schema.json"
-    )
+    SCHEMA_URL = "https://developer.microsoft.com/en-us/json-schemas/teams/v1.17/MicrosoftTeams.schema.json"
 
     # Constraints from the Teams manifest schema
     _NAME_SHORT_MAX = 30
@@ -196,12 +193,12 @@ class TeamsAppManifest:
         bot_id = self._generate_bot_id()
         app_id = self._generate_app_id()
 
-        short_name = name[:self._NAME_SHORT_MAX]
-        full_name = name[:self._NAME_FULL_MAX]
+        short_name = name[: self._NAME_SHORT_MAX]
+        full_name = name[: self._NAME_FULL_MAX]
 
         description = self._description()
-        short_desc = description[:self._DESC_SHORT_MAX]
-        full_desc = description[:self._DESC_FULL_MAX]
+        short_desc = description[: self._DESC_SHORT_MAX]
+        full_desc = description[: self._DESC_FULL_MAX]
 
         manifest: dict[str, Any] = {
             "$schema": self.SCHEMA_URL,
@@ -300,9 +297,7 @@ class TeamsAppManifest:
         version = manifest.get("version", "")
         parts = version.split(".")
         if len(parts) < 2 or not all(p.isdigit() for p in parts):
-            errors.append(
-                f"Field 'version' must be a valid semver string, got '{version}'."
-            )
+            errors.append(f"Field 'version' must be a valid semver string, got '{version}'.")
 
         # --- Name length constraints ---
         name_obj = manifest.get("name", {})
@@ -311,15 +306,9 @@ class TeamsAppManifest:
         if not short_name:
             errors.append("name.short is required and cannot be empty.")
         elif len(short_name) > self._NAME_SHORT_MAX:
-            errors.append(
-                f"name.short exceeds {self._NAME_SHORT_MAX} characters "
-                f"(got {len(short_name)})."
-            )
+            errors.append(f"name.short exceeds {self._NAME_SHORT_MAX} characters (got {len(short_name)}).")
         if full_name and len(full_name) > self._NAME_FULL_MAX:
-            errors.append(
-                f"name.full exceeds {self._NAME_FULL_MAX} characters "
-                f"(got {len(full_name)})."
-            )
+            errors.append(f"name.full exceeds {self._NAME_FULL_MAX} characters (got {len(full_name)}).")
 
         # --- Description length constraints ---
         desc_obj = manifest.get("description", {})
@@ -328,15 +317,9 @@ class TeamsAppManifest:
         if not short_desc:
             errors.append("description.short is required and cannot be empty.")
         elif len(short_desc) > self._DESC_SHORT_MAX:
-            errors.append(
-                f"description.short exceeds {self._DESC_SHORT_MAX} characters "
-                f"(got {len(short_desc)})."
-            )
+            errors.append(f"description.short exceeds {self._DESC_SHORT_MAX} characters (got {len(short_desc)}).")
         if full_desc and len(full_desc) > self._DESC_FULL_MAX:
-            errors.append(
-                f"description.full exceeds {self._DESC_FULL_MAX} characters "
-                f"(got {len(full_desc)})."
-            )
+            errors.append(f"description.full exceeds {self._DESC_FULL_MAX} characters (got {len(full_desc)}).")
 
         # --- Developer info ---
         dev = manifest.get("developer", {})
@@ -376,9 +359,7 @@ class TeamsAppManifest:
                 try:
                     uuid.UUID(wai_id)
                 except (ValueError, AttributeError):
-                    warnings.append(
-                        f"webApplicationInfo.id should be a valid UUID, got '{wai_id}'."
-                    )
+                    warnings.append(f"webApplicationInfo.id should be a valid UUID, got '{wai_id}'.")
 
         return {
             "valid": len(errors) == 0,
@@ -401,6 +382,7 @@ class TeamsAppManifest:
 # ---------------------------------------------------------------------------
 # Manifest uploader (Graph API)
 # ---------------------------------------------------------------------------
+
 
 class TeamsAppUploader:
     """Uploads Teams app manifests to the Teams app catalog via Graph API.
@@ -452,10 +434,7 @@ class TeamsAppUploader:
         Returns:
             A plan dict describing the lookup query.
         """
-        url = (
-            f"{self.GRAPH_BASE}/appCatalogs/teamsApps"
-            f"?$filter=externalId eq '{external_id}'"
-        )
+        url = f"{self.GRAPH_BASE}/appCatalogs/teamsApps?$filter=externalId eq '{external_id}'"
         return {
             "action": "check_existing_teams_app",
             "dry_run": True,
@@ -560,9 +539,7 @@ class TeamsAppUploader:
             if check_result.get("exists"):
                 # Update existing app
                 catalog_app_id = check_result["app_id"]
-                update_url = (
-                    f"{self.GRAPH_BASE}/appCatalogs/teamsApps/{catalog_app_id}"
-                )
+                update_url = f"{self.GRAPH_BASE}/appCatalogs/teamsApps/{catalog_app_id}"
                 resp = await self._client.patch(
                     update_url,
                     headers=self._headers(),
@@ -603,6 +580,7 @@ class TeamsAppUploader:
 # ---------------------------------------------------------------------------
 # Publisher adapter
 # ---------------------------------------------------------------------------
+
 
 class TeamsPublisher:
     """Publisher for Teams and M365 Copilot channels with manifest support.
@@ -702,17 +680,14 @@ class TeamsPublisher:
             }
 
             if info["requires_admin_approval"]:
-                approvals_needed.append(
-                    f"{info['display_name']}: approval via {info['approval_scope']}"
-                )
+                approvals_needed.append(f"{info['display_name']}: approval via {info['approval_scope']}")
 
             # Security scope checks
             if security:
                 allow_ext = security.get("allowExternal", False)
                 if ch in ("web", "custom") and not allow_ext:
                     warnings.append(
-                        f"Channel '{ch}' is publicly accessible but "
-                        f"allowExternal=false in spec. Verify intent."
+                        f"Channel '{ch}' is publicly accessible but allowExternal=false in spec. Verify intent."
                     )
 
             channel_plans.append(plan_entry)
@@ -739,14 +714,16 @@ class TeamsPublisher:
 
         for ch_plan in plan.get("channels", []):
             # TODO: Implement actual publish via PAC / Graph API
-            results.append({
-                "channel": ch_plan["channel"],
-                "status": "pending_implementation",
-                "message": (
-                    f"Channel '{ch_plan['display_name']}' publish steps recorded. "
-                    "Manual execution required — see steps in plan."
-                ),
-            })
+            results.append(
+                {
+                    "channel": ch_plan["channel"],
+                    "status": "pending_implementation",
+                    "message": (
+                        f"Channel '{ch_plan['display_name']}' publish steps recorded. "
+                        "Manual execution required — see steps in plan."
+                    ),
+                }
+            )
 
         elapsed = (time.perf_counter() - start) * 1000
         return {

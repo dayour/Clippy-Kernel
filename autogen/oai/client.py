@@ -262,50 +262,6 @@ LEGACY_DEFAULT_CACHE_SEED = 41
 LEGACY_CACHE_DIR = ".cache"
 OPEN_API_BASE_URL_PREFIX = "https://api.openai.com"
 
-# These mirror the keyword-only args of openai.OpenAI/AzureOpenAI.__init__ and are used only
-# as a fallback when the openai SDK is not installed. test_fallback_kwargs guards them against
-# SDK drift; resync with the installed openai version if that test fails.
-OPENAI_FALLBACK_KWARGS = {
-    "api_key",
-    "organization",
-    "project",
-    "base_url",
-    "websocket_base_url",
-    "timeout",
-    "max_retries",
-    "default_headers",
-    "default_query",
-    "http_client",
-    "_strict_response_validation",
-    "webhook_secret",
-    "workload_identity",
-    "_enforce_credentials",
-    "admin_api_key",
-}
-
-AOPENAI_FALLBACK_KWARGS = {
-    "azure_endpoint",
-    "azure_deployment",
-    "api_version",
-    "api_key",
-    "azure_ad_token",
-    "azure_ad_token_provider",
-    "organization",
-    "websocket_base_url",
-    "timeout",
-    "max_retries",
-    "default_headers",
-    "default_query",
-    "http_client",
-    "_strict_response_validation",
-    "base_url",
-    "project",
-    "webhook_secret",
-    "workload_identity",
-    "_enforce_credentials",
-    "admin_api_key",
-}
-
 
 @lru_cache(maxsize=128)
 def log_cache_seed_value(cache_seed_value: str | int, client: ModelClient) -> None:
